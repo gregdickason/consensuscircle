@@ -1,0 +1,158 @@
+swagger: '2.0'
+info:
+  description: >-
+    Definition for the ConsensusCircle Distributed Arms Length Reputation and Authority Network
+    (DALRAN)
+  version: 0.5.0
+  title: ConsensusCircle 
+  termsOfService: 'http://dalran.consensuscircle.io/terms/'
+  contact:
+    email: developmentteam@consensuscircle.io
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+host: developer.consensuscircle.io
+basePath: /v1
+tags:
+  - name: instruction
+    description: Sending and receiving instructions that update entities
+    externalDocs:
+      description: Find out more
+      url: 'http://developer.consensuscircle.io/instruction'
+  - name: entity
+    description: Finding out about current state of entities in the network (example participants such as people and organisations or workflows)
+    externalDocs:
+      description: Find out more
+      url: 'http://developer.consensuscircle.io/entity'
+schemes:
+  - http
+paths:
+  /instruction:
+    post:
+      tags:
+        - instruction
+      summary: Send a new instruction for processing that will update an entity and usually has a price
+      description: 'See documentation - instructions change state in the consensus coin network and require processing on the consensus circle'
+      operationId: processInstruction
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: Instruction 
+          required: true
+          schema:
+            $ref: '#/definitions/processInstruction'
+      responses:
+        '200':
+          description: successful operation.
+        '405':
+          description: Invalid input
+  /instruction/findByOriginatorID:
+    get:
+      tags:
+        - instruction/findByOriginatorID
+      summary: Finds instructions by originator ID
+      description: will return instructions for the given originator (those the requesting node has seen - it is not guaranteed that all instructions not yet on the blockchain will be available).  Some nodes will limit to most recent instructions
+      operationId: findInstructionsByOriginatorID
+      produces:
+        - application/json
+      parameters:
+        - name: originatorID
+          in: query
+          description: originator
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation.  Returns list of instructions by originator
+        '400':
+          description: Invalid status value
+  /entity:
+    get:
+      tags:
+        - entity
+      summary: Search on entities.  Entities themselves cannot be created directly (only via an instruction)
+      description: 'See documentation - entities hold state in the consensus circle network but are built up through a view of UTIO targets (instruction outputs) rather than having a distinct entity on the blockchain'
+      operationId: getEntity
+      produces:
+        - application/json
+      parameters:
+        - name: entityID
+          in: query
+          description: entityID
+          required: true
+          type: string
+      responses:
+        '200':
+          description: successful operation.  Returns entity as a JSON structure
+        '400':
+          description: Invalid status value      
+definitions:
+  Tag:
+    type: object
+    properties:
+      id:
+        type: number
+      name:
+        type: string
+  processInstruction:
+    type: object
+    required:
+      - originatorID
+      - originatedInstructionDateTime
+      - instructionType
+      - instructionAttribute
+      - entityTarget
+      - instructionFee
+      - feePayingSatchel
+      - payment
+    properties:
+      originatorID:
+        type: string
+      originatedInstructionDateTime:
+        type: string
+      originatorSequence:
+        type: number
+      instructionType: 
+        type: string
+      instructionAttribute:
+        type: object
+        required:
+          - attributeType
+          - attributeSubType
+          - attributeName
+          - attributeValue
+          - attributeEncrypted
+          - attributeEvidence
+        properties:
+          attributeType:
+            type: string
+          attributeSubType:
+            type: string
+          attributeName:
+            type: string
+          attributeValue:
+            type: string
+          attributeEncrypted:
+            type: boolean
+          attributeEncryptedKeyAuthority:
+            type: string
+          attributeEvidence: 
+            type: boolean
+          attributeEvidenceHash:
+            type: string
+          attributeEvidenceLink:
+            type: string 
+      entityTarget:
+        type: string
+      instructionFee:
+        type: number
+      feePayingSatchel:
+        type: string
+      feePayingWallet:
+        type: string
+      payment:
+        type: boolean
