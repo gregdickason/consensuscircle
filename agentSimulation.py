@@ -5,15 +5,13 @@ import socket
 import argparse
 
 
-# This is an end to end simulation of an agent operating in a consensus circle. 
-# TODO: Create give ac
-
+# This contains definitions that are used for convergence, management of the circle, etc
 
 # It also demonstrates how a random number is created in a matrix composed of vectors from 5 agents in a consensus circle
 # And implements the final stage of the convergence protocol as part of consensus circle
 # Assumption of no cheating in this version, but cheating checks will be instituted in later versions
 
-# Define how to converge matrices with modulus as input to the function. 
+# Define how to converge matrices with modulus (a) as input to the function. 
 def converge(m,a):
   rlen, clen, i, j, s = len(m[0]), len(m), 0, 0, 0
   while i < rlen:
@@ -32,8 +30,8 @@ def hashvector(v,s):
     yield hashlib.sha256(str(v[i]).encode('utf-8') + str(s).encode('utf-8')).hexdigest()
     i += 1
 
-# reading arguments - we only read 1 (the file which contains all the data we need to connect to peers etc
-# TODO: read in who we are from the command line, read in a file with who we connect to, and then start simulation
+
+
 
 
 
