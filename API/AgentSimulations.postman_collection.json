@@ -1,0 +1,104 @@
+{
+	"info": {
+		"_postman_id": "7652af90-ed7a-46c9-9463-3e8635ec0298",
+		"name": "AgentSimulations",
+		"description": "Testing for the agents simulations with multiple agents running \n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Converge",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/converge",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"converge"
+					]
+				},
+				"description": "Converge the blockchain (issue only to 1 agent and it will cascade convergence)"
+			},
+			"response": []
+		},
+		{
+			"name": "Instruction",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"sender\":\"gregdickason\",\n\t\"recipient\":\"nicgatland\",\n\t\"hash\":\"ABC123\"\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/instruction",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"instruction"
+					]
+				},
+				"description": "Add an instruction to the unprocessed instructions pool"
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"agents\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/agents/register",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"agents",
+						"register"
+					]
+				},
+				"description": "Register an agent with another agent (see it as a pair it will poll for instructions and for convergence)"
+			},
+			"response": []
+		}
+	]
+}
