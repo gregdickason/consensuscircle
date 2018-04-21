@@ -15,11 +15,11 @@ class TddAgent(TestCase):
     
     #GREG HERE
     
-    def test_flask_application_is_up_and_running(self):
-          url = "http://www.google.com"
-          request = urllib.request.Request(url)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
+    #def dont_test_flask_application_is_up_and_running(self):
+    #      url = "http://www.google.com"
+    #      request = urllib.request.Request(url)
+    #      response = urllib.request.urlopen(request)
+    #      self.assertEqual(response.code, 200)
           
     
     @classmethod
@@ -54,6 +54,14 @@ class TddAgent(TestCase):
           self.assertEqual(response.code, 201)
 
 
+    def test_get_instructions_returns_200(self):
+          url = "http://localhost:5000/instructions"
+          request = urllib.request.Request(url)
+          response = urllib.request.urlopen(request)
+          body = json.loads(response.read().decode('utf-8'))
+          print(f'the returned instructions are {body["instructions"]}')
+          self.assertEqual(response.code, 200)
+
 
     def test_register_returns_201(self):
           url = "http://localhost:5000/agents/register"
@@ -61,4 +69,10 @@ class TddAgent(TestCase):
           request.add_header("Content-Type","application/json")
           response = urllib.request.urlopen(request)
           self.assertEqual(response.code, 201)
-  
+          
+    def test_get_entity_returns_200(self):      
+        url = "http://localhost:5000/entity"
+        request = urllib.request.Request(url)  # Need to add the query parameters and check this stays as a GET
+        response = urllib.request.urlopen(request)
+        self.assertEqual(response.code, 200)
+    

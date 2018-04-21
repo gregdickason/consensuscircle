@@ -12,17 +12,17 @@ from flask import Flask, jsonify, request
 
 class Blockchain:
     def __init__(self):
-        self.current_instructions = []
+        self.current_instructions = [] # this should be treated as a set and so only added to if the instruction hash is unique (TODO)
+        self.instruction_hashes = set() # changed to set as duplicates treated as repeats.  We only add the hash (dont care about the rest)
         self.chain = []
         self.agents = set()
-
-        # Load the latest block
-        # self.new_block(previous_hash='1', proof=100)
+        self.trusted_agents = set()
+        self.untrusted_agents = set()
+        # TODO and HERE to build out what to do with these (from whitepaper?)
 
     def register_agent(self, address):
         """
         Add a new agent to the list of agents we are working with for consensus.  For now we dont check if they are valid
-
         :param address: Address of node. Eg. 'http://192.168.0.5:5000'
         """
 
@@ -42,6 +42,7 @@ class Blockchain:
         :param sender: Address of the Sender
         :param recipient: Address of the Recipient
         :param hash: sha256 hash of the instruction contents (for convergence simulation not adding instruction this is for uniqueness)
+        Note that the hash is how the final consensus circle code will manage instructions in sets (so immutable and guaranteed to be unique and idempotently added)
         """
         self.current_instructions.append({
             'sender': sender,
@@ -49,6 +50,8 @@ class Blockchain:
             'hash': hash,
         })
         
+        self.instruction_hashes.add(hash)
+        print(f'instruction hashes are {self.instruction_hashes}')
         return len(self.current_instructions)
 
 
@@ -59,6 +62,7 @@ app = Flask(__name__)
 # Generate a globally unique address for this agent 
 # In production code this is the agent public key which is assigned by the owning satchell (participant)
 agent_identifier = str(uuid4()).replace('-', '')
+print(f'my unique agent ID is {agent_identifier}')
 # agent_public_key = 
 
 # Instantiate the Blockchain
@@ -70,11 +74,32 @@ blockchain = Blockchain()
 def convergeCircle():
     # This is where we start the convergence protocol (only done to test)
     print("converging now")
+    # get hash of instructions from all my followees (registered with me)
     response = {
                 'message': 'Converging on the on the next block',
                }
     
     return jsonify(response), 200
+
+
+@app.route('/entity', methods=['GET'])
+def returnEntities():
+    print("returning entities")
+    # need to do a get on the entities we are tracking
+    response = {
+                'entity': 'abc',
+               }
+    
+    return jsonify(response), 200
+
+@app.route('/instructions',methods=['GET'])
+def retrieveInstructions():
+    print("returning instructions")
+    response = {
+            'instructions': list(blockchain.instruction_hashes)
+    }
+    return jsonify(response), 200
+    
     
 @app.route('/instruction', methods=['POST'])
 def instruction():
@@ -113,7 +138,7 @@ def register_agents():
 
     response = {
         'message': 'New agents have been added',
-        'total_nodes': list(blockchain.agents),
+        'total_agents': list(blockchain.agents),
     }
     return jsonify(response), 201
     
@@ -126,6 +151,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
     args = parser.parse_args()
     port = args.port
-
+    # The app is running on open port.  Dont include the 0.0.0.0 if concerned about external access
     app.run(host='0.0.0.0', port=port)
     
