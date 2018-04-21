@@ -54,6 +54,16 @@ class Blockchain:
         self.instruction_hashes.add(hash)
         print(f'instruction hashes are {self.instruction_hashes}')
         return len(self.current_instructions)
+    
+    
+    def add_instruction_hash(self, hash):
+        """
+        Adds instructions hashes we are not going to track in this node (only the hash is in the blockchain directly for now
+        param hash: sha256 hash of the instruction
+        """
+        self.instruction_hashes.add(hash)
+        return len(self.instruction_hashes)
+         
 
 
 
@@ -77,12 +87,16 @@ def convergeCircle():
     print("converging now")
     # get hash of instructions from all my followees (registered with me)
     for url in blockchain.agents:
-        print(f'URL is {url}')
         request = urllib.request.Request("http://" + url + "/instructions")
         response = urllib.request.urlopen(request)
         body = json.loads(response.read().decode('utf-8'))
         print(f'the returned instructions are {body["instructions"]}')
-          
+        i = 0
+        while i < len(body["instructions"]):
+            blockchain.add_instruction_hash(body["instructions"][i])
+            i += 1
+        
+        
     response = {
                 'message': 'Converging on the on the next block',
                }
