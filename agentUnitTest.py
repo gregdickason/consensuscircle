@@ -39,11 +39,6 @@ class TddAgent(TestCase):
         pass
     
     
-    def test_converge_returns_200(self):
-          url = "http://localhost:5000/converge"
-          request = urllib.request.Request(url)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
 
 
     def test_instruction_returns_201(self):
@@ -76,3 +71,9 @@ class TddAgent(TestCase):
         response = urllib.request.urlopen(request)
         self.assertEqual(response.code, 200)
     
+    
+    def test_converge_returns_200(self):
+        url = "http://localhost:5000/converge"
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+        self.assertEqual(response.code, 200)

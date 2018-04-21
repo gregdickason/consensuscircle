@@ -4,6 +4,7 @@ import hashlib
 import json
 from time import time
 from urllib.parse import urlparse
+import urllib.request
 from uuid import uuid4
 
 import requests
@@ -75,6 +76,13 @@ def convergeCircle():
     # This is where we start the convergence protocol (only done to test)
     print("converging now")
     # get hash of instructions from all my followees (registered with me)
+    for url in blockchain.agents:
+        print(f'URL is {url}')
+        request = urllib.request.Request("http://" + url + "/instructions")
+        response = urllib.request.urlopen(request)
+        body = json.loads(response.read().decode('utf-8'))
+        print(f'the returned instructions are {body["instructions"]}')
+          
     response = {
                 'message': 'Converging on the on the next block',
                }
