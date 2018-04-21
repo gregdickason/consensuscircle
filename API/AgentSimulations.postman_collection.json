@@ -99,6 +99,68 @@
 				"description": "Register an agent with another agent (see it as a pair it will poll for instructions and for convergence)"
 			},
 			"response": []
+		},
+		{
+			"name": "Instructions",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/instructions",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"instructions"
+					]
+				},
+				"description": "Get the current list of instructions from a node"
+			},
+			"response": []
+		},
+		{
+			"name": "Vote",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/vote",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"vote"
+					]
+				},
+				"description": "get the Vote from this node.  This will be denied if the node has not yet got to converged state or is still waiting on getting to converged state (i.e. to get the encrypted votes from others)"
+			},
+			"response": []
 		}
 	]
 }
