@@ -72,6 +72,12 @@ class TddAgent(TestCase):
         self.assertEqual(response.code, 200)
     
     
+    def test_votes_returns_200(self):
+        url = "http://localhost:5000/vote"
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+        self.assertEqual(response.code, 200)
+
     def test_converge_returns_200(self):
         url = "http://localhost:5000/converge"
         request = urllib.request.Request(url)

@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 import urllib.request
 from uuid import uuid4
 
+from agentUtilities import converge, hashvector, getRandomNumbers, getSeed  # need to setup as cc utilities
+import collections
 import requests
 from flask import Flask, jsonify, request
 
@@ -15,10 +17,14 @@ class Blockchain:
     def __init__(self):
         self.current_instructions = [] # this should be treated as a set and so only added to if the instruction hash is unique (TODO)
         self.instruction_hashes = set() # changed to set as duplicates treated as repeats.  We only add the hash (dont care about the rest)
-        self.chain = []
+        self.chain = collections.deque(maxlen = 20)  # only running to a chain depth of 20 in memory 
         self.agents = set()
         self.trusted_agents = set()
         self.untrusted_agents = set()
+        self.randomNumbers = []
+        self.seed = 0
+        self.next_circle = collections.deque(maxlen = 5)
+        
         # TODO and HERE to build out what to do with these (from whitepaper?)
 
     def register_agent(self, address):
@@ -45,6 +51,12 @@ class Blockchain:
         :param hash: sha256 hash of the instruction contents (for convergence simulation not adding instruction this is for uniqueness)
         Note that the hash is how the final consensus circle code will manage instructions in sets (so immutable and guaranteed to be unique and idempotently added)
         """
+        
+        # check if the hash has already been received for this instruction and if so then dont append
+        if hash in self.instruction_hashes:
+            print(f'Received instruction already have, instruction hashes are {self.instruction_hashes}')
+            return len(self.current_instructions)
+        
         self.current_instructions.append({
             'sender': sender,
             'recipient': recipient,
@@ -74,11 +86,15 @@ app = Flask(__name__)
 # In production code this is the agent public key which is assigned by the owning satchell (participant)
 agent_identifier = str(uuid4()).replace('-', '')
 print(f'my unique agent ID is {agent_identifier}')
-# agent_public_key = 
+
 
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
+# setup my randomNumbers for my vote for the next chain. 
+
+blockchain.randomNumbers = getRandomNumbers(2)
+blockchain.seed = getSeed(2)
 
 # Public Methods
 @app.route('/converge', methods=['GET'])
@@ -86,6 +102,8 @@ def convergeCircle():
     # This is where we start the convergence protocol (only done to test)
     print("converging now")
     # get hash of instructions from all my followees (registered with me)
+    # add these to our list of instructions.  For now we dont check if there are false ones
+    
     for url in blockchain.agents:
         request = urllib.request.Request("http://" + url + "/instructions")
         response = urllib.request.urlopen(request)
@@ -96,14 +114,28 @@ def convergeCircle():
             blockchain.add_instruction_hash(body["instructions"][i])
             i += 1
         
-        
+    
+    
+    # TODO the below will fail if the number of instructions is 0 as body then undefined
     response = {
-                'message': 'Converging on the on the next block',
+                'instructions': f'{body["instructions"]}',
+                'nextCircle':f'{blockchain.randomNumbers}'
                }
     
     return jsonify(response), 200
 
 
+@app.route('/vote', methods=['GET'])
+def returnVote():
+    print("returning votes")
+    # return the blockchain votes (need in future to encode and only return when have all the encoded votes from others or some timout
+    response = {
+                 'votes':f'{blockchain.randomNumbers}',
+                 'seed':f'{blockchain.seed}'
+               }
+    return jsonify(response),200
+    
+    
 @app.route('/entity', methods=['GET'])
 def returnEntities():
     print("returning entities")
