@@ -13,17 +13,67 @@ import requests
 from flask import Flask, jsonify, request
 
 
+class trackedAgent:
+    def __init__(self):
+        self.randomVector = []
+        self.randomVectorHashes = []
+        self.seed = 0
+        self.identifier = str(uuid4()).replace('-', '')  # would be the public key in the real network
+        self.instructions = []
+        self.instructionHashes = set()
+        
+    def setRandomVector(self, vector):     
+        self.randomVector = vector
+        
+    def getRandomVector(self):
+        return self.randomVector
+
+    def setRandomVectorHashes(self, vectorHashes):     
+        self.randomVectorHashes = vectorHashes
+        
+    def getRandomVectorHashes(self):
+        return self.randomVectorHashes
+      
+    def setIdentifier(self, id):     
+        self.identifier = id
+        
+    def getIdentifier(self):
+        return self.identifier
+      
+    def setSeed(self, s):     
+        self.seed = s
+            
+    def getSeed(self):
+        return self.seed
+        
+    def setInstructions(self, ins):     
+        self.instructions = ins
+        
+    def getInstructions(self):
+        return self.instructions
+    
+    def setInstructionHashes(self, ih):     
+        self.instructionHashes = ih
+            
+    def getInstructionHashes(self):
+        return self.instructionHashes
+    
+    
+
 class Blockchain:
     def __init__(self):
-        self.current_instructions = [] # this should be treated as a set and so only added to if the instruction hash is unique (TODO)
+        self.current_instructions = [] # this is treated as a set and so only added to if the instruction hash is unique
         self.instruction_hashes = set() # changed to set as duplicates treated as repeats.  We only add the hash (dont care about the rest)
         self.chain = collections.deque(maxlen = 20)  # only running to a chain depth of 20 in memory 
-        self.agents = set()
+        self.followedAgents = set()   # vector of tracked agents we listen to
         self.trusted_agents = set()
         self.untrusted_agents = set()
-        self.randomNumbers = []
+        # using a trackedCircle list (will have objects for each agent: the UID of the agent, the random numbers from the agent, the hashes of the random number, the seed, 8th is the list of instructions, 9th is the hash of the list
+        self.trackedCircleAgents = []  # list that manages the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle         
+        self.randomMatrix = []
+        self.randomMatrixHash = []        
         self.seed = 0
-        self.next_circle = collections.deque(maxlen = 5)
+        
         
         # TODO and HERE to build out what to do with these (from whitepaper?)
 
@@ -34,11 +84,12 @@ class Blockchain:
         """
 
         parsed_url = urlparse(address)
+              
         if parsed_url.netloc:
-            self.agents.add(parsed_url.netloc)
+            self.followedAgents.add(parsed_url.netloc)
         elif parsed_url.path:
             # Accepts an URL without scheme like '192.168.0.5:5000'.
-            self.agents.add(parsed_url.path)
+            self.followedAgents.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
 
@@ -91,20 +142,27 @@ print(f'my unique agent ID is {agent_identifier}')
 # Instantiate the Blockchain
 blockchain = Blockchain()
 
-# setup my randomNumbers for my vote for the next chain. 
+# Instantiate the tracked agents in my circle - need to read some of the parameters in the final code
+maxAgentsInCircle = 5
+for x in range(0,maxAgentsInCircle):
+    blockchain.trackedCircleAgents.append(trackedAgent())
 
-blockchain.randomNumbers = getRandomNumbers(2)
+# setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain. 
+blockchain.randomMatrix = [g for g in getRandomNumbers(2,5)]
 blockchain.seed = getSeed(2)
+blockchain.randomMatrixHash = [g for g in hashvector(blockchain.randomMatrix, blockchain.seed)]
+print(f'Blockchain random hash is {blockchain.randomMatrixHash}')
 
 # Public Methods
 @app.route('/converge', methods=['GET'])
 def convergeCircle():
     # This is where we start the convergence protocol (only done to test)
     print("converging now")
-    # get hash of instructions from all my followees (registered with me)
-    # add these to our list of instructions.  For now we dont check if there are false ones
     
-    for url in blockchain.agents:
+    # get hash of instructions from all my followees (registered with me)
+    # add these to our list of instructions.  For now we dont check if there are false ones  (not for simulation but for final code this would be in)
+    
+    for url in blockchain.followedAgents:
         request = urllib.request.Request("http://" + url + "/instructions")
         response = urllib.request.urlopen(request)
         body = json.loads(response.read().decode('utf-8'))
@@ -114,12 +172,13 @@ def convergeCircle():
             blockchain.add_instruction_hash(body["instructions"][i])
             i += 1
         
-    
+    # converge on next circle - get random numbers from our followees to make up matrix.  Need to get theirs and from their followees
+    # TODO HERE 
     
     # TODO the below will fail if the number of instructions is 0 as body then undefined
     response = {
                 'instructions': f'{body["instructions"]}',
-                'nextCircle':f'{blockchain.randomNumbers}'
+                'nextCircle':f'{blockchain.randomMatrix}'
                }
     
     return jsonify(response), 200
@@ -127,14 +186,25 @@ def convergeCircle():
 
 @app.route('/vote', methods=['GET'])
 def returnVote():
-    print("returning votes")
+    # only return if we have already received all the hashes from the circle
+    print("Returning votes")
     # return the blockchain votes (need in future to encode and only return when have all the encoded votes from others or some timout
     response = {
-                 'votes':f'{blockchain.randomNumbers}',
-                 'seed':f'{blockchain.seed}'
+                 'votes':list(blockchain.randomMatrix),
+                 'seed':blockchain.seed
                }
     return jsonify(response),200
+
+@app.route('/hashedVote', methods=['GET'])
+def returnHashedVote():
+    print(f'Blockchain random hash is {blockchain.randomMatrixHash}')
+    # return the hashed vote
+    response = {
+                  'voteHashes': list(blockchain.randomMatrixHash)
+               }   
     
+    return jsonify(response), 200
+
     
 @app.route('/entity', methods=['GET'])
 def returnEntities():
@@ -192,7 +262,7 @@ def register_agents():
 
     response = {
         'message': 'New agents have been added',
-        'total_agents': list(blockchain.agents),
+        'total_agents': list(blockchain.followedAgents),
     }
     return jsonify(response), 201
     

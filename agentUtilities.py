@@ -27,9 +27,10 @@ def hashvector(v,s):
     i += 1
 
 
-def getRandomNumbers(byteLen):
-  slot1 = [int(secrets.token_hex(byteLen),16),int(secrets.token_hex(byteLen),16),int(secrets.token_hex(byteLen),16),int(secrets.token_hex(byteLen),16),int(secrets.token_hex(byteLen),16)]
-  return slot1
+def getRandomNumbers(byteLen, numberEntries):
+  for x in range(0,numberEntries):
+    yield(int(secrets.token_hex(byteLen),16))
+   
    
 def getSeed(byteLen):
   seed = int(secrets.token_hex(byteLen),16)  
