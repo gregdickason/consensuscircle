@@ -24,13 +24,13 @@
 					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
 				},
 				"url": {
-					"raw": "localhost:5000/converge",
+					"raw": "localhost:5000/convergeInstructions",
 					"host": [
 						"localhost"
 					],
 					"port": "5000",
 					"path": [
-						"converge"
+						"convergeInstructions"
 					]
 				},
 				"description": "Converge the blockchain (issue only to 1 agent and it will cascade convergence)"
@@ -159,6 +159,223 @@
 					]
 				},
 				"description": "get the Vote from this node.  This will be denied if the node has not yet got to converged state or is still waiting on getting to converged state (i.e. to get the encrypted votes from others)"
+			},
+			"response": []
+		},
+		{
+			"name": "HashedVote",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/hashedVote",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"hashedVote"
+					]
+				},
+				"description": "get the HashedVote from this Agent.  Will always supply it while in circle (and deny if not in circle)"
+			},
+			"response": []
+		},
+		{
+			"name": "Entity",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/entity",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"entity"
+					]
+				},
+				"description": "Returns the agent identifier (normally public key but for simulation a unique key)"
+			},
+			"response": []
+		},
+		{
+			"name": "convergeEntity",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/convergeUIDs",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"convergeUIDs"
+					]
+				},
+				"description": "Returns the agent identifier (normally public key but for simulation a unique key)"
+			},
+			"response": []
+		},
+		{
+			"name": "setPKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"pkey\":\"9c8345cf13413cd0ff0e6af4f33cce4f0555fb3a50364b64265b05ce134af28d\"\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/setPKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"setPKey"
+					]
+				},
+				"description": "Set the public Key of the agent"
+			},
+			"response": []
+		},
+		{
+			"name": "PKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/PKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"PKey"
+					]
+				},
+				"description": "get the Public Key of this agent"
+			},
+			"response": []
+		},
+		{
+			"name": "blockPublished",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/blockPublished",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"blockPublished"
+					]
+				},
+				"description": "New block has been published - read and process"
+			},
+			"response": []
+		},
+		{
+			"name": "block",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/block",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"block"
+					]
+				},
+				"description": "Returns the block height and block hash of the highest block the agent is aware of"
 			},
 			"response": []
 		}
