@@ -7,82 +7,45 @@ from urllib.parse import urlparse
 import urllib.request
 from uuid import uuid4
 
-from agentUtilities import converge, hashvector, getRandomNumbers, getSeed  # need to setup as cc utilities
 import collections
 import requests
 from flask import Flask, jsonify, request
 
 
-class trackedAgent:
-    def __init__(self):
-        self.randomVector = []
-        self.randomVectorHashes = []
-        self.seed = 0
-        self.identifier = str(uuid4()).replace('-', '')  # would be the public key in the real network
-        self.instructions = []
-        self.instructionHashes = set()
-        
-    def setRandomVector(self, vector):     
-        self.randomVector = vector
-        
-    def getRandomVector(self):
-        return self.randomVector
+# classes managing the aspects of the blockchain an agent needs in this simulation: the lastBlock, the agents they are following for updates.
+from lastBlock import lastBlock
+from trackedAgent import trackedAgent
 
-    def setRandomVectorHashes(self, vectorHashes):     
-        self.randomVectorHashes = vectorHashes
-        
-    def getRandomVectorHashes(self):
-        return self.randomVectorHashes
-      
-    def setIdentifier(self, id):     
-        self.identifier = id
-        
-    def getIdentifier(self):
-        return self.identifier
-      
-    def setSeed(self, s):     
-        self.seed = s
-            
-    def getSeed(self):
-        return self.seed
-        
-    def setInstructions(self, ins):     
-        self.instructions = ins
-        
-    def getInstructions(self):
-        return self.instructions
-    
-    def setInstructionHashes(self, ih):     
-        self.instructionHashes = ih
-            
-    def getInstructionHashes(self):
-        return self.instructionHashes
-    
-    
+#utility functions
+from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance  # need to setup as cc utilities
 
-class Blockchain:
+
+class Agent:
     def __init__(self):
-        self.current_instructions = [] # this is treated as a set and so only added to if the instruction hash is unique
-        self.instruction_hashes = set() # changed to set as duplicates treated as repeats.  We only add the hash (dont care about the rest)
-        self.chain = collections.deque(maxlen = 20)  # only running to a chain depth of 20 in memory 
-        self.followedAgents = set()   # vector of tracked agents we listen to
-        self.trusted_agents = set()
-        self.untrusted_agents = set()
-        # using a trackedCircle list (will have objects for each agent: the UID of the agent, the random numbers from the agent, the hashes of the random number, the seed, 8th is the list of instructions, 9th is the hash of the list
-        self.trackedCircleAgents = []  # list that manages the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle         
+        self.current_instructions = [] # Pool of unprocessed instructions we are aware of
+        self.instruction_hashes = set() # Set as duplicates treated as repeats and not added to the current_instructions pool. 
+        self.chain = collections.deque(maxlen = 20)  
+        
+        self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.  
+        
+        self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle         
+        
+        # On convergence we populate these:
         self.randomMatrix = []
         self.randomMatrixHash = []        
         self.seed = 0
         
+        self.owner = ''  # This is part of setup file for each agent and holds the public key of the owner.  Needs to sign public key of the agent to ensure that this agent is operating on their behalf (offered as proof)
+        self.agent_identifier = ''  # set by the owner through a call (so by the test scripts for now)
+        self.level = 0  # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
+        self.inCircle = False  # we are not in a circle by default
         
-        # TODO and HERE to build out what to do with these (from whitepaper?)
-
+        # Register an agent to follow.  This is our direct connections to other agents in the circle
     def register_agent(self, address):
         """
-        Add a new agent to the list of agents we are working with for consensus.  For now we dont check if they are valid
+        Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
         :param address: Address of node. Eg. 'http://192.168.0.5:5000'
         """
-
         parsed_url = urlparse(address)
               
         if parsed_url.netloc:
@@ -92,7 +55,7 @@ class Blockchain:
             self.followedAgents.add(parsed_url.path)
         else:
             raise ValueError('Invalid URL')
-
+       
     def add_instruction (self, sender, recipient, hash):
         """
         Creates an instruction to add to the unprocessed instructions pool.  For simulation does not propagate to other agents
@@ -121,7 +84,7 @@ class Blockchain:
     
     def add_instruction_hash(self, hash):
         """
-        Adds instructions hashes we are not going to track in this node (only the hash is in the blockchain directly for now
+        Adds instructions hashes we are not going to track in this agent (only the hash is in the blockchain directly for now
         param hash: sha256 hash of the instruction
         """
         self.instruction_hashes.add(hash)
@@ -133,85 +96,146 @@ class Blockchain:
 # Instantiate the Agent
 app = Flask(__name__)
 
-# Generate a globally unique address for this agent 
-# In production code this is the agent public key which is assigned by the owning satchell (participant)
-agent_identifier = str(uuid4()).replace('-', '')
-print(f'my unique agent ID is {agent_identifier}')
 
+# Instantiate the Agent Class
+agent = Agent()
+agent.agent_identifier = app.config.get('pkey')
 
-# Instantiate the Blockchain
-blockchain = Blockchain()
+# Instantiate the tracked agents in my circle 
+maxAgentsInCircle = 4   # set to 1 below number as we are a member of the circle
+#for x in range(0,maxAgentsInCircle):
+#    agent.trackedCircleAgents.append(trackedAgent())
 
-# Instantiate the tracked agents in my circle - need to read some of the parameters in the final code
-maxAgentsInCircle = 5
-for x in range(0,maxAgentsInCircle):
-    blockchain.trackedCircleAgents.append(trackedAgent())
 
 # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain. 
-blockchain.randomMatrix = [g for g in getRandomNumbers(2,5)]
-blockchain.seed = getSeed(2)
-blockchain.randomMatrixHash = [g for g in hashvector(blockchain.randomMatrix, blockchain.seed)]
-print(f'Blockchain random hash is {blockchain.randomMatrixHash}')
+agent.randomMatrix = [g for g in getRandomNumbers(2,5)]
+agent.seed = getSeed(2)
+agent.randomMatrixHash = [g for g in hashvector(agent.randomMatrix, agent.seed)]
+print(f'Agents random hash is {agent.randomMatrixHash}')
 
 # Public Methods
-@app.route('/converge', methods=['GET'])
-def convergeCircle():
+
+@app.route('/convergeUIDs', methods=['GET'])
+def convergeUIDs():
+    # This is where we find all the UIDs of the agents in the blockchain.  If we dont have them we return 202, if we do we return 200 (Check appropriate code).
+    # If the return is 202 we expect to be called again to determine if we have converged  (in final code we could loop inside an EC2 instance or using some form of loop around a queue)
+    print("converging on UIDs")
+    # get UID, and ask for other UIDs
+    for url in agent.followedAgents:
+        request = urllib.request.Request("http://" + url + "/entity")
+        response = urllib.request.urlopen(request)
+        body = json.loads(response.read().decode('utf-8'))
+        # Check if we have seen this entity already (in the agent.trackedCircleAgents)
+        if body["entity"] in agent.trackedCircleAgents:
+            print(f'ALready tracking Agent with UID {body["entity"]}')
+        else:
+            agent.trackedCircleAgents[body["entity"]] = trackedAgent()
+            
+        print(f'the returned uid for followed URL is {body["entity"]}')
+        print(f'the returned uid for trackedEntities is {body["trackedEntities"]}')
+        
+        if body["entity"] not in agent.slots:
+            agent.slots.add(body["entity"])
+        
+        i = 0    
+        while i < len(body["trackedEntities"]):
+            agent.slots.add(body["trackedEntities"][i])
+            i += 1
+    print(f'Agent slots are {agent.slots}')
+    
+    response = {
+	         'uids': f'[{agent.slots}]'  
+	       }
+	       
+    if len(agent.slots) < maxAgentsInCircle:
+        return jsonify(response), 202
+    else:
+        return jsonify(response), 200
+
+
+
+@app.route('/convergeInstructions', methods=['GET'])
+def convergeCircleInstructions():
     # This is where we start the convergence protocol (only done to test)
     print("converging now")
     
-    # get hash of instructions from all my followees (registered with me)
-    # add these to our list of instructions.  For now we dont check if there are false ones  (not for simulation but for final code this would be in)
+    # Create Slots and populate with UID, Instructions, Random Numbers, etc
     
-    for url in blockchain.followedAgents:
-        request = urllib.request.Request("http://" + url + "/instructions")
-        response = urllib.request.urlopen(request)
-        body = json.loads(response.read().decode('utf-8'))
-        print(f'the returned instructions are {body["instructions"]}')
-        i = 0
-        while i < len(body["instructions"]):
-            blockchain.add_instruction_hash(body["instructions"][i])
-            i += 1
-        
-    # converge on next circle - get random numbers from our followees to make up matrix.  Need to get theirs and from their followees
-    # TODO HERE 
     
+    # get UID, and ask for other UIDs
+    for url in agent.followedAgents:
+            request = urllib.request.Request("http://" + url + "/instructions")
+            response = urllib.request.urlopen(request)
+            body = json.loads(response.read().decode('utf-8'))
+            print(f'the returned instructions are {body["instructions"]}')
+            i = 0
+            while i < len(body["instructions"]):
+                agent.add_instruction_hash(body["instructions"][i])
+                i += 1
+   
     # TODO the below will fail if the number of instructions is 0 as body then undefined
-    response = {
-                'instructions': f'{body["instructions"]}',
-                'nextCircle':f'{blockchain.randomMatrix}'
-               }
-    
+    if len(body["instructions"]) > 0:
+        response = {
+                    'instructions': f'{body["instructions"]}'
+                    #'nextCircle':f'{agent.randomMatrix}'
+                   }
+    else:                
+        response = {
+	            'instructions': '[]'
+	            #'nextCircle':f'{agent.randomMatrix}'
+                   }
     return jsonify(response), 200
+
+
+@app.route('/convergeHashedVotes', methods=['GET'])
+def convergeHashedVotes():
+    # Method to get the hahedVotes for all agents in circle
+    for url in agent.followedAgents:
+        request = urllib.request.Request("http://" + url + "/hashedVote")
+        response = urllib.request.urlopen(request)
+        body = json.loads(response.read().decode('utf-8'))   # check this doesnt override to the last call
+        print(f'the returned hashes are {body["voteHashes"]}')
+        
+        # return only the voteHashes from our followed entities - TODO: add to the trackedCircleAgents
+        response = {
+                    'voteHashes': f'{body["voteHashes"]}',
+                   }
+        
+        return jsonify(response), 200
 
 
 @app.route('/vote', methods=['GET'])
 def returnVote():
     # only return if we have already received all the hashes from the circle
+    # only return if we are in the circle
     print("Returning votes")
-    # return the blockchain votes (need in future to encode and only return when have all the encoded votes from others or some timout
+    # return the agent votes (need in future to encode and only return when have all the encoded votes from others or some timout
     response = {
-                 'votes':list(blockchain.randomMatrix),
-                 'seed':blockchain.seed
+                 'votes':list(agent.randomMatrix),
+                 #'followeesVotes':list(
+                 #'seed':agent.seed
                }
     return jsonify(response),200
 
 @app.route('/hashedVote', methods=['GET'])
 def returnHashedVote():
-    print(f'Blockchain random hash is {blockchain.randomMatrixHash}')
+    print(f'Agents random hash is {agent.randomMatrixHash}')
     # return the hashed vote
     response = {
-                  'voteHashes': list(blockchain.randomMatrixHash)
+                  'voteHashes': list(agent.randomMatrixHash)
                }   
     
     return jsonify(response), 200
+
 
     
 @app.route('/entity', methods=['GET'])
 def returnEntities():
     print("returning entities")
-    # need to do a get on the entities we are tracking
+    # need to do a get on the entities we are tracking that we already know about            
     response = {
-                'entity': 'abc',
+                'entity': agent.agent_identifier,
+                'trackedEntities':[slot for slot in agent.slots if len(slot) > 0] # GREG HERE - treating as set and not 
                }
     
     return jsonify(response), 200
@@ -220,16 +244,80 @@ def returnEntities():
 def retrieveInstructions():
     print("returning instructions")
     response = {
-            'instructions': list(blockchain.instruction_hashes)
+            'instructions': list(agent.instruction_hashes)   # We just return the instruction hashes.  Individual instructions are returned on gets per instruction
     }
     return jsonify(response), 200
     
+
+
+@app.route('/setPKey', methods=['POST'])
+def setPKey():
+    # set the public key of this node.  Requires signed authority from the owner (and normally only done on setup)
+    print("setting the public Key")
+    values = request.get_json()
+    
+    # Check that the required fields are in the POST'ed data
+    required = ['pkey']
+    if not all(k in values for k in required):
+        return 'Missing pkey field', 400
+    
+    agent.agent_identifier = values['pkey']
+    
+    response = {
+        'message': f'Agent pkey set to {agent.agent_identifier}'
+    }
+    return jsonify(response), 201
+
+
+@app.route('/blockPublished',methods=['GET'])
+def processBlock():
+    print("new block published, retrieve validate and process it")
+    
+    # TODO Block Validation in lastBlock() method and then validate that this block is valid (hashpointer, block agent distance, etc).  Also if should fork to this block
+    agent.chain.append(lastBlock())
+    
+    # CHECK if we should be in the block -- start with how far are we from the actual block ID 
+    
+    #agent.inCircle = checkBlockMembership(agent.chain[0].outputMatrix[agent.level], agent.agent_identifier)
+    distance = returnHashDistance(agent.chain[0].outputMatrix[agent.level][0], agent.agent_identifier)  # only for now taking the first in the level - need to parse this per slot in a level for distances if there are more than 1 (based on blockchain parameters)
+    
+    # now check if there are any closer agents (Will be a database / noSQL call in the production code)
+
+    response = {
+            'lastBlock': agent.chain[0].blockHash,
+            'levelDistance': distance
+    }
+    return jsonify(response), 200
+
+
+@app.route('/block',methods=['GET'])
+def retrieveBlock():
+    print("return the Hash of the block at the top of our chain and the block height")
+    # TODO generic function for returning all the blocks and contents
+    
+
+    response = {
+            'lastBlock': agent.chain[0].blockHash,
+            'blockHeight': agent.chain[0].blockHeight
+    }
+    return jsonify(response), 200
+
+
+@app.route('/PKey',methods=['GET'])
+def retrievePKey():
+    print("returning pkey")
+    response = {
+            'pkey': agent.agent_identifier
+    }
+    return jsonify(response), 200
+
     
 @app.route('/instruction', methods=['POST'])
 def instruction():
     # Add an instruction to the pool of unprocessed instructions
-    print("added an instruction")
+    print("received an instruction to add")
     values = request.get_json()
+    
     
     # Check that the required fields are in the POST'ed data
     required = ['sender', 'recipient', 'hash']
@@ -237,11 +325,11 @@ def instruction():
         return 'Missing mandatory fields in the instruction', 400
     
     # Create a new Instruction
-    numberInstructions = blockchain.add_instruction(values['sender'], values['recipient'], values['hash'])
+    numberInstructions = agent.add_instruction(values['sender'], values['recipient'], values['hash'])
     
     response = {
         'message': f'Agent currently has {numberInstructions} instructions in the unprocessed pool',
-        'instructions': list(blockchain.current_instructions)
+        'instructions': list(agent.current_instructions)
     }
     return jsonify(response), 201
     
@@ -257,12 +345,12 @@ def register_agents():
     if agents is None:
         return "Error: Please supply a valid list of agents", 400
 
-    for agent in agents:
-        blockchain.register_agent(agent)
+    for ele in agents:
+        agent.register_agent(ele)
 
     response = {
         'message': 'New agents have been added',
-        'total_agents': list(blockchain.followedAgents),
+        'total_agents': list(agent.followedAgents),
     }
     return jsonify(response), 201
     
@@ -275,6 +363,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', default=5000, type=int, help='port to listen on')
     args = parser.parse_args()
     port = args.port
+    
     # The app is running on open port.  Dont include the 0.0.0.0 if concerned about external access
     app.run(host='0.0.0.0', port=port)
     
