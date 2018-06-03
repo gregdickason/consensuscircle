@@ -378,6 +378,99 @@
 				"description": "Returns the block height and block hash of the highest block the agent is aware of"
 			},
 			"response": []
+		},
+		{
+			"name": "ownerPublicKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/ownerPublicKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"ownerPublicKey"
+					]
+				},
+				"description": "get the Public Key of the owner of this agent (the entity that owns the agent)"
+			},
+			"response": []
+		},
+		{
+			"name": "ownerLevel",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/ownerLevel",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"ownerLevel"
+					]
+				},
+				"description": "get the level of the owner of this agent"
+			},
+			"response": []
+		},
+		{
+			"name": "genesisBlock",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/genesisBlock",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"genesisBlock"
+					]
+				},
+				"description": "Returns the genesisBlock hash the agent is using"
+			},
+			"response": []
 		}
 	]
 }
