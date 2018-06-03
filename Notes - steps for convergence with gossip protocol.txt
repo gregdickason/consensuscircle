@@ -1,0 +1,56 @@
+Process for convergence:
+
+DISCOVERY (this is continuous to discover if we should be in a circle): discover the agents we should be connected to based on lowest mean circle distance
+
+- link to followees (who we are following).  
+
+- Determine if we are all on same block height and agree that we are the circle of choice:
+  - Request the block height and block hash they are building on (to ensure we both have the same view of the truth):
+     - if they are building on a higher block we have not seen, ask for the blocks and validate if we should be in the circle.  Start again
+        - if blocks received link back to our chain, accept them (even if this means orphaning some of our higher blocks --> we are pruning a fork in this case)
+        - if blocks received dont link back at all or are nor a hashed pointer list, flag agent as untrustworthy and dont follow
+     - if they are building on a lower block, stop following them (for a time) and move to the next agent.  (we dont post a higher block hash as posting a hash to them is a path for a DDOS no posts will be accepted by Agents unless from trusted circle)
+     
+ 
+ - Once have the highest block after processing instructions etc, determine mean distance to the circle slot(s) available for my agent level.
+   - if so then determine if I should be in the circle: am I closest or second closest to a slot?
+        - if not then return to DISCOVERY 
+
+
+
+CIRCLE FORMATION
+
+- Find out the URLs' / URIs for the closest agents in other slots to follow
+- Connect to each one using HTTP (to confirm if should use different protocol later).  They will accept request based on us signing merkle root of the block (or the slot we should be in) 
+
+- Request UIDs to populate for each followee with them being signed (to confirm they are who we think they are)
+- Request UID list of circle to confirm they are following same circle.
+   - repeat connecting to other agents until guaranteed tight circle (roundup(n/3) + 1) until have full list, or link to more agents if not found in 2 iterations (to ensure tightly coupled network with rapid convergence)
+
+- Ask for symmetric key from them to slow down degradation of private key?  
+
+
+INSTRUCTIONS with GOSSIP and Random population
+- ask followees for their instuction list and their received instruction lists. all lists signed by originator for confirmation where came from.  
+   -- Followees only send their original instructions in their list
+
+- add coinbase instructions from the previous circle participants (they only get paid in next block)!
+   
+- Compare different lists from different agents for the same other agent.  If there is diversion (and list is signed), then assume that agent is false and untrust.
+- All agents lists include previous blockhash to prevent malicous middle men keeping any previously signed lists (eg from a previous circle) and using to discredit the agent
+- iterate until we have both a full list of instructions we accumulate, and of full set of the original lists from other agents signed.
+- All agents who have reliably propagated lists remain trusted, any who have sent different list are untrusted and removed.
+
+NOW:
+- process instructions in the definitive list.  Remove them in alphabetic order of their hash (so if there is any clash all agents do same processing: make sure instructions are always unique).  This is where might need to get instruction bodies not just hashes from other agents
+- add hash of random numbers for next list, and any hashes for random numbers in the instructions
+- publish new instructions with removed ones gone, signing the instruction list (not the random number hashes).  COnfirm through above process this is what others agree on.
+
+- confirm trusted agents through having the same list of hashes and instructions
+- reveal numbers 
+- confirm have all revealed numbers from everyone.  If someone drops out here then block still succeeds (lower block distance) but they dont get paid.  [CHECK: is there any incentive to wait and publish later given instructions are same unless this is prep for a double spend attack)
+- hash block and add blockhash
+
+
+Note need to ensure we dont get a deep fork if a level 5 node is promoted and is a lot closer to a previous random hash.  Could then make sense to fork to this node.
+- solve through having maximum chain depth or weighting up the other parameters (# agents in circle, transactions in block)

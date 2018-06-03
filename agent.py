@@ -14,33 +14,48 @@ from flask import Flask, jsonify, request
 
 # classes managing the aspects of the blockchain an agent needs in this simulation: the lastBlock, the agents they are following for updates.
 from lastBlock import lastBlock
+from parseBlock import parseBlock
+from genesisBlock import genesisBlock
+from blockState import blockState
 from trackedAgent import trackedAgent
 
 #utility functions
-from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance  # need to setup as cc utilities
+from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, checkBlock  # need to setup as cc utilities
 
 
 class Agent:
     def __init__(self):
-        self.current_instructions = [] # Pool of unprocessed instructions we are aware of
+        self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
         self.instruction_hashes = set() # Set as duplicates treated as repeats and not added to the current_instructions pool. 
-        self.chain = collections.deque(maxlen = 20)  
+        self.chain = collections.deque(maxlen = 100) # this should be a setting and is for the most recent blocks
+        self.entityInstructions = 100 # global ccEntity setting needs to be read
         
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.  
         
         self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle         
         
-        # On convergence we populate these:
+        # On convergence when we are in a circle we populate these:
         self.randomMatrix = []
         self.randomMatrixHash = []        
         self.seed = 0
         
-        self.owner = ''  # This is part of setup file for each agent and holds the public key of the owner.  Needs to sign public key of the agent to ensure that this agent is operating on their behalf (offered as proof)
-        self.agent_identifier = ''  # set by the owner through a call (so by the test scripts for now)
-        self.level = 0  # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
+        # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
         self.inCircle = False  # we are not in a circle by default
+        with open('agentConfig.json') as json_data:
+            self.config = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed
+            self.level = self.config['level']   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
+            self.agent_identifier = self.config['agentIdentifier']
+            self.owner = self.config['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent
+	               
+        self.blockState = blockState()
+        self.genesisBlock = genesisBlock()
         
-        # Register an agent to follow.  This is our direct connections to other agents in the circle
+        # add to the chain on startup if we have no state we can read from
+        if self.blockState.blockHeight == 0:
+            self.chain.append(self.genesisBlock)
+        # TODO elif we already have state then process the most recent blocks in the queue in case there is a fork.  (or only do this if a fork happens?)
+        
+        # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
     def register_agent(self, address):
         """
         Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
@@ -99,7 +114,6 @@ app = Flask(__name__)
 
 # Instantiate the Agent Class
 agent = Agent()
-agent.agent_identifier = app.config.get('pkey')
 
 # Instantiate the tracked agents in my circle 
 maxAgentsInCircle = 4   # set to 1 below number as we are a member of the circle
@@ -248,20 +262,38 @@ def retrieveInstructions():
     }
     return jsonify(response), 200
     
+@app.route('/ownerPublicKey',methods=['GET'])
+def retrieveOwnerPublicKey():
+    print("returning owners public key")
+    response = {
+            'ownerPublicKey': agent.owner   
+    }
+    return jsonify(response), 200
+
+
+@app.route('/ownerLevel',methods=['GET'])
+def retrieveOwnerLevel():
+    print("returning owners public key")  # Should we have a better call - ownerDetails with level, owner public key combined?
+    response = {
+            'ownerLevel': agent.level 
+    }
+    return jsonify(response), 200
 
 
 @app.route('/setPKey', methods=['POST'])
 def setPKey():
-    # set the public key of this node.  Requires signed authority from the owner (and normally only done on setup)
-    print("setting the public Key")
+    # set the public and private keys of this node.  Requires signed authority from the owner (and normally only done on setup)
+    # first check this is signed by our owner.  If not reject the request 
+    print("setting the public Key and private key")
     values = request.get_json()
     
+    #TODO the checks of the signature from the owner
     # Check that the required fields are in the POST'ed data
     required = ['pkey']
     if not all(k in values for k in required):
         return 'Missing pkey field', 400
     
-    agent.agent_identifier = values['pkey']
+    agent.agent_identifier = values['pkey']  # TODO - update the JSON with the details for future use?
     
     response = {
         'message': f'Agent pkey set to {agent.agent_identifier}'
@@ -269,23 +301,85 @@ def setPKey():
     return jsonify(response), 201
 
 
+@app.route('/genesisBlock', methods=['GET'])
+def genesisBlock():
+    # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
+    response = {
+            'blockHash': agent.genesisBlock.blockHash
+        }
+    return jsonify(response), 200
+
 @app.route('/blockPublished',methods=['GET'])
 def processBlock():
     print("new block published, retrieve validate and process it")
+    #newBlock = lastBlock()
+    newBlock = parseBlock()
     
-    # TODO Block Validation in lastBlock() method and then validate that this block is valid (hashpointer, block agent distance, etc).  Also if should fork to this block
-    agent.chain.append(lastBlock())
+    # is the block Valid?
+    if newBlock.blockPass == False:
+        response = {
+	            'chainLength' : len(agent.chain) - 1,
+	            'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
+	            'error': newBlock.blockComment
+	}
+        return jsonify(response), 422  # unprocessable entity 
+    
+    # check if this block is already in chain. This is done externally before the block gets here (in s3 check).  Do through assert?
+    
+    
+    # TODO circledistance needs to be from previous blocks random matrix not this one
+    
+    
+    
+    # if this is the same blockHeight we have already processed - check if circle distance is closer (i.e. there is more random outputs and therefore more 
+    # coinbase transactions to recognise, plus we need to reprocess who should be in the circle)
+    # TODO - Circle Distance Check
+    if newBlock.blockHeight == agent.chain[len(agent.chain)-1].blockHeight:
+        response = {
+            'chainLength' : len(agent.chain) - 1,
+            'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
+            'circleDistance': newBlock.circleDistance
+        }
+        return jsonify(response), 201
+    elif newBlock.previousBlock != agent.chain[len(agent.chain)-1].blockHash:
+        # This is not building on the top of our chain.  Need to work out if in the chain and deeper down, a fork or are we missing a block.  Do we need to sync
+        # TODO If not then calculate the circleDistance and if lower then use this block (accept the fork)
+        # TODO on this (look at blockheight, etc).  Also need to make sure we cant be attacked with something random that consumes processing power
+        # if lower down we need to reprocess the coinbase transactions
+        response = {
+	            'message' : 'Received block not in chain.  need to manage it TODO'
+	           }
+        return jsonify(response), 202
+    
+    
+    # Normal processing, new block built on our chain.  READ NOTES
+    
+    # TODO - newblock circle distance needs to be calculated off the old block outputMatrix
+    newBlock.circleDistance = returnCircleDistance(newBlock.outputMatrix, newBlock.consensusCircleMatrix, newBlock.instructionOpensCount,agent.entityInstructions)
+    print(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
+    
+    
+    # TODO complete Block Validation in lastBlock() and validate that this block is valid (hashpointer, block agent distance, etc).  Also if should fork to this block
+    agent.chain.append(newBlock)
+    
+    # TODO process instructions and remove from unprocessed pool if in the block
+    
+    
     
     # CHECK if we should be in the block -- start with how far are we from the actual block ID 
     
     #agent.inCircle = checkBlockMembership(agent.chain[0].outputMatrix[agent.level], agent.agent_identifier)
-    distance = returnHashDistance(agent.chain[0].outputMatrix[agent.level][0], agent.agent_identifier)  # only for now taking the first in the level - need to parse this per slot in a level for distances if there are more than 1 (based on blockchain parameters)
+    #distance = returnHashDistance(agent.chain[0].outputMatrix[agent.level][0], agent.agent_identifier)  
+    
+    
+    
     
     # now check if there are any closer agents (Will be a database / noSQL call in the production code)
 
     response = {
-            'lastBlock': agent.chain[0].blockHash,
-            'levelDistance': distance
+            'chainLength' : len(agent.chain) - 1,
+            'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
+            'circleDistance': newBlock.circleDistance
     }
     return jsonify(response), 200
 
@@ -298,7 +392,8 @@ def retrieveBlock():
 
     response = {
             'lastBlock': agent.chain[0].blockHash,
-            'blockHeight': agent.chain[0].blockHeight
+            'blockHeight': agent.chain[0].blockHeight,
+            'circleDistance': agent.chain[0].circleDistance
     }
     return jsonify(response), 200
 

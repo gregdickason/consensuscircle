@@ -1,0 +1,13 @@
+INSTRUCTIONS and data
+
+Data is stored off chain (outsie of atributes).  Chain provides vouchers and addressing (if there is a fee or an opt in rule that needs to be
+enforced).  These can be changed at any time by the entity owner
+
+
+
+- Use 'post quantum' cryptography for the key exchange as this will have good marketing benefits.
+
+
+- pip3 install ecdsa
+
+

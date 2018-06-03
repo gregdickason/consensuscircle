@@ -4,7 +4,8 @@ from flask import Flask
 from flask_testing import TestCase 
 
 # Methods for setting up and executing the simulation for consensus circle.  This is the test harness that calls all the nodes and starts the 
-# convergence after first seeding instructions an registering nodes with each other
+# convergence after first seeding instructions and registering nodes with each other.
+# It calls convergence protocol in order: converge instructions, converge hashed vector, converge full vector, generate block
 
 class TddAgent(TestCase):
     
@@ -32,6 +33,7 @@ class TddAgent(TestCase):
         pass
     
     def test_add_instructions_to_agents(self):
+          # do this through a text file in future
           url1 = "http://localhost:5000/instruction"
           url2 = "http://localhost:5001/instruction"
           url3 = "http://localhost:5002/instruction"
@@ -79,16 +81,11 @@ class TddAgent(TestCase):
           response = urllib.request.urlopen(request52)
           self.assertEqual(response.code, 201)
 
-    #def test_instruction_returns_201(self):
-    #      url = "http://localhost:5000/instruction"
-    #      request = urllib.request.Request(url, data='{"sender":"the Greg","recipient":"gatlandFF","hash":"AD34BBAF"}'.encode('utf-8'))
-    #      request.add_header("Content-Type","application/json")
-    #      response = urllib.request.urlopen(request)
-    #      self.assertEqual(response.code, 201)
-
+    
 
     # Register agents with each other for the convergence protocol to execute
     def test_register_returns_201(self):
+          # do this through text file to test fully connected, partially connected and sparsely connected scenarios. 
           url1 = "http://localhost:5000/agents/register"
           url2 = "http://localhost:5001/agents/register"
           url3 = "http://localhost:5002/agents/register"
@@ -127,41 +124,80 @@ class TddAgent(TestCase):
           self.assertEqual(response.code, 201)
           
     
+    # loop on converging uids
+    def test_run_converge_uids_returns_200and202(self):
+             url1 = "http://localhost:5000/convergeUIDs"
+             url2 = "http://localhost:5001/convergeUIDs"
+             url3 = "http://localhost:5002/convergeUIDs"
+             url4 = "http://localhost:5003/convergeUIDs"
+             url5 = "http://localhost:5004/convergeUIDs"
+             
+             
+             # loop while still seeing 202s, error if any non 200, 202 or loop too long (more than 5)
+             GREG HERE
+             request = urllib.request.Request(url1)
+             response = urllib.request.urlopen(request)
+             if response.code == 202:
+             
+             self.assertEqual(response.code, 200)
+             
+             request = urllib.request.Request(url2)
+             response = urllib.request.urlopen(request)
+             self.assertEqual(response.code, 200)
+             
+             request = urllib.request.Request(url3)
+             response = urllib.request.urlopen(request)
+             self.assertEqual(response.code, 200)
+             
+             request = urllib.request.Request(url4)
+             response = urllib.request.urlopen(request)
+             self.assertEqual(response.code, 200)
+             
+             request = urllib.request.Request(url5)
+             response = urllib.request.urlopen(request)
+             self.assertEqual(response.code, 200)
+
+    
+    
     def test_run_converge_instructions_returns_200(self):
+         url1 = "http://localhost:5000/convergeInstructions"
+         url2 = "http://localhost:5001/convergeInstructions"
+         url3 = "http://localhost:5002/convergeInstructions"
+         url4 = "http://localhost:5003/convergeInstructions"
+         url5 = "http://localhost:5004/convergeInstructions"
+         
+         request = urllib.request.Request(url1)
+         response = urllib.request.urlopen(request)
+         self.assertEqual(response.code, 200)
+         
+         request = urllib.request.Request(url2)
+         response = urllib.request.urlopen(request)
+         self.assertEqual(response.code, 200)
+         
+         request = urllib.request.Request(url3)
+         response = urllib.request.urlopen(request)
+         self.assertEqual(response.code, 200)
+         
+         request = urllib.request.Request(url4)
+         response = urllib.request.urlopen(request)
+         self.assertEqual(response.code, 200)
+         
+         request = urllib.request.Request(url5)
+         response = urllib.request.urlopen(request)
+         self.assertEqual(response.code, 200)
+
+    
+    def test_run_converge_random_matrix_hash_returns_200(self):
          pass
     
     
+    def test_run_converge_random_matrix_returns_200(self):
+         pass
+    
+    
+    
+    
     def test_run_convergence_returns_200(self):
-          url1 = "http://localhost:5000/converge"
-          url2 = "http://localhost:5001/converge"
-          url3 = "http://localhost:5002/converge"
-          url4 = "http://localhost:5003/converge"
-          url5 = "http://localhost:5004/converge"
-          
-          request = urllib.request.Request(url1)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
+         pass 
 
-          request = urllib.request.Request(url2)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
-
-          request = urllib.request.Request(url3)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
-
-          request = urllib.request.Request(url4)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
-
-          request = urllib.request.Request(url5)
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 200)
-
-
-    #def test_get_entity_returns_200(self):      
-    #    url = "http://localhost:5000/entity"
-    #    request = urllib.request.Request(url)  # Need to add the query parameters and check this stays as a GET
-    #    response = urllib.request.urlopen(request)
-    #    self.assertEqual(response.code, 200)
     

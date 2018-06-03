@@ -57,7 +57,6 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
     
     def test_102_owner_returns_200(self):
-             # doesnt always run in order?
              url = "http://localhost:5000/ownerPublicKey"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
@@ -65,77 +64,17 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
 
     def test_103_level_returns_200(self):
-             # doesnt always run in order?
              url = "http://localhost:5000/ownerLevel"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
-
-    
-    def test_110_block_published_returns_200(self):
-             # doesnt always run in order?
-             url = "http://localhost:5000/blockPublished"
-             request = urllib.request.Request(url)
-             response = urllib.request.urlopen(request)
-             body = json.loads(response.read().decode('utf-8'))
-             self.assertEqual(response.code, 200)
              
-    def test_111_block_returns_200(self):
-             url = "http://localhost:5000/block"
+    def test_110_process_genesisBlock_returns200(self):
+             url = "http://localhost:5000/genesisBlock"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
 
 
-             
-    def test_104_instruction_returns_201(self):
-          url = "http://localhost:5000/instruction"
-          request = urllib.request.Request(url, data='{"sender":"the Greg","recipient":"gatlandFF","hash":"AD34BBAF"}'.encode('utf-8'))
-          request.add_header("Content-Type","application/json")
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 201)
-
-
-    def test_105_get_instructions_returns_200(self):
-          url = "http://localhost:5000/instructions"
-          request = urllib.request.Request(url)
-          response = urllib.request.urlopen(request)
-          body = json.loads(response.read().decode('utf-8'))
-          print(f'the returned instructions are {body["instructions"]}')
-          self.assertEqual(response.code, 200)
-
-
-    def test_106_register_returns_201(self):
-          url = "http://localhost:5000/agents/register"
-          request = urllib.request.Request(url, data='{"agents":["http://localhost:5001"]}'.encode('utf-8'))
-          request.add_header("Content-Type","application/json")
-          response = urllib.request.urlopen(request)
-          self.assertEqual(response.code, 201)
-          
-    def test_107_get_entity_returns_200(self):      
-        url = "http://localhost:5000/entity"
-        request = urllib.request.Request(url)  # Need to add the query parameters and check this stays as a GET
-        response = urllib.request.urlopen(request)
-        self.assertEqual(response.code, 200)
-    
-    
-    def test_108_hashed_votes_returns_200(self):
-        url = "http://localhost:5000/hashedVote"
-        request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
-        self.assertEqual(response.code, 200)
-
-    
-    def test_109_votes_returns_200(self):
-        url = "http://localhost:5000/vote"
-        request = urllib.request.Request(url)
-        response = urllib.request.urlopen(request)
-        self.assertEqual(response.code, 200)
-
-#    def test_converge_instructions_returns_200(self):
-#        url = "http://localhost:5000/convergeInstructions"
-#        request = urllib.request.Request(url)
-#        response = urllib.request.urlopen(request)
-#        self.assertEqual(response.code, 200)
