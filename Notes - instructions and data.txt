@@ -10,4 +10,5 @@ enforced).  These can be changed at any time by the entity owner
 
 - pip3 install ecdsa
 
+- Look at actions and action handlers as a way to manage updates (and treat as a data store the attributes) (per eosio - https://github.com/EOSIO/Documentation/blob/master/TechnicalWhitePaper.md)
 

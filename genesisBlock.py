@@ -1,7 +1,7 @@
 import json
 
 # For simulation purposes we dont care about instructions or validity just the output of the random vector that will be the root for the next block (determine participants)
-# TODO complete this section next
+# TODO complete this section next with total as whole block attributes 
 class genesisBlock:
     def __init__(self):
         # The GenesisBlock is hardcoded with the seeds for the chain.  It is not parsed but provides framework for future blocks to be parsed

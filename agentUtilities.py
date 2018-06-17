@@ -4,6 +4,13 @@ import hashlib
 import socket
 import argparse
 
+from ecdsa import SigningKey, VerifyingKey, NIST256p
+from ecdsa.keys import BadSignatureError
+from ecdsa.util import randrange_from_seed__trytryagain
+from base64 import b64encode, b64decode
+from collections import OrderedDict
+
+ENCODING = 'utf-8'
 
 # Stateless Utility Functions. Also used to translate between blockchain native formats and cryptographic representations.  So if move from sha256 to a 
 # quantum computer resistant cryptographic function, all changes will be here
@@ -28,15 +35,15 @@ def converge(m,a):
 def hashvector(v,s):
   vlen, i, out = len(v), 0, []
   while i < vlen:
-    yield hashlib.sha256(str(v[i]).encode('utf-8') + str(s).encode('utf-8')).hexdigest()
+    yield hashlib.sha256(str(v[i]).encode(ENCODING) + str(s).encode(ENCODING)).hexdigest()
     i += 1
 
 
 
-# Get the hash for a json string.
+# Get the hash for a json string (cast to str if not).
 def getHashofInput(input):
-  inputNoWhitespace = ''.join(input.split())
-  return hashlib.sha256(inputNoWhitespace.encode('utf-8')).hexdigest()
+  inputNoWhitespace = ''.join(str(input).split())
+  return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
   
 def getRandomNumbers(byteLen, numberEntries):
   for x in range(0,numberEntries):
@@ -47,26 +54,34 @@ def getRandomNumber(byteLen):
   return number
    
 def getSeed(byteLen):
-  seed = secrets.token_hex(byteLen) # this comes back as decimal on the return for some reason.  TODO confirm the return and use
+  seed = secrets.token_hex(byteLen) 
   return seed
   
 def returnCircleDistance(lastBlockRandomMatrix, consensusCircle, numInstructions, circleEntityInstructionNumber):
   # Calculates the mean distance of the current consensusCircle to the lastBlockRandomMatrix (equation per whitepaper)
-  # TODO check if better to have less nodes.  --> only likely if agent is further away than 1/17 of the size of sha256
-  
-  # First check consensusCircle length is less than or equal to lastBlockRandomMatrix length (can be less if no nodes present)
+  # TODO check if better to have less nodes (lower circle distance).  --> only likely if agent is further away than 1/17 of the size of sha256
+  # First check consensusCircle length is less than or equal to lastBlockRandomMatrix length (can be less if some agents not present)
   lbLen, ccLen, i, sum = len(lastBlockRandomMatrix), len(consensusCircle), 0, 0
-  assert ccLen <= lbLen
+  
+  # TODO if there is a missing cc it might not be the end, so need to remove the lastBlock element that did not have a claimed CC member BEFORE this routine
+  assert ccLen == lbLen  # need to handle assert in the calling code as exception
   
   while i < ccLen:
     sum = sum + returnHashDistance(lastBlockRandomMatrix[i], consensusCircle[i])
     i += 1
   
-  return (sum /(ccLen/lbLen))*(circleEntityInstructionNumber/numInstructions)
+  # Now have to handle approximation issues between binary and non binary representations of numbers and the impact on computer floating point arithmetic - 
+  # normally accurate to 53 bits, we do this by rounding the factors by squaring the lbLen.
+  # Floating point arithmetic limits us to approx 56 significant bits
+  # TODO update whitepaper for definition including the rounding factor (makes a multiple of 1,2,3 etc)
+  roundInsCountTarget = round(circleEntityInstructionNumber/numInstructions)
+  if roundInsCountTarget == 0:
+    roundInsCountTarget = 1
   
-def checkBlock(blockHash):
-  # Utility function to check if the block has already been processed and is in the chain or a discarded chain. return True for now
-  return True 
+  chainRatio = round(lbLen**2 / ccLen)  # approxately a factor of 1/circleNumber of the 2**64 space per agent that drops out)
+  
+  return format(int(sum * chainRatio *roundInsCountTarget),'64x')
+  
 
 # TODO - put in --> def returnDepthWeightedChainDistance which weights chain by CircleDistances  (using the chain structure we are tracking).  
 # maybe we tie off at a depth of 100 so that the blocks dont need to go back to genesis?
@@ -74,3 +89,82 @@ def checkBlock(blockHash):
 def returnHashDistance(blockHash, agentIdentifier):
   # Returns the integer distance between 2 32 byte hashes (base16 input).  TODO - Replace with function that returns which is larger to allow any type of comp
   return abs(int(blockHash,16) - int(agentIdentifier,16))  
+
+
+# Cryptography section
+# TODO:  Allow the agent and the participant to select their own cryptographic scheme for public / private keys (so the BlockChain supports any type of encryption
+# including post quantum schemes.
+
+# Stores the public key, signatures, etc in pure strings to enable appropriate JSON serialisation / deserialisation.  the "b'...'" format fails to deserialise
+def binaryStringFormat(byte_content):
+  base64_bytes = b64encode(byte_content)
+  return base64_bytes.decode(ENCODING)
+
+def binFromString(myString):
+  return b64decode(myString)
+  
+# Public / Private key cryptography
+# Using https://github.com/warner/python-ecdsa for now.  NOTE: TIMING ATTACKS are possible so the agent can never solely sign a message in an external interface: need randomness to mask
+# TODO: Need to manage process for signing in a way that timing attacks are not practical (no repeated calls allowed for example, no leakage of time in a circle process) 
+def signMessage(message, priKey):
+  sk = SigningKey.from_pem(binFromString(priKey))   # TODO: should check this is properly pem encoded before processing
+  return binaryStringFormat(sk.sign_deterministic(str(message).encode(ENCODING),hashlib.sha256))     # Using deterministic ecdsa signature to prevent possible leakage through non randomness.  See https://tools.ietf.org/html/rfc6979
+  
+def verifyMessage(message, signedMessage, pubKey):
+  # signed message is b64 encoded.  We decode 
+  # Log entry
+  vk = VerifyingKey.from_pem(binFromString(pubKey))
+  try:
+    return vk.verify(binFromString(signedMessage),str(message).encode(ENCODING),hashlib.sha256)
+  except BadSignatureError:
+    # Log bad signature.  TODO import bad signature error
+    return False
+  return False  
+
+def signMessageFromPassPhrase(message, passphrase):
+  secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
+  sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
+  return signMessage(message,binaryStringFormat(sk.to_pem()))
+
+def verifyMessageFromPassPhrase(message, signedMessage, passphrase):
+  secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
+  sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
+  vk = sk.get_verifying_key()
+  return verifyMessage(message,signedMessage,binaryStringFormat(vk.to_pem()))
+    
+  
+def getPublicKeyFromPassPhrase(passphrase):
+  secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
+  sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
+  vk = sk.get_verifying_key()
+  return binaryStringFormat(vk.to_pem())
+  
+def getPrivateKeyFromPassPhrase(passphrase):
+  secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
+  sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
+  return binaryStringFormat(sk.to_pem())  
+  
+
+### Merkle Tree Routines.  Borrowing from https://github.com/JaeDukSeo/Simple-Merkle-Tree-in-Python/blob/master/MerkleTrees.py but
+## using ordered Merkle Trees as the order of processing is based on the hash of instructions / instruction handlers
+## NOTE: THIS Routine hashes the leaf nodes (assumes not hashed to start)
+def returnMerkleRoot(myUnorderedArray):
+  # TODO should we be checking if myUnorderedArray has length 0?
+  # first hash and sort the array
+  myList = [getHashofInput(x) for x in myUnorderedArray]
+  myList.sort()
+  # We have a temporary list that replaces myList each loop
+  
+  while len(myList) > 1:
+    tempList = []
+    for i in range(0,len(myList),2):
+      current = myList[i]
+      if i + 1 != len(myList):
+        currentRight = myList[i+1]
+      else:
+        currentRight=''
+      tempList.append(getHashofInput(current + currentRight))
+    myList = tempList[:]       
+  return myList[0]
+  
+  

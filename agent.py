@@ -19,9 +19,10 @@ from genesisBlock import genesisBlock
 from blockState import blockState
 from trackedAgent import trackedAgent
 
-#utility functions
-from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, checkBlock  # need to setup as cc utilities
 
+#utility functions
+from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance 
+from processInstruction import validateInstruction
 
 class Agent:
     def __init__(self):
@@ -33,6 +34,7 @@ class Agent:
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.  
         
         self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle         
+        self.nextCircle = []  # next Circle.  May or may not include us
         
         # On convergence when we are in a circle we populate these:
         self.randomMatrix = []
@@ -53,7 +55,7 @@ class Agent:
         # add to the chain on startup if we have no state we can read from
         if self.blockState.blockHeight == 0:
             self.chain.append(self.genesisBlock)
-        # TODO elif we already have state then process the most recent blocks in the queue in case there is a fork.  (or only do this if a fork happens?)
+        # TODO elif we already have state then we need to get other blocks from agents to see if we are up to date
         
         # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
     def register_agent(self, address):
@@ -71,9 +73,10 @@ class Agent:
         else:
             raise ValueError('Invalid URL')
        
-    def add_instruction (self, sender, recipient, hash):
+    def add_instruction (self, sender, hash):
         """
-        Creates an instruction to add to the unprocessed instructions pool.  For simulation does not propagate to other agents
+        Creates an instruction to add to the unprocessed instructions pool.  Now just keyed on hash 
+        TODO: Process Entity update 
         
         :param sender: Address of the Sender
         :param recipient: Address of the Recipient
@@ -88,8 +91,7 @@ class Agent:
         
         self.current_instructions.append({
             'sender': sender,
-            'recipient': recipient,
-            'hash': hash,
+            'hash': hash
         })
         
         self.instruction_hashes.add(hash)
@@ -97,7 +99,7 @@ class Agent:
         return len(self.current_instructions)
     
     
-    def add_instruction_hash(self, hash):
+    def add_instruction_hash(hash):
         """
         Adds instructions hashes we are not going to track in this agent (only the hash is in the blockchain directly for now
         param hash: sha256 hash of the instruction
@@ -128,7 +130,6 @@ agent.randomMatrixHash = [g for g in hashvector(agent.randomMatrix, agent.seed)]
 print(f'Agents random hash is {agent.randomMatrixHash}')
 
 # Public Methods
-
 @app.route('/convergeUIDs', methods=['GET'])
 def convergeUIDs():
     # This is where we find all the UIDs of the agents in the blockchain.  If we dont have them we return 202, if we do we return 200 (Check appropriate code).
@@ -138,7 +139,7 @@ def convergeUIDs():
     for url in agent.followedAgents:
         request = urllib.request.Request("http://" + url + "/entity")
         response = urllib.request.urlopen(request)
-        body = json.loads(response.read().decode('utf-8'))
+        body = json.loads(response.read().decode('utf-8'))   # Do in utilites and use ENCODING for utf-8
         # Check if we have seen this entity already (in the agent.trackedCircleAgents)
         if body["entity"] in agent.trackedCircleAgents:
             print(f'ALready tracking Agent with UID {body["entity"]}')
@@ -167,7 +168,6 @@ def convergeUIDs():
         return jsonify(response), 200
 
 
-
 @app.route('/convergeInstructions', methods=['GET'])
 def convergeCircleInstructions():
     # This is where we start the convergence protocol (only done to test)
@@ -180,7 +180,7 @@ def convergeCircleInstructions():
     for url in agent.followedAgents:
             request = urllib.request.Request("http://" + url + "/instructions")
             response = urllib.request.urlopen(request)
-            body = json.loads(response.read().decode('utf-8'))
+            body = json.loads(response.read().decode('utf-8'))   # do in utilities and use ENCODING for utf-8
             print(f'the returned instructions are {body["instructions"]}')
             i = 0
             while i < len(body["instructions"]):
@@ -207,7 +207,7 @@ def convergeHashedVotes():
     for url in agent.followedAgents:
         request = urllib.request.Request("http://" + url + "/hashedVote")
         response = urllib.request.urlopen(request)
-        body = json.loads(response.read().decode('utf-8'))   # check this doesnt override to the last call
+        body = json.loads(response.read().decode('utf-8'))   # check this doesnt override to the last call, do in utilities and use ENCODING for utf-8
         print(f'the returned hashes are {body["voteHashes"]}')
         
         # return only the voteHashes from our followed entities - TODO: add to the trackedCircleAgents
@@ -237,10 +237,8 @@ def returnHashedVote():
     # return the hashed vote
     response = {
                   'voteHashes': list(agent.randomMatrixHash)
-               }   
-    
+               }       
     return jsonify(response), 200
-
 
     
 @app.route('/entity', methods=['GET'])
@@ -311,9 +309,11 @@ def genesisBlock():
 
 @app.route('/blockPublished',methods=['GET'])
 def processBlock():
+    blockID = request.args['blockID']
+    
     print("new block published, retrieve validate and process it")
-    #newBlock = lastBlock()
-    newBlock = parseBlock()
+    # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
+    newBlock = parseBlock(blockID)
     
     # is the block Valid?
     if newBlock.blockPass == False:
@@ -324,21 +324,15 @@ def processBlock():
 	}
         return jsonify(response), 422  # unprocessable entity 
     
-    # check if this block is already in chain. This is done externally before the block gets here (in s3 check).  Do through assert?
-    
-    
-    # TODO circledistance needs to be from previous blocks random matrix not this one
-    
-    
-    
+   
     # if this is the same blockHeight we have already processed - check if circle distance is closer (i.e. there is more random outputs and therefore more 
     # coinbase transactions to recognise, plus we need to reprocess who should be in the circle)
-    # TODO - Circle Distance Check
+    # TODO - Circle Distance Check, Look at even lower in the stack as lower height still forkable
     if newBlock.blockHeight == agent.chain[len(agent.chain)-1].blockHeight:
         response = {
             'chainLength' : len(agent.chain) - 1,
             'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
-            'circleDistance': newBlock.circleDistance
+            'circleDistance': agent.chain[len(agent.chain)-1].circleDistance
         }
         return jsonify(response), 201
     elif newBlock.previousBlock != agent.chain[len(agent.chain)-1].blockHash:
@@ -351,30 +345,30 @@ def processBlock():
 	           }
         return jsonify(response), 202
     
-    
     # Normal processing, new block built on our chain.  READ NOTES
     
-    # TODO - newblock circle distance needs to be calculated off the old block outputMatrix
-    newBlock.circleDistance = returnCircleDistance(newBlock.outputMatrix, newBlock.consensusCircleMatrix, newBlock.instructionOpensCount,agent.entityInstructions)
+    # Newblock circle distance needs to be calculated off the old block outputMatrix
+    newBlock.circleDistance = returnCircleDistance(newBlock.ccKeys, agent.chain[len(agent.chain)-1].outputMatrix, newBlock.instructionCount,agent.entityInstructions)
     print(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
-    
-    
-    # TODO complete Block Validation in lastBlock() and validate that this block is valid (hashpointer, block agent distance, etc).  Also if should fork to this block
+        
+    # TODO confirm that the block is shortest distance 
     agent.chain.append(newBlock)
     
-    # TODO process instructions and remove from unprocessed pool if in the block
-    
-    
+    # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
     
     # CHECK if we should be in the block -- start with how far are we from the actual block ID 
     
     #agent.inCircle = checkBlockMembership(agent.chain[0].outputMatrix[agent.level], agent.agent_identifier)
     #distance = returnHashDistance(agent.chain[0].outputMatrix[agent.level][0], agent.agent_identifier)  
     
-    
-    
-    
     # now check if there are any closer agents (Will be a database / noSQL call in the production code)
+    
+    # assume there are not and we are in the circle.
+    # TODO: Trigger event to check if we are in the next circle and start processing
+    # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
+    agent.nextCircle = agent.blockState.nextCircle(newBlock.outputMatrix, [])  # No excluded agents for now
+    
+    print(f'\nNext circle is {agent.nextCircle}\n')
 
     response = {
             'chainLength' : len(agent.chain) - 1,
@@ -406,21 +400,29 @@ def retrievePKey():
     }
     return jsonify(response), 200
 
-    
+
+
+# TODO: setup instruction handling and instructions.  2 sides to allow data management.  
+# For example, and offer from a company will be an instrcution handler: 'if you have these attributes and you send me this proof through an instruction, this handler will do XYZ'
+# The above allows people to 'always opt in' through delegating agents to share some of their data (with shared keys), to opt in when they want, to partiipate in anonymous surveys (through anonymous matching of their attributes), to contribute and earn from models,or to never opt in but understand the value of the data they have
 @app.route('/instruction', methods=['POST'])
 def instruction():
     # Add an instruction to the pool of unprocessed instructions
     print("received an instruction to add")
     values = request.get_json()
     
-    
+    # TODO - validateInstruction
     # Check that the required fields are in the POST'ed data
-    required = ['sender', 'recipient', 'hash']
-    if not all(k in values for k in required):
-        return 'Missing mandatory fields in the instruction', 400
+    validInstruction = validateInstruction(values)
+    if not validInstruction['return']:
+      response = {
+	      'message': validInstruction['message'],
+        }  
+      return  jsonify(response),422
     
-    # Create a new Instruction
-    numberInstructions = agent.add_instruction(values['sender'], values['recipient'], values['hash'])
+    # Create a new Instruction in the Pool (dont process just add the hash)
+    # TODO Process the instruction with the update
+    numberInstructions = agent.add_instruction(values['instruction']['source'],values['instructionHash'])
     
     response = {
         'message': f'Agent currently has {numberInstructions} instructions in the unprocessed pool',

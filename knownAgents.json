@@ -1,10 +1,11 @@
 {
-  "agents" : "[{"agentPKey":"'9c8445cf13413cd09f0e6af4a33cce4f0555fb3a50364c64265b05ce134af278'", "agentURL":"'http://localhost:5000'"}, "level":"0"},
-               {"agentPKey":"'aa064baffa238cf1f3b56c18bf2c34c44c2663f4b8b99282e1e48f85daf1fa57'", "agentURL":"'http://localhost:5001'"}, "level":"1"}, 
-               {"agentPKey":"'8c07655fa560fc2f2e13072d877859bc70b701713f71d3d914f265423ed1bf54'", "agentURL":"'http://localhost:5002'"}, "level":"2"},
-               {"agentPKey":"'db90b0ec94f405d2d1112d0bde4b33da8fbd9b7902dd7088b0b76c14afb6e359'", "agentURL":"'http://localhost:5003'"}, "level":"3"},
-               {"agentPKey":"'e2348ec967f73c6ddaaf19b39d0ad8aab58ef8d7f310d5e36a653f9634f166d8'", "agentURL":"'http://localhost:5004'"}, "level":"3"},
-               {"agentPKey":"'e2549ec967f73c6ddaaf19b39c0ad8aab58ef8d3f310d5e36a653f9634f166d8'", "agentURL":"'http://localhost:5005'"}, "level":"3"},
-               {"agentPKey":"'e3548ec967f73c6ddaaf19b39c0ad8aab58ef8d1f310d5e36a623f9634f166d8'", "agentURL":"'http://localhost:5006'"}, "level":"3"]",
-  "mostRecentBlockUpdated" :  "2544"
+  "agents" : "[{"agentID":"c9e0b43ed679a5221cbcba8c1e0f891087b5eae35683d012b6373ce5f5d02d79","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErl6fukBuJSn5efv7mLz/tcOQhk+M\ntSSBYbz+4paygnxj82T3gEY9lSZlyKiS7CVwzBavXzCfjqxkZkOak6hGbw==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5000"}, "level":"0"},
+               {"agentID":"a4d45b0231e4f235c79d0fb1160cc2f6c6926601042d0533eaa9fc0c715d2185","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErHr02b8p3VIH+O8VhD6F3R8FBfTq\nlfb5OV6pt8Vk8Tj+x2SP95uc7/o3gKrVXb/oii7VJ7lk7/EWpVYZkAk7XA==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5001"}, "level":1}, 
+               {"agentID":"f7fe582f6aa76b728e1c8115f36467c6d2244765b8d355b4010b7663d4599f11","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErJd7QmJmVQb1uKm6Q/O+BYqYYhr4\nIGhSnow9xYFy/+M81dsUiUFly0n+22DfJVBZQ2vrOrIEOmEkk80hDdtRdg==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5002"}, "level":2},
+               {"agentID":"9b4a0d846c113a6ca56530b2ddf6eacaaefbd6bad74a9bd99baaf016e9e765b4","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEdkr9ZNE+0Gbg8sgeoGoVOJ7EO8Uw\nPrz/PiEsMRDVupOv1tZUaCGV3i+1kMmZP8swARm7YRL1YJMfTuIwNK9+Ww==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5003"}, "level":3},
+               {"agentID":"4f0854c51c1e9321ea972d15ce88ab2d98e95e01e5efc36c950199dc403fb9a8","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1h7r1mt7tzT3zwrESwVOr+hIFzxM\nxixJfMtWP/tgn3XOWLCdIF4DTVoMsLdM+sFZbZzLlYteeWIlGqKLDi6vGQ==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5004"}, "level":3},
+               {"agentID":"e3563d783bf7d2ae069f3efdfa31788a0c00e988386c296ea1406e1cdb885021","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEinMZppRZ3jyFx7qmq/H7evzCtde5\ntxrbd73YQY58jZGLQKUqknABE7e8AN3bbnZD8s63w6FtdOMjMU7RoDWomg==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5005"}, "level":3},
+               {"agentID":"2c2f8e97ba272fa4763e6308ccf9e907e296987a513bf3e3595077bcaaf4c5d2","agentPubKey":"b'-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEyp4HnM6qPGxkvRKG15cvghXdLc7o\nVwZLLhyvcbHdWUAkrJmZaAZzT0mLEjTkUN3wE7EEUYdlfuGr1JS6mf5uUg==\n-----END PUBLIC KEY-----\n'", "agentURL":"http://localhost:5006"}, "level":3]",
+  "mostRecentBlockUpdated" :  2
+  "notes" : "AgentIDs are fixed and are based on original public key.  However agents can (and should) replace their public keys and use secondary keys that can be overridden with the master key.
 }  
