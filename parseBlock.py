@@ -1,4 +1,5 @@
 import json
+import logging.config
 
 from blockState import blockState 
 
@@ -17,7 +18,7 @@ class parseBlock:
         with open(blockID) as json_data:
             self.block = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
         self.blockHash = self.block['blockHash']
-        print(f'Block Hash is {self.blockHash}')
+        logging.info(f'Block Hash is {self.blockHash}')
         self.blockHeader = self.block['blockHeader']
         self.convergenceHeader = self.blockHeader['convergenceHeader']
         self.consensusCircle = self.blockHeader['consensusCircle']
@@ -54,14 +55,13 @@ class parseBlock:
         for e in self.consensusCircle:
           self.ccKeys.append(e['pKey'])
 
-        print(f'randomMatrix is {self.randomMatrix}')
+        logging.info(f'randomMatrix is {self.randomMatrix}')
         
         # Now do checks:
         # Is blockhash the same
-        # TODO put conditional prints in for debug vs non (logging framework)
         # TODO confirm json.dumps is deterministic.  If order changes then hash will change.  May need more reliable approach
         self.calculatedHash = getHashofInput(json.dumps(self.blockHeader))
-        print(f'blockhash is: \n{self.blockHash}\nCalculated:\n{self.calculatedHash}\n')
+        logging.info(f'blockhash is: \n{self.blockHash}\nCalculated:\n{self.calculatedHash}\n')
         if self.blockHash != self.calculatedHash:
             self.blockPass = False
             self.blockComment = 'blockHash is not correct'
@@ -137,7 +137,7 @@ class parseBlock:
           return
 	
         hashConvergenceHeader = getHashofInput(json.dumps(self.convergenceHeader))
-        print(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
+        logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
           if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPubKey(self.ccKeys[i])) != True:
             self.blockPass = False
@@ -151,6 +151,6 @@ class parseBlock:
         
         # Converge the Matrix
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]  
-        print(f'Converged Matrix is {self.outputMatrix}')
+        logging.info(f'Converged Matrix is {self.outputMatrix}')
         
         return

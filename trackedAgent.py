@@ -1,12 +1,22 @@
 
-# Class used to track each agent in the circle (even if we are not directly connected to them).  This is used to store the origin of instructions, randomVector outputs, and any gossip about other agents 
+# Class used to track each agent in the circle (even if we are not directly connected to them).  
+# It tracks to ensure that both direct and indirect messages about an agent report the same thing (and if not if we trust them or lose trust in the sending party)
 class trackedAgent:
-    def __init__(self):
-        self.randomVector = []
+    def __init__(self, signedHash):
+        self.agentSign = signedHash  # This is the signature of the previous block.  
+        self.agentId = ''
         self.randomVectorHashes = []
         self.seed = 0
-        self.identifier = ''  # Would be the public key in the real network        
-        self.instructions = []
-        self.instructionHashes = set()
+        self.instructionMerkleRoot = ''
+        self.instructionHandlerMerkleRoot = ''
+        self.signedInstructionMerkleRoot = ''
+        self.signedInstructionHandlerMerkleRoot = ''
+        
         self.trusted = True  # is this trackedAgent trusted?
         # add in gossip metrics: what does this agent think of other agents?
+        self.untrustedList = {}
+        self.trustedList = {}  
+        
+        # TODO: add in evidence for why agent is untrusted so can propagate this (in event they send us something untrusted that is provable)
+
+        

@@ -39,15 +39,15 @@ class TddAgent(TestCase):
             
     # Order is important to allow population of state.  Use numbering from 100 in the test names to ensure the order we need
     def test_100_updateConfig_returns_201(self):
-             url = "http://localhost:5000/updateConfig"
+             url = "http://localhost:5001/updateConfig"
              # TODO make this a jsonify request
-             request = urllib.request.Request(url, data='{"ownerPKey":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","ownerLevel":"founder","agentIdentifier":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920","signId":"amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g==","agentPrivKey":"LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="}'.encode('utf-8'))
+             request = urllib.request.Request(url, data='{"ownerPKey":"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100","ownerLevel":"defender","agentIdentifier":"cb4d24f31f25703dd89fee5aa4813f55a16ce8d05d76af819e02b5c9f7ace7b2","signId":"VT1Jqo/zrrpNDP9AM+oc64JO9KAtQw1nFkWxaBUPa1qf3c6QqK8lxFn0252NokVuclqQnZKVaJr+HbQFDI8RQw==","agentPrivKey":"LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSU9VNnRPT0ZLUXZ3NGttQy9VQzdUMkpwaGZkZmJJVGJiNlJ0ZGE2ZHFJYXFvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFckhyMDJiOHAzVklIK084VmhENkYzUjhGQmZUcWxmYjVPVjZwdDhWazhUait4MlNQOTV1Ywo3L28zZ0tyVlhiL29paTdWSjdsazcvRVdwVllaa0FrN1hBPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="}'.encode('utf-8'))
              request.add_header("Content-Type","application/json")
              response = urllib.request.urlopen(request)
              self.assertEqual(response.code, 201)
 
     def test_101_get_pkey_returns_200(self):
-             url = "http://localhost:5000/PKey"
+             url = "http://localhost:5001/PKey"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
@@ -55,23 +55,24 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
     
     def test_102_owner_returns_200(self):
-             url = "http://localhost:5000/ownerPublicKey"
+             url = "http://localhost:5001/ownerPublicKey"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
 
     def test_103_level_returns_200(self):
-             url = "http://localhost:5000/ownerLevel"
+             url = "http://localhost:5001/ownerLevel"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
              
     def test_110_process_genesisBlock_returns200(self):
-             url = "http://localhost:5000/genesisBlock"
+             url = "http://localhost:5001/genesisBlock"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
-             
+
+

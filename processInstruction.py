@@ -1,4 +1,5 @@
 import json
+import logging.config
 
 #utility functions for processing instructions - pool is run by the agent
 from agentUtilities import getHashofInput

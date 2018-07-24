@@ -1,0 +1,52 @@
+
+
+Agent Convergence:
+
+Send out our pKey and signed hash of last block to prove we are in the circle:
+
+{		'agentPKey' : f'{agent.agent_identifier}',
+                 'agentSign' : f'{mySign of the blockhash}',
+                 'blockHash' :f'{agent.chain[len(agent.chain)-1].blockHash}',
+                 'blockHeight':f'{agent.chain[len(agent.chain)-1].blockHeight}'}
+
+
+Get back from the called agent:
+
+{
+      	         'agentSign': signedID of blockhash,  
+      	         'agentPKey': agent.agent_identifier
+      }
+      
+      
+Put this in followed agents list: 
+trackedCircleAgents
+if signature incorrect make them untrusted
+
+TODO - setup shared keys here with each agent?  Way to protect the chain even over non ssl?  (potentially do this in blockstate?)
+
+
+then request their followees responses.  - and if trusted or not 
+
+[{
+      	         'agentSign': signedID of blockhash,  
+      	         'agentPKey': agent.agent_identifier
+      	         'trusted':trackedAgent.trusted
+      }]
+      
+ And update the list of followees.  If any of these are trusted but the signature does not work out then discard and untrust the forwarding agent too  
+ 
+ THen confirm that we have all the agents in the cirlce (assumes single hop in communication breakdown)
+ 
+ If not repeat 3X, always attempting to connect to all agents.  at this point if we have a majority of the agents connected (and trusted) we start convergence.  But keep
+ checking for others to join 
+ 
+ ONCE connected (have all agents even if some untrusted):
+ 
+ Send out list of instructions, instruction handlers as hashes.  Sign merkle root before sending out (or symmetric key here?)
+ Get list of instructions, instruction handlers.   Check merkle root signature (or symmetric key here?)
+ Provide full instructions to agents who ask
+ request full instructions if dont have from hash
+ Confirm instructions all valid - if receive an invalid instruction from Agent reject instruction and flag agent (but dont yet untrust this can be 
+ 
+ 
+ 

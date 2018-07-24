@@ -1,28 +1,32 @@
 import json
 from bisect import bisect_left
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
+import logging.config
 
 # Holds the blockState for the current chain we are following that we believe is valid.  We can change this if presented with a better block or chain (Where depth weighted chain distance is lower)
 # This class is specific to the environment in which the agent is running.  Same method signatures but differnet implementations per environment
-# This is for local agent with all settings and instructions in json files.  Production uses cloud technologies (eg S3)
+# This is for local agent with all settings and instructions in json files.  Production uses cloud technologies (eg S3) and does not load state into memory
 class blockState:
   def __init__(self):
     with open('currentBlockChainState.json') as json_data:
         self.blockState = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
-    print(f'Blockchain State is {self.blockState}')
+    logging.info(f'Blockchain State is {self.blockState}')
     self.outputMatrix = self.blockState['blockRandomMatrix']
     self.merkleTreeRoot = self.blockState['blockMerkleRoot']  # Random for simulation 
     self.blockHash = self.blockState['blockHash']   # Hash of the highest block in chain
     self.blockHeight = self.blockState['blockHeight']
     self.depthWeightedChainDistancePreviousBlock = self.blockState['depthWeightedChainDistancePreviousBlock']
-    print(f'\nprevious block convergence matrix is {self.outputMatrix}')
+    logging.info(f'\nprevious block convergence matrix is {self.outputMatrix}')
     # get the agent public keys into a binary matrix
     
     self.agents = self.blockState['agents']
     self.agentPublicKeys = {}
+    self.agentURLs = {}
     
     # define the levels we accept and the number per level:
-    self.agentLevels = {'founder':1,'defender':1,'protector':1,'contributor':2}
+    self.agentLevels = {'founder':1,'defender':1,'protector':1,'contributor':2,'member':0}
     
     # Looks for levels.  This is not efficient but will not be used in production (where these will be DB lookups)
     # storing in lists so we can sort and find nearest matches.  Will slow down if we need to remove some numbers (eg if nearest not available)
@@ -31,15 +35,43 @@ class blockState:
     self.level['defender'] = [] 
     self.level['protector'] = [] 
     self.level['contributor'] = [] 
+    self.level['member'] = []
     
     for e in self.agents:
       self.agentPublicKeys[e['agentID']] = e['agentPubKey']
       self.level[e['level']].append(e['agentID'])
+      self.agentURLs[e['agentID']] = e['agentURL']
     
     # sort the level lists to make it more efficient and use takeClosest (note sorting is highly optimised in Python)
     for e in self.level:
       self.level[e].sort()
-      
+  
+  # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
+  def sendMessage(self,agentID, message, function):
+    logging.info(f'\nGot {message}  to send\n')
+             
+    if agentID in self.agentURLs.keys():
+      request = Request(self.agentURLs[agentID] + '/' + function)
+      request.add_header('Content-Type','application/json; charset=utf-8')  
+      jsondata = json.dumps(message)
+      jsondataasbytes = jsondata.encode('utf-8')
+      request.add_header('Content-Length', len(jsondataasbytes))
+      logging.info(f'\nRequest is {request}  \n')
+      try:
+        msgResponse = json.loads(urlopen(request,jsondataasbytes).read().decode('utf-8'))
+        logging.debug(f'\nGot valid response from sendMessage')
+        return (True, msgResponse)
+      except ConnectionRefusedError:
+        logging.error(f'\nGot connectio refused\n')
+        return (False, 'Error - Agent not able to be connected to')
+      except:
+        logging.error(f'\nGot error {sys.exc_info()[0]}\n')
+        return (False, 'Error in communicating with Agent')
+    else: 
+      logging.error(f'\nAgent not known\n')
+      return (False, 'Error - agent not known')   # TODO throw exception for this? 
+
+  
   def getPubKey(self, pubKey):
     return self.agentPublicKeys[pubKey]
   
@@ -50,7 +82,7 @@ class blockState:
     nextcircle, bIndex = [],0
     self.templevel = self.level.copy()
     
-    # remove all th excludedAgents per level:
+    # remove all the excludedAgents per level:
     for level in excludedAgents:
       levelName = level['level']
       for i in level[levelName]:

@@ -6,8 +6,12 @@ from time import time
 from urllib.parse import urlparse
 import urllib.request
 from uuid import uuid4
+import threading
+
+import logging.config
 
 import collections
+import copy
 import requests
 from flask import Flask, jsonify, request
 
@@ -21,13 +25,14 @@ from trackedAgent import trackedAgent
 
 
 #utility functions
-from agentUtilities import converge, hashvector, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance 
+from agentUtilities import converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage 
 from processInstruction import validateInstruction
 
 class Agent:
     def __init__(self):
         self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
-        self.instruction_hashes = set() # Set as duplicates treated as repeats and not added to the current_instructions pool. 
+        self.instruction_hashes = set() 
+        self.instructionHashPool = set()  # Used in convergence
         self.chain = collections.deque(maxlen = 100) # this should be a setting and is for the most recent blocks
         self.entityInstructions = 100 # global ccEntity setting needs to be read
         
@@ -43,13 +48,23 @@ class Agent:
         
         # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
         self.inCircle = False  # we are not in a circle by default
+        
+        # some of the memory structures shold be locked for multithread access.  Importing Mutex
+        self.insMutex = threading.Lock()  # equal to threading.Semaphore(1)
+
+        
+        # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
         with open('agentConfig.json') as json_data:
             self.config = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed
             self.level = self.config['level']   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
             self.agent_identifier = self.config['agentIdentifier']
-            self.owner = self.config['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent
-	               
+            self.owner = self.config['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+            self.signedIdentifier = self.config['signedIdentifier']
+            self.agentPrivKey = self.config['agentPrivateKey']
+	
+        logging.info('Getting blockchain State')
         self.blockState = blockState()
+        logging.info('Parsing Genesis Block')
         self.genesisBlock = genesisBlock()
         
         # add to the chain on startup if we have no state we can read from
@@ -57,6 +72,15 @@ class Agent:
             self.chain.append(self.genesisBlock)
         # TODO elif we already have state then we need to get other blocks from agents to see if we are up to date
         
+        # update config when we get setup - needs the owner to sign off to allow change
+        # TODO Confirm that the owner of the agent has signed off changes or dont change
+    def change_config(self, ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey):    
+        self.level = ownerLevel # TODO should come from the agents owners level
+        self.agent_identifier = agentIdentifier
+        self.owner = ownerPKey      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.signedIdentifier = signId
+        self.agentPrivKey = agentPrivKey  #TODO - do we want to accept private key updates?  (will be over SSL)
+    
         # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
     def register_agent(self, address):
         """
@@ -86,16 +110,17 @@ class Agent:
         
         # check if the hash has already been received for this instruction and if so then dont append
         if hash in self.instruction_hashes:
-            print(f'Received instruction already have, instruction hashes are {self.instruction_hashes}')
+            logging.info(f'Received instruction already have, instruction hashes are {self.instruction_hashes}')
             return len(self.current_instructions)
         
-        self.current_instructions.append({
-            'sender': sender,
-            'hash': hash
-        })
-        
-        self.instruction_hashes.add(hash)
-        print(f'instruction hashes are {self.instruction_hashes}')
+        # THis is Mutexed for hash control
+        with agent.insMutex: 
+          self.current_instructions.append({
+              'sender': sender,
+              'hash': hash
+          })
+          self.instruction_hashes.add(hash)
+        logging.info(f'instruction hashes are {self.instruction_hashes}')
         return len(self.current_instructions)
     
     
@@ -113,102 +138,410 @@ class Agent:
 # Instantiate the Agent
 app = Flask(__name__)
 
+# Setup Logging
+with open('logConfig.json') as json_data:
+  logDict = json.load(json_data)
+  logging.config.dictConfig(logDict)
+
+logging.info('Instantiating Agent')
 
 # Instantiate the Agent Class
 agent = Agent()
 
+
+# Testing parameters
+networkOn = True
+
+# TODO: Remove, we track based on the config in blockState
 # Instantiate the tracked agents in my circle 
 maxAgentsInCircle = 4   # set to 1 below number as we are a member of the circle
-#for x in range(0,maxAgentsInCircle):
-#    agent.trackedCircleAgents.append(trackedAgent())
 
 
 # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain. 
-agent.randomMatrix = [g for g in getRandomNumbers(2,5)]
+agent.randomMatrix = [g for g in getRandomNumbers(2,5)]  # TODO this needs to be updated each time in the convergence not just here
 agent.seed = getSeed(2)
 agent.randomMatrixHash = [g for g in hashvector(agent.randomMatrix, agent.seed)]
-print(f'Agents random hash is {agent.randomMatrixHash}')
+logging.info(f'Agents random hash is {agent.randomMatrixHash}')
+
+
+#Testing Methods - used to simulate failures etc
+@app.route('/networkOn',methods=['POST'])
+def networkOn():
+  values = request.get_json()
+  required = ['network']
+  if not all(k in values for k in required):
+    return 'Missing fields', 400
+  
+  if values['network'] == 'off':
+    networkOn = False
+  elif values['network'] == 'on':
+    networkOn = True
+  
+  response = { 'networkOn' : f'{networkOn}' }
+  return jsonify(response), 200
+  
 
 # Public Methods
-@app.route('/convergeUIDs', methods=['GET'])
-def convergeUIDs():
-    # This is where we find all the UIDs of the agents in the blockchain.  If we dont have them we return 202, if we do we return 200 (Check appropriate code).
-    # If the return is 202 we expect to be called again to determine if we have converged  (in final code we could loop inside an EC2 instance or using some form of loop around a queue)
-    print("converging on UIDs")
-    # get UID, and ask for other UIDs
-    for url in agent.followedAgents:
-        request = urllib.request.Request("http://" + url + "/entity")
-        response = urllib.request.urlopen(request)
-        body = json.loads(response.read().decode('utf-8'))   # Do in utilites and use ENCODING for utf-8
-        # Check if we have seen this entity already (in the agent.trackedCircleAgents)
-        if body["entity"] in agent.trackedCircleAgents:
-            print(f'ALready tracking Agent with UID {body["entity"]}')
-        else:
-            agent.trackedCircleAgents[body["entity"]] = trackedAgent()
-            
-        print(f'the returned uid for followed URL is {body["entity"]}')
-        print(f'the returned uid for trackedEntities is {body["trackedEntities"]}')
-        
-        if body["entity"] not in agent.slots:
-            agent.slots.add(body["entity"])
-        
-        i = 0    
-        while i < len(body["trackedEntities"]):
-            agent.slots.add(body["trackedEntities"][i])
-            i += 1
-    print(f'Agent slots are {agent.slots}')
+@app.route('/updateConfig', methods=['POST'])
+def updateConfig():
+   # Testing parameters - is network on 
+   if not networkOn:
+     response = {'network' : f'{networkOn}'}
+     return jsonify(response), 400
+     
+   values = request.get_json()
+   
+   required = ['ownerLevel','agentIdentifier','ownerPKey','signId', 'agentPrivKey']
+   if not all(k in values for k in required):
+     return 'Missing fields', 400
     
+   ownerLevel = values['ownerLevel']  # TODO should come from the agents owners level
+   agentIdentifier = values['agentIdentifier']
+   ownerPKey = values['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+   signId = values['signId']
+   agentPrivKey = values['agentPrivKey']
+   agent.change_config(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
+   
+   response = {
+        'message': f'Updated agent config'
+       }
+   return jsonify(response), 201
+   
+
+
+# get the Trusted Agents this particular followee is also following
+# we dont do checks here as only if there is a connection between us and the calling agent will this work.  We simply confirm shared secret that was setup as
+# part of initial handshake
+@app.route('/getTrustedFollowedAgents', methods=['POST'])
+def returnTrustedAgents():
+  # Testing parameters - is network on 
+  if not networkOn:
+    response = {'network' : f'{networkOn}'}
+    return jsonify(response), 400
+   
+  
+  logging.info(f'In getTrustedFolledAgents')
+  if not agent.inCircle:
     response = {
-	         'uids': f'[{agent.slots}]'  
+    	         'error': 'Agent not in circle'  
+    	       }
+    return jsonify(response), 403
+  
+  requestValues = request.get_json()  
+  required = ['agentPKey','agentSign']
+  if not all(k in requestValues for k in required):
+    logging.info(f'Not all fields in the request')
+    return 'Missing fields in request', 400
+  
+    
+  # if they are not already being tracked then error - they need to exchange signatures first (signHash handshake)
+  if not requestValues['agentPKey'] in agent.trackedCircleAgents.keys():
+    return 'Not in list', 400
+  
+  # TODO confirm Shared Secret is what we have with this agent and they are in our trusted list
+  if not agent.trackedCircleAgents[requestValues['agentPKey']].trusted == True:
+    return 'Agent not trusted', 400
+  
+  
+  myResponse = []
+  for trackedAgent in agent.trackedCircleAgents.values():
+    myResponse.append({'agentPKey':trackedAgent.agentId,'agentSign':trackedAgent.agentSign,'trusted':trackedAgent.trusted})
+    logging.info(f'Added in \n{trackedAgent.agentId}')
+  # Response includes all the agents we also know about - to allow for fast convergence and gossip protocol
+  return jsonify(myResponse), 200
+
+# signHash is the handshake routine between agents in initial circle setup.  
+@app.route('/signHash', methods=['POST'])
+def signHash():
+  # Testing parameters - is network on 
+  if not networkOn:
+    response = {'network' : f'{networkOn}'}
+    return jsonify(response), 400
+  
+  # Called as part of convergence setup.  If we are not part of the circle we reject this (and wait for an invite if they believe we should be), if we are we only accept from members we believe are also
+  if not agent.inCircle:
+    response = {
+    	         'error': 'Agent not in circle'  
+    	       }
+    return jsonify(response), 403
+  
+  
+  values = request.get_json()  
+  
+  logging.info(f'request is {values}')
+  required = ['agentPKey','agentSign','blockHash','blockHeight']
+  if not all(k in values for k in required):
+    logging.info(f'Not all fields in the request')
+    return 'Missing fields in request', 400
+  
+  # Now confirm the agent is in the circle, the blockheight is right (same chain), blockHash is right and they have signed the blockHash
+  # TODO error checking on input data (in the API gateway)
+  if int(values['blockHeight']) != agent.chain[len(agent.chain)-1].blockHeight:
+    # TODO should we care - i.e. if this is higher does it mean we are out of sync and should resync?
+    logging.info(f'Incorrect Blockheight %n : %n', values['blockHeight'], agent.chain[len(agent.chain)-1].blockHeight)
+    return 'Incorrect blockHeight', 400 
+  
+  if values['agentPKey'] not in agent.nextCircle:
+    # we reject this - if the agent is in the circle we need to hear from others we trust before we accept
+    return 'Calling agent is not in circle',403
+  
+  if values['blockHash'] != agent.chain[len(agent.chain)-1].blockHash:
+    return 'Incorrect BlockHash',403
+  
+  if not verifyMessage(values['blockHash'], values['agentSign'], agent.blockState.getPubKey(values['agentPKey'])):
+    # TODO should block this agent at the edge for period of time?
+    return 'Incorrect Signature',403
+  
+    # OK we have a correctly sent message from an agent in the circle and we are in the circle.  At this point we accept them and return 200 with our signature 
+  # so this is 2 way
+  
+  # if they are already being tracked then dont re-add (method is idempotent)
+  if not values['agentPKey'] in agent.trackedCircleAgents.keys():
+    temp = values['agentPKey']
+    agent.trackedCircleAgents[values['agentPKey']] = trackedAgent(values['agentSign'])
+    agent.trackedCircleAgents[values['agentPKey']].agentId = values['agentPKey']
+    logging.info(f'\n*** have added to tracked circle agent for {temp}\n')
+    
+  # Sign Hash
+  # Send ID
+  signedID = signMessage(agent.chain[len(agent.chain)-1].blockHash,agent.agentPrivKey)
+  response = {
+      	         'agentSign': signedID,  
+      	         'agentPKey': agent.agent_identifier
+      }
+  return jsonify(response), 200
+    
+
+# Routine to get the current instruction pool as part of convergence
+@app.route('/instructionPool', methods=['POST'])
+def instructionPool():
+  # Testing parameters - is network on 
+  if not networkOn:
+    response = {'network' : f'{networkOn}'}
+    return jsonify(response), 400
+   
+  # Get Message of form: {'merkleRoot':<merkleRoot>,'signed':<signedMerkleRoot>,'hashes':[<array of hashes of instructions we think are good>]}
+  
+  logging.info(f'In instructionPool')
+  if not agent.inCircle:
+    response = {
+              'error': 'Agent not in circle'  
+           }
+    return jsonify(response), 403
+  
+  requestValues = request.get_json()  
+  required = ['merkleRoot','signed','hashes']
+  if not all(k in requestValues for k in required):
+    logging.info(f'Not all fields in the request')
+    return 'Missing fields in request', 400
+
+  if requestValues['merkleRoot'] == returnMerkleRoot(requestValues['hashes']):
+    # process is disciplined to only take instructions all the agents know about to stop potential double spends 
+    # being manipulated through timing attacks.  Only remove from the hashpool
+    insHashes = set(requestValues['hashes'])
+    with agent.insMutex: 
+      agent.instructionHashPool = agent.instructionHashPool.intersection(insHashes)
+  else: 
+    logging.info(f'Request merkle root incorrect')
+    return 'Merkle root incorrect', 400
+    # TODO remove trust from calling agent and log evidence
+  
+  # TODO confirm if instruction hashes are 0 in length
+  # setup the response
+  logging.info(f'\nhashpool is {agent.instructionHashPool}, list is {list(agent.instructionHashPool)}')
+  hashMerkle = returnMerkleRoot(agent.instructionHashPool)
+  hashSigned = signMessage(hashMerkle,agent.agentPrivKey)
+  
+  
+  response = {
+           'merkleRoot': hashMerkle,
+           'signed':hashSigned,
+           'hashes':list(agent.instructionHashPool)
+         }
+         
+  return jsonify(response), 200
+
+  
+  
+@app.route('/converge', methods=['GET'])
+def converge():
+    # Testing parameters - is network on 
+    
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    if not agent.inCircle:
+      response = {
+            'error': 'Agent not in circle'  
+           }
+      return jsonify(response), 403
+  
+    
+    # This is called by agents who are in the circle and believe we are too.  We call them with our signed hash of previous block
+    # First sign the hash:
+    mySign = signMessage(agent.chain[len(agent.chain)-1].blockHash, agent.agentPrivKey)
+    #['agentPKey','agentSign','blockHash','blockHeight']
+    myMessage = {'agentPKey' : f'{agent.agent_identifier}',
+                 'agentSign' : f'{mySign}',
+                 'blockHash' :f'{agent.chain[len(agent.chain)-1].blockHash}',
+                 'blockHeight':f'{agent.chain[len(agent.chain)-1].blockHeight}'}
+    for agentID in agent.nextCircle:
+      logging.info(f'\n sending message to {agentID}\n')
+      # Handle case where cant access Agent
+      # remove myself - dont send to myself
+      if agentID != agent.agent_identifier:
+        # TODO should work out how to multithread this - or some sort of event driven architecture to speed up?
+        agentResponse = agent.blockState.sendMessage(agentID, myMessage, 'signHash')
+        if agentResponse[0] == False:  # Manage case where agent not available
+          logging.info(f'Agent not able to be contacted')  # Agent not in our list 
+        else:   
+          logging.info(f'Agent response is {agentResponse[1]}')
+          if not agentResponse[1]['agentPKey'] in agent.trackedCircleAgents.keys():
+            temp = agentResponse[1]['agentPKey']
+            logging.info(f'**\n agent response not in trackedAgents - adding it {temp}\n')
+            agent.trackedCircleAgents[agentResponse[1]['agentPKey']] = trackedAgent(agentResponse[1]['agentSign'])
+            agent.trackedCircleAgents[agentResponse[1]['agentPKey']].agentId = agentResponse[1]['agentPKey']
+    
+            # TODO here close off what we are tracking and how - do convergence on all
+            if not verifyMessage(agent.chain[len(agent.chain)-1].blockHash, agentResponse[1]['agentSign'], agent.blockState.getPubKey(agentResponse[1]['agentPKey'])):
+            # The agent has sent us the wrong message - dont trust them here
+              agent.trackedCircleAgents[agentResponse[1]['agentPKey']].trusted = False 
+              
+    
+    myMessage = {'agentPKey' : f'{agent.agent_identifier}',
+    	              'agentSign' : f'{mySign}'}
+    
+    # now get what each agent is tracking (so repeat but now can see 1 hop further if not directly connected)
+    logging.info(f'TrackedCircleAgents are {agent.trackedCircleAgents.keys()}')
+    
+    tempFollowedAgents = {}
+    for trAgent in agent.trackedCircleAgents.values():
+      logging.info(f'\n** Got {trAgent}\n')
+      if trAgent.trusted == True:
+        agentResponse = agent.blockState.sendMessage(trAgent.agentId, myMessage,'getTrustedFollowedAgents')
+        
+        if agentResponse[0] == False:  # Manage case where agent not available
+            logging.info(f'Agent not able to be contacted')  # Put agent in unable to contact list?
+        else:   
+          for returnedList in agentResponse[1]:
+            # dont reload if already have this and dont track ourselves!
+            # TODO confirm verification and if not properly signed and in trusted we stop trusting the called agent
+            # TODO - wea re adding to the list while iterating, this is finite so can be left (no infinite loop)
+            if not returnedList['agentPKey'] in agent.trackedCircleAgents.keys() and not returnedList['agentPKey'] == agent.agent_identifier:
+              tempFollowedAgents[returnedList['agentPKey']] = trackedAgent(returnedList['agentSign'])
+              tempFollowedAgents[returnedList['agentPKey']].agentId = returnedList['agentPKey']
+              tempFollowedAgents[returnedList['agentPKey']].trusted = returnedList['trusted']
+    
+    agent.trackedCircleAgents.update(tempFollowedAgents)        
+    
+    # check how many agents we have in the list - trusted.  Dont setup convergence parameters if there is less than n/2 + 1 trusted agents
+    tempTrusted = 0
+    for trAgent in agent.trackedCircleAgents.values():
+      if trAgent.trusted == True:
+        tempTrusted += 1
+    
+    
+    logging.info(f'tracked agents are {list(agent.trackedCircleAgents.keys())}')
+    response = {
+	         'agents': f'{list(agent.trackedCircleAgents.keys())}',
+	         'trusted':tempTrusted
 	       }
 	       
-    if len(agent.slots) < maxAgentsInCircle:
-        return jsonify(response), 202
-    else:
-        return jsonify(response), 200
+    return jsonify(response), 200
 
 
 @app.route('/convergeInstructions', methods=['GET'])
 def convergeCircleInstructions():
-    # This is where we start the convergence protocol (only done to test)
-    print("converging now")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
     
-    # Create Slots and populate with UID, Instructions, Random Numbers, etc
+    if not agent.inCircle:
+      response = {
+            'error': 'Agent not in circle'  
+           }
+      return jsonify(response), 403
+    
+    # TODO - if no instructions in pool what do we do?  For now returning
+    if len(agent.instructionHashPool) == 0:
+      response = {
+                 'info': 'No instructions in pool'  
+                }
+      return jsonify(response), 202
     
     
-    # get UID, and ask for other UIDs
-    for url in agent.followedAgents:
-            request = urllib.request.Request("http://" + url + "/instructions")
-            response = urllib.request.urlopen(request)
-            body = json.loads(response.read().decode('utf-8'))   # do in utilities and use ENCODING for utf-8
-            print(f'the returned instructions are {body["instructions"]}')
-            i = 0
-            while i < len(body["instructions"]):
-                agent.add_instruction_hash(body["instructions"][i])
-                i += 1
-   
-    # TODO the below will fail if the number of instructions is 0 as body then undefined
-    if len(body["instructions"]) > 0:
-        response = {
-                    'instructions': f'{body["instructions"]}'
-                    #'nextCircle':f'{agent.randomMatrix}'
-                   }
-    else:                
-        response = {
-	            'instructions': '[]'
-	            #'nextCircle':f'{agent.randomMatrix}'
-                   }
+    # We start converging instructions if we are in the circle and we have minimum n / 2 agents we have seen responses for 
+    # TODO confirm circle is sufficient size (n/2 + 1)
+    
+    # Send Message of form: {'merkleRoot':<merkleRoot>,'signed':<signedMerkleRoot>,'hashes':[<array of hashes of instructions we think are good>]}
+    myMessage = {}
+    myMessage['hashes'] = []
+    
+    
+    for insHash in agent.instructionHashPool:
+      myMessage['hashes'].append(insHash)  
+    
+    # create merkle root and sign it
+    logging.info(f'\n messages hashes are: {myMessage}')
+    myMessage['merkleRoot'] = returnMerkleRoot(myMessage['hashes'])
+    myMessage['signed'] = signMessage(myMessage['merkleRoot'], agent.agentPrivKey)
+    
+    required = ['merkleRoot','signed','hashes']
+    for trAgent in agent.trackedCircleAgents.values():
+      if trAgent.trusted == True:
+        agentResponse = agent.blockState.sendMessage(trAgent.agentId, myMessage,'instructionPool')
+        if agentResponse[0] == False:  # Manage case where agent not available
+          logging.info(f'Agent not able to be contacted')  # Agent not in our list
+        elif not all(k in agentResponse[1] for k in required):
+          logging.info(f'Agent not returned a proper response')
+          trAgent.trusted = False
+        else:   
+          logging.info(f'Agent instructions response is {agentResponse[1]}')
+          
+          if len(agentResponse[1]['hashes']) > 0:
+            logging.info(f'received hashes back')
+            
+            # Check merkle root, if same as yours dont need to process.  Also confirm 
+            logging.info('\nMerkle root is: ')
+            logging.info(agentResponse[1]['merkleRoot'])
+            if agentResponse[1]['merkleRoot'] == returnMerkleRoot(agentResponse[1]['hashes']):
+              # process is disciplined to only take instructions all the agents know about to stop potential double spends 
+              # being manipulated through timing attacks.  Only remove from the hashpool
+              # TODO - need to confirm if making this call while receiving instructionPool call that changes to instructionHashPool dont cause 
+              # issues - make change blocking?
+              for insHash in agentResponse[1]['hashes']:
+                if not insHash in agent.instructionHashPool:
+                  with insMutex: 
+                    agent.instructionHashPool.remove(insHash)
+                    myMessage['hashes'].remove(instruction.hash)
+            else:
+              logging.info(f'Agent did not send proper Merkle Root, removed their trust')
+              trAgent.trusted = False
+              # TODO check the signature, keep the evidence for why they were untrusted
+    
+    # TODO - iteration until have converged list? Do sending merkle root
+    response = {
+	            'instructions': f'{agent.instructionHashPool}'
+                }
     return jsonify(response), 200
 
 
+# TODO remove this?
 @app.route('/convergeHashedVotes', methods=['GET'])
 def convergeHashedVotes():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
     # Method to get the hahedVotes for all agents in circle
     for url in agent.followedAgents:
         request = urllib.request.Request("http://" + url + "/hashedVote")
         response = urllib.request.urlopen(request)
         body = json.loads(response.read().decode('utf-8'))   # check this doesnt override to the last call, do in utilities and use ENCODING for utf-8
-        print(f'the returned hashes are {body["voteHashes"]}')
+        logging.info(f'the returned hashes are {body["voteHashes"]}')
         
         # return only the voteHashes from our followed entities - TODO: add to the trackedCircleAgents
         response = {
@@ -220,9 +553,14 @@ def convergeHashedVotes():
 
 @app.route('/vote', methods=['GET'])
 def returnVote():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
     # only return if we have already received all the hashes from the circle
     # only return if we are in the circle
-    print("Returning votes")
+    logging.info("Returning votes")
     # return the agent votes (need in future to encode and only return when have all the encoded votes from others or some timout
     response = {
                  'votes':list(agent.randomMatrix),
@@ -233,7 +571,12 @@ def returnVote():
 
 @app.route('/hashedVote', methods=['GET'])
 def returnHashedVote():
-    print(f'Agents random hash is {agent.randomMatrixHash}')
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info(f'Agents random hash is {agent.randomMatrixHash}')
     # return the hashed vote
     response = {
                   'voteHashes': list(agent.randomMatrixHash)
@@ -243,7 +586,12 @@ def returnHashedVote():
     
 @app.route('/entity', methods=['GET'])
 def returnEntities():
-    print("returning entities")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("returning entities")
     # need to do a get on the entities we are tracking that we already know about            
     response = {
                 'entity': agent.agent_identifier,
@@ -252,9 +600,17 @@ def returnEntities():
     
     return jsonify(response), 200
 
+
+# Get the instructions that this agent has that are not yet in a block
+# These instructions are their candidates for the block 
 @app.route('/instructions',methods=['GET'])
 def retrieveInstructions():
-    print("returning instructions")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("returning instructions")
     response = {
             'instructions': list(agent.instruction_hashes)   # We just return the instruction hashes.  Individual instructions are returned on gets per instruction
     }
@@ -262,7 +618,12 @@ def retrieveInstructions():
     
 @app.route('/ownerPublicKey',methods=['GET'])
 def retrieveOwnerPublicKey():
-    print("returning owners public key")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("returning owners public key")
     response = {
             'ownerPublicKey': agent.owner   
     }
@@ -271,7 +632,12 @@ def retrieveOwnerPublicKey():
 
 @app.route('/ownerLevel',methods=['GET'])
 def retrieveOwnerLevel():
-    print("returning owners public key")  # Should we have a better call - ownerDetails with level, owner public key combined?
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("returning owners public key")  # Should we have a better call - ownerDetails with level, owner public key combined?
     response = {
             'ownerLevel': agent.level 
     }
@@ -280,9 +646,14 @@ def retrieveOwnerLevel():
 
 @app.route('/setPKey', methods=['POST'])
 def setPKey():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
     # set the public and private keys of this node.  Requires signed authority from the owner (and normally only done on setup)
     # first check this is signed by our owner.  If not reject the request 
-    print("setting the public Key and private key")
+    logging.info("setting the public Key and private key")
     values = request.get_json()
     
     #TODO the checks of the signature from the owner
@@ -301,6 +672,11 @@ def setPKey():
 
 @app.route('/genesisBlock', methods=['GET'])
 def genesisBlock():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
     # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
     response = {
             'blockHash': agent.genesisBlock.blockHash
@@ -309,9 +685,14 @@ def genesisBlock():
 
 @app.route('/blockPublished',methods=['GET'])
 def processBlock():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
     blockID = request.args['blockID']
     
-    print("new block published, retrieve validate and process it")
+    logging.info("new block published, retrieve validate and process it")
     # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
     newBlock = parseBlock(blockID)
     
@@ -349,26 +730,35 @@ def processBlock():
     
     # Newblock circle distance needs to be calculated off the old block outputMatrix
     newBlock.circleDistance = returnCircleDistance(newBlock.ccKeys, agent.chain[len(agent.chain)-1].outputMatrix, newBlock.instructionCount,agent.entityInstructions)
-    print(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
+    logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
         
     # TODO confirm that the block is shortest distance 
     agent.chain.append(newBlock)
     
+    # Clear out any convergence state 
+    agent.trackedCircleAgents = {}
+    
     # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
     
-    # CHECK if we should be in the block -- start with how far are we from the actual block ID 
-    
-    #agent.inCircle = checkBlockMembership(agent.chain[0].outputMatrix[agent.level], agent.agent_identifier)
-    #distance = returnHashDistance(agent.chain[0].outputMatrix[agent.level][0], agent.agent_identifier)  
-    
-    # now check if there are any closer agents (Will be a database / noSQL call in the production code)
-    
-    # assume there are not and we are in the circle.
     # TODO: Trigger event to check if we are in the next circle and start processing
     # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
     agent.nextCircle = agent.blockState.nextCircle(newBlock.outputMatrix, [])  # No excluded agents for now
     
-    print(f'\nNext circle is {agent.nextCircle}\n')
+    # Am I in the circle?
+    if agent.agent_identifier in agent.nextCircle:
+      agent.inCircle = True
+      # setup the instructionPool
+      logging.info(f'copying the agent instructions: {agent.instruction_hashes}')
+      agent.instructionHashPool = copy.copy(agent.instruction_hashes)
+      logging.info(f'\n to instruction has pool: {agent.instructionHashPool}')
+      
+      logging.info(f'\n** Agent is in next Circle**\n')
+    
+    
+    # clear out any variables we may have from previous circle membership
+    agent.trackedCircleAgents = {}
+    
+    logging.info(f'\nNext circle is {agent.nextCircle}\n')
 
     response = {
             'chainLength' : len(agent.chain) - 1,
@@ -380,7 +770,12 @@ def processBlock():
 
 @app.route('/block',methods=['GET'])
 def retrieveBlock():
-    print("return the Hash of the block at the top of our chain and the block height")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("return the Hash of the block at the top of our chain and the block height")
     # TODO generic function for returning all the blocks and contents
     
 
@@ -394,7 +789,12 @@ def retrieveBlock():
 
 @app.route('/PKey',methods=['GET'])
 def retrievePKey():
-    print("returning pkey")
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+    
+    logging.info("returning pkey")
     response = {
             'pkey': agent.agent_identifier
     }
@@ -407,11 +807,15 @@ def retrievePKey():
 # The above allows people to 'always opt in' through delegating agents to share some of their data (with shared keys), to opt in when they want, to partiipate in anonymous surveys (through anonymous matching of their attributes), to contribute and earn from models,or to never opt in but understand the value of the data they have
 @app.route('/instruction', methods=['POST'])
 def instruction():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400    
+    
     # Add an instruction to the pool of unprocessed instructions
-    print("received an instruction to add")
+    logging.info("received an instruction to add")
     values = request.get_json()
     
-    # TODO - validateInstruction
     # Check that the required fields are in the POST'ed data
     validInstruction = validateInstruction(values)
     if not validInstruction['return']:
@@ -434,8 +838,14 @@ def instruction():
 
 @app.route('/agents/register', methods=['POST'])
 def register_agents():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+
+
     # Register other agents with this agent - add them to the set it maintains 
-    print("registering agents with each other (will be in blockchain")
+    logging.info('register agent')
     values = request.get_json()
 
     agents = values.get('agents')

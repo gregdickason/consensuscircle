@@ -3,6 +3,7 @@ import secrets
 import hashlib
 import socket
 import argparse
+import os
 
 from ecdsa import SigningKey, VerifyingKey, NIST256p
 from ecdsa.keys import BadSignatureError
@@ -95,6 +96,9 @@ def returnHashDistance(blockHash, agentIdentifier):
 # TODO:  Allow the agent and the participant to select their own cryptographic scheme for public / private keys (so the BlockChain supports any type of encryption
 # including post quantum schemes.
 
+# TODO use curve 25519 which is not from NIST and unlikely to have NSA backdoor?  ( https://github.com/warner/python-ed25519 ) - need local c compiler (get from https://ed25519.cr.yp.to/?)
+# read https://security.stackexchange.com/questions/50878/ecdsa-vs-ecdh-vs-ed25519-vs-curve25519 for some context
+
 # Stores the public key, signatures, etc in pure strings to enable appropriate JSON serialisation / deserialisation.  the "b'...'" format fails to deserialise
 def binaryStringFormat(byte_content):
   base64_bytes = b64encode(byte_content)
@@ -104,11 +108,12 @@ def binFromString(myString):
   return b64decode(myString)
   
 # Public / Private key cryptography
-# Using https://github.com/warner/python-ecdsa for now.  NOTE: TIMING ATTACKS are possible so the agent can never solely sign a message in an external interface: need randomness to mask
+# Using https://github.com/warner/python-ecdsa for now.  NOTE: TIMING ATTACKS are possible so the agent can never solely sign a message in an external interface: need to mask somehow
 # TODO: Need to manage process for signing in a way that timing attacks are not practical (no repeated calls allowed for example, no leakage of time in a circle process) 
 def signMessage(message, priKey):
   sk = SigningKey.from_pem(binFromString(priKey))   # TODO: should check this is properly pem encoded before processing
-  return binaryStringFormat(sk.sign_deterministic(str(message).encode(ENCODING),hashlib.sha256))     # Using deterministic ecdsa signature to prevent possible leakage through non randomness.  See https://tools.ietf.org/html/rfc6979
+  # Using deterministic ecdsa signature to prevent possible leakage through non randomness.  See https://tools.ietf.org/html/rfc6979
+  return binaryStringFormat(sk.sign_deterministic(str(message).encode(ENCODING),hashlib.sha256))     
   
 def verifyMessage(message, signedMessage, pubKey):
   # signed message is b64 encoded.  We decode 
@@ -143,18 +148,32 @@ def getPrivateKeyFromPassPhrase(passphrase):
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
   sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
   return binaryStringFormat(sk.to_pem())  
+
+# Diffie - Hellman.  Using ecdsa BUT not the private key of the current agent as want perfect forward secrecy.  We therefore trade a 
+# new session key based on a random variable. 
+# default is perfect forward secrecy: we generate a session key everytime we interact.  This means agents do not store private keys in long
+# term storage
+def createSessionKeyFromPublicKey(pubKey):
+  # Random Number:
+  mySecret = os.urandom()
   
+
+
+#def encryptWithSessionKey(sessKey):
+
+
+#def decryptWithSessionKey(sessKey):
 
 ### Merkle Tree Routines.  Borrowing from https://github.com/JaeDukSeo/Simple-Merkle-Tree-in-Python/blob/master/MerkleTrees.py but
 ## using ordered Merkle Trees as the order of processing is based on the hash of instructions / instruction handlers
-## NOTE: THIS Routine hashes the leaf nodes (assumes not hashed to start)
 def returnMerkleRoot(myUnorderedArray):
   # TODO should we be checking if myUnorderedArray has length 0?
   # first hash and sort the array
   myList = [getHashofInput(x) for x in myUnorderedArray]
+  # bubble sort - this is highly optimised in C code 
   myList.sort()
-  # We have a temporary list that replaces myList each loop
   
+  # We have a temporary list that replaces myList each loop
   while len(myList) > 1:
     tempList = []
     for i in range(0,len(myList),2):
@@ -166,5 +185,7 @@ def returnMerkleRoot(myUnorderedArray):
       tempList.append(getHashofInput(current + currentRight))
     myList = tempList[:]       
   return myList[0]
+  
+
   
   
