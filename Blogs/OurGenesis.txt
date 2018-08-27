@@ -1,0 +1,32 @@
+So this is how you change the world.
+
+
+Blockchains started with Bitcoin.  And Bitcoin started with a Genesis Block: the original data that the rest of the bitcoin blockchain was chained off.
+And the Genesis block contains a reference to a London Times article of 2009:
+'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+
+This quote as much as anything else tells us about the motivation of Satoshi in developing Bitcoin: removing the moral hazard of central banks bailing out commercial banks at the long term expense of taxpayers.  It is no coincidence that in depths of the financial crisis a currency would emerge that was not centrally controlled and couldnt just be manipulated by a central bank to shore up reckless financial speculators. 
+
+Anti central control of money is also built into the operation of Bitcoin:  there is a finite supply, the rate of new money supply is known, and the distribution of who gets the new money is determined by very simple rules - mining rewards. 
+
+New blockchains similarly have rules built into them that show intent.
+
+With Consensus Circle the intention is different but no less ambitious:
+- Take control of data, so that users own their own data in ways that no central authority can manipulate
+- Ensure trustworthiness in Data.  Users can claim anything but it is in the verification of claims that we build trust
+- Trust externally.  Understand that humans extend trust in many ways and allow that trust to be part of the circle.  Earlier blockchains didnt let the 'real world' participate easily.  CC embraces the real world
+- Dont burn up the planet keeping the network alive.  Build a new consensus mechanism (the cc) that can run with trust but also without massive costs in proof of work
+- Enable randomness, embrace entropy.  The world will change and we need to have a central way to produce trusted randomness that allows us to respond 
+- Build in mechanisms to scale and upgrade.  Dont assume you can know what the community will want
+- Let everyone participate.  
+- Know the limits of smart contracts.  Smart contracts are not magic, any code can have bugs.  Know the limitations of what a blockchain is and dont befuddle the world with fancy terms that allow tricksters to thrive.  As fr as possible use trust ad push processing to the edge: trust the outcomes not the contract
+- people delegated agents
+
+So CC is:
+- not turing complete
+- built on random generation
+- open to all
+- layered trust
+easy to understand.  It is the Kumbaya of blockchains.  We sit. We hold hands. We chant, and we agree!
+
+(Call it the agreement circle?)

@@ -2,12 +2,16 @@ import json
 from bisect import bisect_left
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+import redis
+from rq import Queue
+from convergenceProcessor import blockConvergeAndPublish
 
 import logging.config
 
 # Holds the blockState for the current chain we are following that we believe is valid.  We can change this if presented with a better block or chain (Where depth weighted chain distance is lower)
 # This class is specific to the environment in which the agent is running.  Same method signatures but differnet implementations per environment
-# This is for local agent with all settings and instructions in json files.  Production uses cloud technologies (eg S3) and does not load state into memory
+# This is for local agent with all settings and long term storage in json files, using redis and rejson for queues and instructionPool.  
+# Other versions uses cloud technologies (eg S3) and do not always load state into memory
 class blockState:
   def __init__(self):
     with open('currentBlockChainState.json') as json_data:
@@ -18,6 +22,11 @@ class blockState:
     self.blockHash = self.blockState['blockHash']   # Hash of the highest block in chain
     self.blockHeight = self.blockState['blockHeight']
     self.depthWeightedChainDistancePreviousBlock = self.blockState['depthWeightedChainDistancePreviousBlock']
+    self.root = '5000'   # Used to root the current state in redis
+    
+    # add in current_instructions with get / set mechanisms that then link to REDIS here
+    self.current_instructions = {}
+    
     logging.info(f'\nprevious block convergence matrix is {self.outputMatrix}')
     # get the agent public keys into a binary matrix
     
@@ -45,6 +54,28 @@ class blockState:
     # sort the level lists to make it more efficient and use takeClosest (note sorting is highly optimised in Python)
     for e in self.level:
       self.level[e].sort()
+    
+    # setup rejson as our in memory store.  
+    # TODO - store the data in redis on shutdown of redis
+    self.red = redis.StrictRedis(host='localhost', port=6379, db=0)
+    
+    # create the instructionPool object to store instructions
+    # TODO implement the redlock algorithm for locking 
+    
+  # Manage the instruction pool 
+  def addInstruction(self, instruction, hash):
+    self.current_instructions[hash] = instruction
+    
+    logging.info(f'\nwriting {hash} to redis\n')
+    
+    # Store to redis
+    self.red.set('instructionPool:' + hash, json.dumps(instruction))
+    
+    return
+
+  def getInstructionList(self):
+    logging.info(f'Returning instructions for getInstructionList: {self.current_instructions.values()}')
+    return self.current_instructions.values()
   
   # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
   def sendMessage(self,agentID, message, function):
@@ -62,7 +93,7 @@ class blockState:
         logging.debug(f'\nGot valid response from sendMessage')
         return (True, msgResponse)
       except ConnectionRefusedError:
-        logging.error(f'\nGot connectio refused\n')
+        logging.error(f'\nGot connection refused\n')
         return (False, 'Error - Agent not able to be connected to')
       except:
         logging.error(f'\nGot error {sys.exc_info()[0]}\n')
@@ -72,12 +103,26 @@ class blockState:
       return (False, 'Error - agent not known')   # TODO throw exception for this? 
 
   
+  # postJob is internal and used to communicate to queue.  In the local implementation this is to a redis queue (pip install rq)
+  # Note if using redis on Windows need to run linux subsystem (https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+  def postJob(self,data):
+    redis_conn = redis.Redis()
+    # TODO check if need to do 1 call for Redis not here
+    q = Queue('5000', connection=redis_conn)  # send to default queue for now
+    jsondata = json.dumps(data)
+    job = q.enqueue(blockConvergeAndPublish, jsondata)
+    logging.info(f'Sent {jsondata} - on default queue')
+    return
+     
+
+  
   def getPubKey(self, pubKey):
     return self.agentPublicKeys[pubKey]
   
   
   # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
   # currently it is order of log(n) 
+  # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
   def nextCircle(self,lastBlockMatrix, excludedAgents):
     nextcircle, bIndex = [],0
     self.templevel = self.level.copy()

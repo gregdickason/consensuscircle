@@ -1,0 +1,54 @@
+Original exception was:
+Traceback (most recent call last):
+  File "testrejson.py", line 16, in <module>
+    temp = rj.jsonget('obj')
+  File "/home/greg/.local/lib/python3.6/site-packages/rejson/client.py", line 114, in jsonget
+    return self.execute_command('JSON.GET', *pieces)
+  File "/home/greg/.local/lib/python3.6/site-packages/redis/client.py", line 668, in execute_command
+    return self.parse_response(connection, command_name, **options)
+  File "/home/greg/.local/lib/python3.6/site-packages/redis/client.py", line 682, in parse_response
+    return self.response_callbacks[command_name](response, **options)
+  File "/usr/lib/python3.6/json/decoder.py", line 339, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+TypeError: cannot use a string pattern on a bytes-like object
+
+
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/apport_python_hook.py", line 63, in apport_excepthook
+    from apport.fileutils import likely_packaged, get_recent_crashes
+  File "/usr/lib/python3/dist-packages/apport/__init__.py", line 5, in <module>
+    from apport.report import Report
+  File "/usr/lib/python3/dist-packages/apport/report.py", line 30, in <module>
+    import apport.fileutils
+  File "/usr/lib/python3/dist-packages/apport/fileutils.py", line 23, in <module>
+    from apport.packaging_impl import impl as packaging
+  File "/usr/lib/python3/dist-packages/apport/packaging_impl.py", line 23, in <module>
+    import apt
+  File "/usr/lib/python3/dist-packages/apt/__init__.py", line 23, in <module>
+    import apt_pkg
+ModuleNotFoundError: No module named 'apt_pkg'
+
+Original exception was:
+Traceback (most recent call last):
+  File "testrejson.py", line 25, in <module>
+    rj.jsondel('obj', Path('.arr[0]'))
+  File "/home/greg/.local/lib/python3.6/site-packages/rejson/client.py", line 101, in jsondel
+    return self.execute_command('JSON.DEL', name, str_path(path))
+  File "/home/greg/.local/lib/python3.6/site-packages/redis/client.py", line 668, in execute_command
+    return self.parse_response(connection, command_name, **options)
+  File "/home/greg/.local/lib/python3.6/site-packages/redis/client.py", line 680, in parse_response
+    response = connection.read_response().decode('utf-8')
+AttributeError: 'int' object has no attribute 'decode'
+
+
+
+
+fixed changing line 680 in client.py to 
+
+response = connection.read_response()
+if isinstance(response, bytes):
+  response = response.decode('utf-8')
+
+As the python3.6/json/decoder.py error is related to getting a binary input string
+But this will have hairs on it as probably relies on encoding for the particular server

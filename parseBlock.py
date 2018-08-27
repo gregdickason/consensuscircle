@@ -60,6 +60,7 @@ class parseBlock:
         # Now do checks:
         # Is blockhash the same
         # TODO confirm json.dumps is deterministic.  If order changes then hash will change.  May need more reliable approach
+        # TODO use orderedDict for loading: https://stackoverflow.com/questions/2774361/json-output-sorting-in-python
         self.calculatedHash = getHashofInput(json.dumps(self.blockHeader))
         logging.info(f'blockhash is: \n{self.blockHash}\nCalculated:\n{self.calculatedHash}\n')
         if self.blockHash != self.calculatedHash:

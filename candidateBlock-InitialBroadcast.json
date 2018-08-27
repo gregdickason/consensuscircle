@@ -1,0 +1,55 @@
+{
+  	              
+	"gossip" :  [{"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920":
+	               {"previousBlock" : "695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4",
+	    	       	"instructionsMerkleRoot" :  "aefabad2ed90f15cc1b89145a300422c4d753210a611b872d26524f2087f827a",
+		       	"instructionHandlersMerkleRoot" :  "96deabd82c6caf004719e6d3cdc97ba3aa122ef8493c750275775ca970eb02d9",
+		       	"instructionCount" : 3,
+		       	"instructionHandlerCount" : 4,
+		       	"blockHeight" :  1,
+		       	"randomNumberHash" : ['9e948059b53fa14c494f9ee935970c687dd8a51210e384ffab3b34700903b8b6', '8a648a67ec70488c62013cbda291db8ffc8b96a5c2c14d9d37cec784d822fa80', '445248805ea55da93b13a0ada98c79638ed6d489875a49c449a9ca8e55f5de67', 'bc84115a92b21c4f522bf0440f973fdafdd4d903398114ad6366d6a04999dcb5', 'af337edbd2c474ddd865b9ef9f9e89f2327a9c2c2f024809541a9dadbf39cf1a'],
+                       },
+                      "sign":"AlqYGbLCR7YbDcuBEd6vlaDYCsuF1Hro+EuJG6st7Q4YpOoIxrRVZU8JWF53+q1/U9O4fQZg9WZMDH97sBvCLg==",
+                      "trusted":1},
+			
+		      {"cb4d24f31f25703dd89fee5aa4813f55a16ce8d05d76af819e02b5c9f7ace7b2":
+		      	               {"previousBlock" : "695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4",
+		      	    	       	"instructionsMerkleRoot" :  "aefabad2ed90f15cc1b89145a300422c4d753210a611b872d26524f2087f827a",
+		      		       	"instructionHandlersMerkleRoot" :  "96deabd82c6caf004719e6d3cdc97ba3aa122ef8493c750275775ca970eb02d9",
+		      		       	"instructionCount" : 3,
+		      		       	"instructionHandlerCount" : 4,
+		      		       	"blockHeight" :  1,
+		      		       	"randomNumberHash" : ['9e948059b53fa14c494f9ee935970c687dd8a51210e384ffab3b34700903b8b6', '8a648a67ec70488c62013cbda291db8ffc8b96a5c2c14d9d37cec784d822fa80', '445248805ea55da93b13a0ada98c79638ed6d489875a49c449a9ca8e55f5de67', 'bc84115a92b21c4f522bf0440f973fdafdd4d903398114ad6366d6a04999dcb5', 'af337edbd2c474ddd865b9ef9f9e89f2327a9c2c2f024809541a9dadbf39cf1a'],
+		                             },
+		                            "sign":"AlqYGbLCR7YbDcuBEd6vlaDYCsuF1Hro+EuJG6st7Q4YpOoIxrRVZU8JWF53+q1/U9O4fQZg9WZMDH97sBvCLg==",
+		                            "trusted":1},
+
+                       
+                     ...     
+ 			     
+ 		     ],
+ 	"broadcaster":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920",	     
+ 	"signedGossip":"/j6rlKDEhoDEdak8uSIDSePmxatk3FN0dbrI2t/ans3tBNICKPfgP3zwXRgMz4X2SQGht2NE9am7Vfe57BeSqQ==",	     
+"instructionHashes" : ["cffc1a33c4fa8c63450171ce0090b5daf13d11b8bad395f6e5dc07a28efc1e91","b57cb3e6f6bedfd9dc04a65ca92af3febb70f235d86aacf4eb3f7fd187367b72","bd7fc83b062edd4dc3ee42baf6d83a540a6a03b54510357d194801f8a48309b3"],
+"instructionHandlerHashes" : ["691311ba52a7fb93d95bcd88a88df6d55ff8c0d8db25a7a9e6656ee4d6d7cd56","b8af1c7b379903cbaf37e1213797c6412687c602be8e4e53d43fd022b6e74da2","f1386828848c8a15220a882d7139d069f815d2492c617d01934f3a38b2fa8185","c0e7010402a50e07ecbc21dea666c24d4ad1a2cba98e5f877d04325494941548"]
+}
+
+
+back from python:
+{'gossip': [{'17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920': 
+		{'previousBlock': '695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4', 
+		'instructionsMerkleRoot': 'fff54f69c9e4cca69f585478a550828f60d5337b6d4b119469bdb12b6c60d728', 
+		'instructionCount': 5, 
+		'blockHeight': 0, 
+		'randomNumberHash': ['a77657e6f60765b6eee200c7b67f1bbf91ef31da992d35cd038d2fb94548e5cf', 'b7e809210fead744e06b8b32d2e24a401fa7be533e39598901803eb57459fce8', '606ebbab40fda2da18a8b6ca149d2b440e900d0f9b64b5e815bd0eaf689bc511', '4ca7ebe8dca58b1673ae9a50cbd4631423918172b0dde38ffa6b37b9e40e4d58', '3bd1eacc10d3dbeb80d1ebf67dec87a1e4cba650b34b813d2d800d3df3881015']
+		}, 
+		'sign': 'eC0CFwrQHYGjgtKeMU1m+Xzxn5eXKKkyg1vyYWPPzSMS4WmdmxhtRWdjEBsypEi88VXJWUXzXHZVGP2r12UdOA==', 
+		'trusted': 1}
+		], 
+		
+	'broadcaster': '17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920', 
+	'signedGossip': 's4FXELMVDs7M2AbT76rcBeXSvPmD0TPCLo6jg6f415nuwWgOerCRtBvTmn6SpXQnWFsUOBnEflg74+0UXCbpsA==', 
+	'instructionHashes': ['892d8844a61e38cdda9495026ece1b950f65cfcd0b1f8a0420ded163432bf5d7', 'a879c427374a600db890a00bc6fce124c5e4bd1fc35a8b60ffb9abea221255e0', '9dc2ec28e327dcedc0e168df7e9145e0dec5185015cdd0909b24db415ba659b8', 'dd9880075fa086e6025f6a01a4e2a9045ac751b5417045082668e5a9ca97c9c8', '5908a04a072f0beb2d7521bb9ec77662234c4a8ccb44d4e15541e91952380938'], 
+	'agentSettings': {
+			'randomMatrix': ['ebc792badf71be39a3301439e69638250fb9cc95576dc269904f2b1390c4d600', 'd732b6686d53e3f1e8d9e46ec254e56d43338a4202783f1a157354402a826126', '66e079be7cb8b1275ab4c4ebe46b0c31a526f30446eb181b84af07a2a987c87d', '0d05afdf7864c1498d31b39764f374f13790e3cf5affb97b5d7cebdbf50ed2e1', '799e63a350d0e7d119b4598473489a243d070ca588a0ca164461d15a0feda91d'], 
+			'seed': '19934ae684c6e5f0eb3ca6f578cb35d6aaba5d4fa5145b7b8dfabfe3be703fe5'}}

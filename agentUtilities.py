@@ -36,10 +36,8 @@ def converge(m,a):
 def hashvector(v,s):
   vlen, i, out = len(v), 0, []
   while i < vlen:
-    yield hashlib.sha256(str(v[i]).encode(ENCODING) + str(s).encode(ENCODING)).hexdigest()
+    yield getHashofInput(v[i] + s)
     i += 1
-
-
 
 # Get the hash for a json string (cast to str if not).
 def getHashofInput(input):

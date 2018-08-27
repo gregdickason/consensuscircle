@@ -1,0 +1,5 @@
+Todo
+
+
+- Dump redis json.  Too complex and causing issues.  Do parsing in memory for local client.  Use redis for queues and shared memory structures
+Write redis then for key - value stores but not for embedded json, store by hash
