@@ -1,4 +1,5 @@
 import json
+import copy
 from bisect import bisect_left
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -26,6 +27,7 @@ class blockState:
     
     # add in current_instructions with get / set mechanisms that then link to REDIS here
     self.current_instructions = {}
+    self.current_instructionHandlers = {}
     
     logging.info(f'\nprevious block convergence matrix is {self.outputMatrix}')
     # get the agent public keys into a binary matrix
@@ -63,19 +65,43 @@ class blockState:
     # TODO implement the redlock algorithm for locking 
     
   # Manage the instruction pool 
-  def addInstruction(self, instruction, hash):
-    self.current_instructions[hash] = instruction
+  def addInstruction(self, instruction, hash,sign):
+    insOut = {}
+    insOut['instructionHash'] = hash
+    insOut['sign'] = sign
+    insOut['instruction'] = instruction
     
     logging.info(f'\nwriting {hash} to redis\n')
+    self.current_instructions[hash] = insOut
     
     # Store to redis
-    self.red.set('instructionPool:' + hash, json.dumps(instruction))
+    self.red.set('instructionPool:' + hash, json.dumps(insOut))
+    
+    return
+    
+  # Manage the instructionHandler pool 
+  def addInstructionHandler(self, instructionHandler, hash,sign):
+    
+    logging.info(f'\nwriting {hash} to redis\n')
+    insHanOut = {}
+    insHanOut['instructionHandlerHash'] = hash
+    insHanOut['sign'] = sign
+    insHanOut['instructionHandler'] = instructionHandler
+    self.current_instructionHandlers[hash] = insHanOut
+    
+    # Store to redis
+    self.red.set('instructionHandlerPool:' + hash, json.dumps(insHanOut))
     
     return
 
   def getInstructionList(self):
     logging.info(f'Returning instructions for getInstructionList: {self.current_instructions.values()}')
     return self.current_instructions.values()
+
+  def getInstructionHandlerList(self):
+    logging.info(f'Returning instructionHandlerss for getInstructionHandlerList: {self.current_instructionHandlers.values()}')
+    return self.current_instructionHandlers.values()
+
   
   # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
   def sendMessage(self,agentID, message, function):
@@ -125,12 +151,15 @@ class blockState:
   # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
   def nextCircle(self,lastBlockMatrix, excludedAgents):
     nextcircle, bIndex = [],0
-    self.templevel = self.level.copy()
+    logging.info(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}') 
+    self.templevel = copy.deepcopy(self.level)
+    logging.info(f'templevel is {self.templevel}')
     
     # remove all the excludedAgents per level:
     for level in excludedAgents:
       levelName = level['level']
       for i in level[levelName]:
+        logging.info(f'removing {i}')
         self.templevel[levelName].remove(i)
     
     # find next agent and delete from level so cant be chosen twice:    
@@ -155,7 +184,7 @@ class blockState:
       Ignore anything in the excludedList
       """
       
-        
+      logging.info(f'takeClosest: {myList} and {myNumber}')  
       # for efficiency could remove before returning (rather than search through twice on the return call)      
       pos = bisect_left(myList, myNumber)
       if pos == 0:

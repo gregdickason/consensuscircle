@@ -40,7 +40,7 @@ class TddAgent(TestCase):
 
 
     def test_120_process_firstBlock_returns200(self):
-             url = "http://localhost:5000/blockPublished?blockID=bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json"
+             url = "http://localhost:5000/blockPublished?blockID=1a044569fd3419c376356dedfc45989c8200dd64362cc9f4160e7aed9dc8a88a.json"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))

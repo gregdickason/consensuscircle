@@ -237,6 +237,24 @@ def instruction():
     else:
       return jsonify(agentResponse['message']), 200
 
+@app.route('/instructionHandler', methods=['POST'])
+def instructionHandler():
+    # Testing parameters - is network on 
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400    
+    
+    # Add an instruction to the pool of unprocessed instructions
+    logging.info("received an instructionHandler to add")
+    values = request.get_json()
+    
+    agentResponse = agent.processInstructionHandler(values)
+    
+    if agentResponse['success'] == False:
+      return jsonify(agentResponse['message']), 400
+    else:
+      return jsonify(agentResponse['message']), 200
+    
     
 # TODO remove this routine.  It is being used as to accept agents we want to follow for instrution updates
 # build routine into instruction parsing (when we will choose to randomly follow agents?) 

@@ -22,13 +22,14 @@ from trackedAgent import trackedAgent  #TODO do we need this?
 
 #utility functions - add to class?
 from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage 
-from processInstruction import validateInstruction
+from processInstruction import validateInstruction, validateInstructionHandler
 
 class Agent:
     def __init__(self):
         # TODO load from blockstate?  (handles long term state)
         #self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
         self.instruction_hashes = set() 
+        self.instruction_Handlerhashes = set() 
         self.chain = collections.deque(maxlen = 100) # this should be a setting and is for the most recent blocks
         self.entityInstructions = 100 # global ccEntity setting needs to be read
         
@@ -115,7 +116,7 @@ class Agent:
         else:
             raise ValueError('Invalid URL')
        
-    def add_instruction(self, hash, instruction):
+    def add_instruction(self, hash, instruction, sign):
        
         # Check hash is right - if not error (TODO: block the calling agent)
         # Also check if we trust the sender.  If not then block.  TODO - create trusted senders list we share with others
@@ -131,12 +132,37 @@ class Agent:
         # This is Mutexed for hash control
         # TODO add to the redis pool in the blockstate
         with self.insMutex: 
-          self.blockState.addInstruction(instruction,hash)
+          self.blockState.addInstruction(instruction,hash,sign)
           # TODO get from blockstate if in pool (not from our hash list)
           self.instruction_hashes.add(hash)
         logging.info(f'instruction hashes are {self.instruction_hashes}')
         # TODO - get the length from the blockstate 
         return len(self.instruction_hashes)
+
+    def add_instructionHandler(self, hash, instructionHandler, sign):
+       
+        # Check hash is right - if not error (TODO: block the calling agent)
+        # Also check if we trust the sender.  If not then block.  TODO - create trusted senders list we share with others
+        if getHashofInput(instructionHandler) != hash:
+            return 0   
+        
+        # check if the hash has already been received for this instruction and if so then dont append
+        # TODO get from blockstate if in the pool
+        if hash in self.instruction_Handlerhashes:
+            logging.info(f'Received instructionHandler already have, instructionHandler hashes are {self.instruction_Handlerhashes}')
+            return len(self.blockState.current_Handlerinstructions)
+        
+        # This is Mutexed for hash control
+        # TODO add to the redis pool in the blockstate
+        # TODO Separate InstructionHandler mutex?  or no mutex?
+        with self.insMutex: 
+          self.blockState.addInstructionHandler(instructionHandler,hash,sign)
+          # TODO get from blockstate if in pool (not from our hash list)
+          self.instruction_Handlerhashes.add(hash)
+        logging.info(f'instructionHandler hashes are {self.instruction_Handlerhashes}')
+        # TODO - get the length from the blockstate 
+        return len(self.instruction_Handlerhashes)
+
     
     
     def add_instruction_hash(hash):
@@ -190,6 +216,7 @@ class Agent:
         # coinbase transactions to recognise, plus we need to reprocess who should be in the circle)
         # TODO - Circle Distance Check, Look at even lower in the stack as lower height still forkable
         if newBlock.blockHeight == self.chain[len(self.chain)-1].blockHeight:
+            logging.info(f'Block published - same height as previous block.  Ignore for now')
             agentResponse['message'] = {
                 'chainLength' : len(self.chain) - 1,
                 'lastBlock': self.chain[len(self.chain)-1].blockHash,
@@ -201,6 +228,7 @@ class Agent:
             # TODO If not then calculate the circleDistance and if lower then use this block (accept the fork)  --> which means undoing instructions that have completed
             # TODO on this (look at blockheight, etc).  Also need to make sure we cant be attacked with something random that consumes processing power
             # if lower down we need to reprocess the coinbase transactions
+            logging.info(f'Block published - not referencing previous block hash')
             agentResponse['message'] = {
                    'message' : 'Received block not in chain.  need to manage it TODO'
                   }
@@ -219,6 +247,7 @@ class Agent:
         # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
     
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
+        logging.info(f'New block output matrix is {newBlock.outputMatrix}')
         self.nextCircle = self.blockState.nextCircle(newBlock.outputMatrix, [])  # No excluded agents for now
     
         # TODO: check if already in a circle and what this block means - do we stop processing?
@@ -263,13 +292,35 @@ class Agent:
           return validInstruction
 	  
         # GREG: put into Blockstate here
-        numberInstructions = self.add_instruction(values['instructionHash'], values['instruction'])
+        numberInstructions = self.add_instruction(values['instructionHash'], values['instruction'], values['sign'])
         
         agentResponse['message'] = {
             'message': f'Agent currently has {numberInstructions} instructions in the unprocessed pool',
             'instructions': list(self.instruction_hashes)
         }
         return agentResponse
+
+    def processInstructionHandler(self,values):
+        # Add an instructionHandler to the pool of unprocessed instructionHandlers
+        logging.info("received an instructionHandler to add")
+        agentResponse = {}
+        agentResponse['success'] = True
+        
+        # Check that the required fields are in the POST'ed data
+        validInstructionHandler = validateInstructionHandler(values)
+        if not validInstructionHandler['return']:
+          return validInstructionHandler
+	  
+        # GREG: put into Blockstate here
+        numberInstructionHandlers = self.add_instructionHandler(values['instructionHandlerHash'], values['instructionHandler'], values['sign'])
+        
+        agentResponse['message'] = {
+            'message': f'Agent currently has {numberInstructionHandlers} instructionHandlers in the unprocessed pool',
+            'instructionHandlers': list(self.instruction_Handlerhashes)
+        }
+        return agentResponse
+
+
 
 
 # TODO Put this in a separate module with class that loads up from persistent storage?			
@@ -280,12 +331,13 @@ class Agent:
      
      # TODO Use an orderedMap here for consistent Hash
      myMap = {}
-     myMap["previousBlock"] = self.chain[0].blockHash
+     myMap["previousBlock"] = self.chain[len(self.chain)-1].blockHash
      myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.instruction_hashes)
-     #myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.instructionHandlerHashPool)
+     myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.instruction_Handlerhashes)
      myMap["instructionCount"] = len(self.blockState.current_instructions)
-     #myMap["instructionHandlerCount"] = len(self.current_instructionHandlers)
-     myMap["blockHeight"] = self.chain[0].blockHeight
+     myMap["instructionHandlerCount"] = len(self.blockState.current_instructionHandlers)
+     # TODO fix as chain 0 isnt highest block?  Append issue?
+     myMap["blockHeight"] = self.chain[len(self.chain)-1].blockHeight + 1 # 1 higher for next block
      myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
      myGossip = {}
      myGossip[self.agent_identifier] = myMap
@@ -296,7 +348,8 @@ class Agent:
      candidate["signedGossip"] = signMessage(myGossip, self.agentPrivKey)
      candidate["instructionHashes"] = list(self.instruction_hashes)
      candidate["instructions"] = list(self.blockState.getInstructionList())
-     #candidate["instructionHandlerHashes"] = list(self.HandlerHashPool)
+     candidate["instructionHandlerHashes"] = list(self.instruction_Handlerhashes)
+     candidate["instructionHandlers"] = list(self.blockState.getInstructionHandlerList())
      
      # we send randomMatrix and seed too so this can be reused 
      mySettings = {}

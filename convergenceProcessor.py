@@ -1,8 +1,11 @@
 import requests
 import json
+from consensusEmulator import consensusEmulator
+
 from redis import Redis
 from rq import Queue
 from rejson import Client, Path
+
 
 
 # This is the processor for converging the circle, it listens on a queue as convergence is asynchronous (non blocking).  
@@ -66,9 +69,11 @@ def blockConvergeAndPublish(candidateData):
 
     # NORMALLY would now converge.  For this version we broadcast the block (publish it) as if convergence happened
     # sign from everyone
+    candidateBlock = consensusEmulator(candidateStructure)
+
+    
     
     # Step 1:  load the current blockstate from DB
-    
     
     # Steps 2..n : 
     
