@@ -81,19 +81,24 @@ def instructionPool():
     
     
 @app.route('/entity', methods=['GET'])
-def returnEntities():
+def returnEntity():
     # Testing parameters - is network on 
     if not networkOn:
       response = {'network' : f'{networkOn}'}
       return jsonify(response), 400
     
-    logging.info("returning entities")
-    # need to do a get on the entities we are tracking that we already know about            
-    response = {
-                'entity' : 'NOT YET IMPLEMENTED'
-               }
+    entity = request.args.get('entity')
     
-    return jsonify(response), 200
+    logging.info(f'returning entity {entity}')
+    
+    agentResponse = agent.getEntity(entity)
+    
+    # need to do a get on the entities we are tracking that we already know about            
+    if agentResponse['success'] == False:
+        return jsonify(agentResponse['message']), 400
+    else:
+        return jsonify(agentResponse['message']), 200
+  
 
   
 @app.route('/ownerPublicKey',methods=['GET'])

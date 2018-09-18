@@ -17,7 +17,7 @@ class blockState:
   def __init__(self):
     with open('currentBlockChainState.json') as json_data:
         self.blockState = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
-    logging.info(f'Blockchain State is {self.blockState}')
+    logging.debug(f'Blockchain State is {self.blockState}')
     self.outputMatrix = self.blockState['blockRandomMatrix']
     self.merkleTreeRoot = self.blockState['blockMerkleRoot']  # Random for simulation 
     self.blockHash = self.blockState['blockHash']   # Hash of the highest block in chain
@@ -28,8 +28,18 @@ class blockState:
     # add in current_instructions with get / set mechanisms that then link to REDIS here
     self.current_instructions = {}
     self.current_instructionHandlers = {}
+    self.current_entities = {}
     
-    logging.info(f'\nprevious block convergence matrix is {self.outputMatrix}')
+    # Load entities - stored in individual JSON files for the local copy.  This will get unweildly 
+    # TODO: store long term in redis or some compact json form (binary json) 
+    for e in self.blockState['Entities']:
+      with open(e + '.json') as json_data:
+        entity = json.load(json_data)
+        logging.debug(f'loaded {entity}')
+        self.current_entities[entity['Entity']] = entity
+    
+    
+    logging.debug(f'\nprevious block convergence matrix is {self.outputMatrix}')
     # get the agent public keys into a binary matrix
     
     self.agents = self.blockState['agents']
@@ -71,7 +81,7 @@ class blockState:
     insOut['sign'] = sign
     insOut['instruction'] = instruction
     
-    logging.info(f'\nwriting {hash} to redis\n')
+    logging.debug(f'\nwriting {hash} to redis\n')
     self.current_instructions[hash] = insOut
     
     # Store to redis
@@ -82,7 +92,7 @@ class blockState:
   # Manage the instructionHandler pool 
   def addInstructionHandler(self, instructionHandler, hash,sign):
     
-    logging.info(f'\nwriting {hash} to redis\n')
+    logging.debug(f'\nwriting {hash} to redis\n')
     insHanOut = {}
     insHanOut['instructionHandlerHash'] = hash
     insHanOut['sign'] = sign
@@ -95,17 +105,28 @@ class blockState:
     return
 
   def getInstructionList(self):
-    logging.info(f'Returning instructions for getInstructionList: {self.current_instructions.values()}')
+    logging.debug(f'Returning instructions for getInstructionList: {self.current_instructions.values()}')
     return self.current_instructions.values()
 
   def getInstructionHandlerList(self):
-    logging.info(f'Returning instructionHandlerss for getInstructionHandlerList: {self.current_instructionHandlers.values()}')
+    logging.debug(f'Returning instructionHandlerss for getInstructionHandlerList: {self.current_instructionHandlers.values()}')
     return self.current_instructionHandlers.values()
 
+
+  # All entities in memory
+  # TODO: use redis to store enties and persist to disk when needed. (or as backup store on Redis)
+  def getEntity(self, entity):
+    logging.debug(f'Getting entity {entity} in blockState)')
+    try:
+      return self.current_entities[entity]
+    except: 
+      # TODO throw exception and handle in Agent 
+      return ''
+    
   
   # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
   def sendMessage(self,agentID, message, function):
-    logging.info(f'\nGot {message}  to send\n')
+    logging.debug(f'\nGot {message}  to send\n')
              
     if agentID in self.agentURLs.keys():
       request = Request(self.agentURLs[agentID] + '/' + function)
@@ -113,7 +134,7 @@ class blockState:
       jsondata = json.dumps(message)
       jsondataasbytes = jsondata.encode('utf-8')
       request.add_header('Content-Length', len(jsondataasbytes))
-      logging.info(f'\nRequest is {request}  \n')
+      logging.debug(f'\nRequest is {request}  \n')
       try:
         msgResponse = json.loads(urlopen(request,jsondataasbytes).read().decode('utf-8'))
         logging.debug(f'\nGot valid response from sendMessage')
@@ -137,29 +158,36 @@ class blockState:
     q = Queue('5000', connection=redis_conn)  # send to default queue for now
     jsondata = json.dumps(data)
     job = q.enqueue(blockConvergeAndPublish, jsondata)
-    logging.info(f'Sent {jsondata} - on default queue')
+    logging.debug(f'Sent {jsondata} - on default queue')
     return
      
 
   
-  def getPubKey(self, pubKey):
-    return self.agentPublicKeys[pubKey]
-  
+  def getPubKey(self, pubKeyHash):
+    # is this an agent or an entity? 
+    if pubKeyHash in self.agentPublicKeys:
+      return self.agentPublicKeys[pubKeyHash]
+    elif pubKeyHash in self.current_entities:
+      return self.current_entities[pubKeyHash]['PublicKey']
+    else:
+      #TODO throw errors / error checking
+      return
   
   # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
   # currently it is order of log(n) 
   # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
   def nextCircle(self,lastBlockMatrix, excludedAgents):
     nextcircle, bIndex = [],0
-    logging.info(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}') 
+    logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}') 
+    # TODO - efficiency of deepcopy will not scale.  Different approach excluding agents needed.  Code this
     self.templevel = copy.deepcopy(self.level)
-    logging.info(f'templevel is {self.templevel}')
+    logging.debug(f'templevel is {self.templevel}')
     
     # remove all the excludedAgents per level:
     for level in excludedAgents:
       levelName = level['level']
       for i in level[levelName]:
-        logging.info(f'removing {i}')
+        logging.debug(f'removing {i}')
         self.templevel[levelName].remove(i)
     
     # find next agent and delete from level so cant be chosen twice:    
@@ -184,7 +212,7 @@ class blockState:
       Ignore anything in the excludedList
       """
       
-      logging.info(f'takeClosest: {myList} and {myNumber}')  
+      logging.debug(f'takeClosest: {myList} and {myNumber}')  
       # for efficiency could remove before returning (rather than search through twice on the return call)      
       pos = bisect_left(myList, myNumber)
       if pos == 0:

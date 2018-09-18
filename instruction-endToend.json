@@ -1,0 +1,45 @@
+
+
+
+GREG: process here
+{
+  "instructionHash": "85ceeddce78c021d6e55c8f3e422f7817df3f8f7e18c3db9dd5f0a100d1ede6d",
+  "sign": "YZSWn6QUtL7pCmzLTUBgFMudEwDbK567GU2jDUzRvofcLIdbNTziWrZOo0ybMG3AMWDJdodVyfmte46HIE9afQ==",
+  "instruction": {
+    "source": "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c",
+    "mostRecentBlockHeight": 1,
+    "slots": [
+      {
+        "wallet": "Default",
+        "payment": 200000000,
+        "action": "MinerFee",
+        "timeout": 0
+      },
+      {
+        "wallet": "Default",
+        "payment": 0,
+        "action": "Claim",
+        "target": "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c",
+        "UpdateAction": "Identity.Citizenship.Type = South African",
+        "timeout": 0
+      },
+      {
+        "wallet": "Default",
+        "payment": 500000000,
+        "action": "ValidationRequest",
+        "target": "a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100",
+        "UpdateAction": "Identity.Citizenship.Type = South African",
+        "timeout": 0
+      }
+    ]
+  }
+}             
+ 
+
+{"source":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","mostRecentBlockHeight":1,"slots":[{"wallet":"Default","payment":200000000,"action":"MinerFee","timeout":0},{"wallet":"Default","payment":0,"action":"Claim","target":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","UpdateAction":"Identity.Citizenship.Type = South African","timeout":0},{"wallet":"Default","payment":500000000,"action":"ValidationRequest","target":"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100","UpdateAction":"Identity.Citizenship.Type = South African","timeout":0}]}
+
+
+use:  https://jsoneditoronline.org/#/ to clear up
+GREG Notes:
+
+Put in slot numbers for consuming inbound instructions?  Escrows reference permissions from previous instructions (so not stored against entity)

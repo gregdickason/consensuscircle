@@ -71,9 +71,9 @@ class Agent:
             self.signedIdentifier = self.config['signedIdentifier']
             self.agentPrivKey = self.config['agentPrivateKey']
 
-        logging.info('Getting blockchain State')
+        logging.debug('Getting blockchain State')
         self.blockState = blockState()
-        logging.info('Parsing Genesis Block')
+        logging.debug('Parsing Genesis Block')
         self.genesisBlock = genesisBlock()
         
         # add genesis block to the chain on startup if we have no state we can read from
@@ -135,7 +135,7 @@ class Agent:
           self.blockState.addInstruction(instruction,hash,sign)
           # TODO get from blockstate if in pool (not from our hash list)
           self.instruction_hashes.add(hash)
-        logging.info(f'instruction hashes are {self.instruction_hashes}')
+        logging.debug(f'instruction hashes are {self.instruction_hashes}')
         # TODO - get the length from the blockstate 
         return len(self.instruction_hashes)
 
@@ -159,7 +159,7 @@ class Agent:
           self.blockState.addInstructionHandler(instructionHandler,hash,sign)
           # TODO get from blockstate if in pool (not from our hash list)
           self.instruction_Handlerhashes.add(hash)
-        logging.info(f'instructionHandler hashes are {self.instruction_Handlerhashes}')
+        logging.debug(f'instructionHandler hashes are {self.instruction_Handlerhashes}')
         # TODO - get the length from the blockstate 
         return len(self.instruction_Handlerhashes)
 
@@ -175,12 +175,12 @@ class Agent:
          
     # Routine to get the current instruction pool we dont test convergence, any following agent can get this to populate their pool
     def instructionPool(self):
-        logging.info(f'In instructionPool')
+        logging.debug(f'In instructionPool')
         agentResponse = {}
         
         # TODO - get this from the blockstate
         
-        logging.info(f'\nhashpool is {self.instruction_hashes}')
+        logging.debug(f'\nhashpool is {self.instruction_hashes}')
         hashMerkle = returnMerkleRoot(self.instruction_hashes)
         hashSigned = signMessage(hashMerkle,self.agentPrivKey)
         agentResponse['message'] = {
@@ -197,7 +197,7 @@ class Agent:
         agentResponse = {}
         agentResponse['success'] = True
         
-        logging.info("new block published, retrieve validate and process it")
+        logging.debug("new block published, retrieve validate and process it")
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
         newBlock = parseBlock(blockID)
         
@@ -216,7 +216,7 @@ class Agent:
         # coinbase transactions to recognise, plus we need to reprocess who should be in the circle)
         # TODO - Circle Distance Check, Look at even lower in the stack as lower height still forkable
         if newBlock.blockHeight == self.chain[len(self.chain)-1].blockHeight:
-            logging.info(f'Block published - same height as previous block.  Ignore for now')
+            logging.debug(f'Block published - same height as previous block.  Ignore for now')
             agentResponse['message'] = {
                 'chainLength' : len(self.chain) - 1,
                 'lastBlock': self.chain[len(self.chain)-1].blockHash,
@@ -228,7 +228,7 @@ class Agent:
             # TODO If not then calculate the circleDistance and if lower then use this block (accept the fork)  --> which means undoing instructions that have completed
             # TODO on this (look at blockheight, etc).  Also need to make sure we cant be attacked with something random that consumes processing power
             # if lower down we need to reprocess the coinbase transactions
-            logging.info(f'Block published - not referencing previous block hash')
+            logging.debug(f'Block published - not referencing previous block hash')
             agentResponse['message'] = {
                    'message' : 'Received block not in chain.  need to manage it TODO'
                   }
@@ -247,7 +247,7 @@ class Agent:
         # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
     
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
-        logging.info(f'New block output matrix is {newBlock.outputMatrix}')
+        logging.debug(f'New block output matrix is {newBlock.outputMatrix}')
         self.nextCircle = self.blockState.nextCircle(newBlock.outputMatrix, [])  # No excluded agents for now
     
         # TODO: check if already in a circle and what this block means - do we stop processing?
@@ -257,7 +257,7 @@ class Agent:
         if self.agent_identifier in self.nextCircle:
           self.inCircle = True
           # setup the instructionPool
-          logging.info(f'copying the agent instructions: {self.instruction_hashes}')
+          logging.debug(f'copying the agent instructions: {self.instruction_hashes}')
           # TODO should below line be in a storage somewhere (blockcstate hold the instruction hashes in memory not against agent)
           
           # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
@@ -280,19 +280,22 @@ class Agent:
     # TODO: setup instruction handling and instructions.  2 sides to allow data management.  
     # For example, and offer from a company will be an instrcution handler: 'if you have these attributes and you send me this proof through an instruction, this handler will do XYZ'
     # The above allows people to 'always opt in' through delegating agents to share some of their data (with shared keys), to opt in when they want, to partiipate in anonymous surveys (through anonymous matching of their attributes), to contribute and earn from models,or to never opt in but understand the value of the data they have
-    def processInstruction(self,values):
+    def processInstruction(self,instruction):
         # Add an instruction to the pool of unprocessed instructions
-        logging.info("received an instruction to add")
+        logging.debug('received an instruction to add')
         agentResponse = {}
         agentResponse['success'] = True
         
         # Check that the required fields are in the POST'ed data
-        validInstruction = validateInstruction(values)
+        validInstruction = validateInstruction(instruction, self.blockState)
         if not validInstruction['return']:
-          return validInstruction
+          logging.debug(f'Instruction not valid: {instruction}')
+          agentResponse['success'] = False
+          agentResponse['message'] = validInstruction['message']
+          return agentResponse
 	  
         # GREG: put into Blockstate here
-        numberInstructions = self.add_instruction(values['instructionHash'], values['instruction'], values['sign'])
+        numberInstructions = self.add_instruction(instruction['instructionHash'], instruction['instruction'], instruction['sign'])
         
         agentResponse['message'] = {
             'message': f'Agent currently has {numberInstructions} instructions in the unprocessed pool',
@@ -302,7 +305,7 @@ class Agent:
 
     def processInstructionHandler(self,values):
         # Add an instructionHandler to the pool of unprocessed instructionHandlers
-        logging.info("received an instructionHandler to add")
+        logging.debug("received an instructionHandler to add")
         agentResponse = {}
         agentResponse['success'] = True
         
@@ -318,6 +321,19 @@ class Agent:
             'message': f'Agent currently has {numberInstructionHandlers} instructionHandlers in the unprocessed pool',
             'instructionHandlers': list(self.instruction_Handlerhashes)
         }
+        return agentResponse
+        
+        
+    def getEntity(self, entity):
+        # gets entity as a JSON object referenced by the public key.
+        # TODO Error handling or return 'Entity not found JSON object'
+        agentResponse = {}
+        agentResponse['success'] = True
+        agentResponse['message'] = self.blockState.getEntity(entity)
+        if agentResponse['message'] == '':
+          agentResponse['success'] = False
+          
+        
         return agentResponse
 
 
@@ -359,7 +375,7 @@ class Agent:
      
      # post structure - do this through blockState
      self.blockState.postJob(candidate)
-     logging.info(f'candidate = {candidate}')
+     logging.debug(f'candidate = {candidate}')
    
    
      return

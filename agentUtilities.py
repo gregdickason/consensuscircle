@@ -163,7 +163,7 @@ def createSessionKeyFromPublicKey(pubKey):
 #def decryptWithSessionKey(sessKey):
 
 ### Merkle Tree Routines.  Borrowing from https://github.com/JaeDukSeo/Simple-Merkle-Tree-in-Python/blob/master/MerkleTrees.py but
-## using ordered Merkle Trees as the order of processing is based on the hash of instructions / instruction handlers
+## using ordered Merkle Trees as the order of processing instructions in a block is based on the hash of instructions / instruction handlers
 def returnMerkleRoot(myUnorderedArray):
   # TODO should we be checking if myUnorderedArray has length 0?
   # first hash and sort the array

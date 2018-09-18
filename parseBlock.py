@@ -18,9 +18,9 @@ class parseBlock:
         with open(blockID) as json_data:
             self.block = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
         
-        logging.info(f'in parseBlock')
+        logging.debug(f'in parseBlock')
         self.blockHash = self.block['blockHash']
-        logging.info(f'Block Hash is {self.blockHash}')
+        logging.debug(f'Block Hash is {self.blockHash}')
         self.blockHeader = self.block['blockHeader']
         self.convergenceHeader = self.blockHeader['convergenceHeader']
         self.consensusCircle = self.blockHeader['consensusCircle']
@@ -49,7 +49,7 @@ class parseBlock:
         self.blockComment = 'Block Conforms'
         
         self.bState = blockState()
-        logging.info(f'random Numbers are {self.randomNumbers}')
+        logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
           for f in e.values():
             self.randomMatrix.append(f)
@@ -122,7 +122,7 @@ class parseBlock:
         
         
         # Check consensus circle has signed off on the convergenceHeader
-        logging.info(f'parsing  blockSig {self.blockSignatures}')
+        logging.debug(f'parsing  blockSig {self.blockSignatures}')
         for e in self.blockSignatures:        
             self.blockSigs.append(list(e.values())[0])
        

@@ -1,0 +1,23 @@
+UTXO and consensus circle
+
+Consensus Circle utilises the same principles as Bitcoin with transaction handling.  
+
+These are:
+
+- Each instruction is paired to an instruction handler to complete the end to end processing.  B
+- Each instruction references the previous instructionHandler output which it fully uses up in one or more outputs that are matched to instruction handlers on other entities
+
+If no instruction handler is supplied, the default instruction handler is invoked.  This has simple rules:
+- if the instruction is from the owner of the entity it is handled by default.
+- if the instruction is not from the owner of the entity no updates are processed unless the update is only payment which causes an increment in a wallet balance
+
+The verification instruction process is an important one.  The process is simple
+- an update instruction referencing a payment is created by the owner of the entity.  This calls the standard instructionHandler 'update and verify' on the owners entity
+- the instructionHandler updates the entity and invokes 2 instructions: a 'verify entity' with payment and conditions for verification (from the calling instruction), and a payment instruction back to the entity for further payments to reference
+- the verification instruction is routed to the verifier by the cc, the verifier's has a 'verify entity' instructionHandler.  This has a timeout allowing the owner to action the verification (it can be automatic outside of the blockchanin). 
+- if the timeout is reached then another verifier can perform the verification and claim the reward.  If the verification is completed (signed data update) then the instruction payment is processed to the verifier.  (secondary verification is possible too where portion is passed to next level)
+
+
+NO.  Hold on this - state easier to manage per Ethereum conversation.  But need to have easy mechanism to roll back in event of a fork.  
+
+

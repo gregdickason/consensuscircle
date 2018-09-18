@@ -3,10 +3,10 @@
     "disable_existing_loggers": "False",
     "loggers": {
         "": {
-            "level": "INFO"
+            "level": "DEBUG"
         },
         "another.module": {
-            "level": "DEBUG"
+            "level": "ERROR"
         }
     }
 }

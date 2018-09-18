@@ -62,7 +62,7 @@ def blockConvergeAndPublish(candidateData):
     #         'seed': '2c917a7c9c79722822c482b809417606f7d73884dfd61828cabb8c33c34af2c1'}}
     
     candidateStructure = json.loads(candidateData)
-    
+    # TODO add in logging to this 
     print(f'\nReceived {candidateStructure}')
     broadcaster = candidateStructure['broadcaster']
     print(f'\n\nAnd the broadcaster is {broadcaster}')

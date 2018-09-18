@@ -19,14 +19,14 @@ With Consensus Circle the intention is different but no less ambitious:
 - Enable randomness, embrace entropy.  The world will change and we need to have a central way to produce trusted randomness that allows us to respond 
 - Build in mechanisms to scale and upgrade.  Dont assume you can know what the community will want
 - Let everyone participate.  
-- Know the limits of smart contracts.  Smart contracts are not magic, any code can have bugs.  Know the limitations of what a blockchain is and dont befuddle the world with fancy terms that allow tricksters to thrive.  As fr as possible use trust ad push processing to the edge: trust the outcomes not the contract
-- people delegated agents
+- Know the limits of smart contracts.  Smart contracts are not magic, any code can have bugs.  Know the limitations of what a blockchain is and dont befuddle the world with fancy terms that allow tricksters to thrive.  As far as possible use trust and push processing to the edge: trust the outcomes not the contract
+- allow people to delegate to 'agents' in the blockchain.  To choose who they trust
 
 So CC is:
 - not turing complete
 - built on random generation
 - open to all
-- layered trust
-easy to understand.  It is the Kumbaya of blockchains.  We sit. We hold hands. We chant, and we agree!
+- layered in trust
+- easy to understand.  It is the Kumbaya of blockchains.  We sit. We hold hands. We chant, and we agree!
 
 (Call it the agreement circle?)
