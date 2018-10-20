@@ -3,9 +3,113 @@
 
 GREG: process here
 {
-  "instructionHash": "85ceeddce78c021d6e55c8f3e422f7817df3f8f7e18c3db9dd5f0a100d1ede6d",
-  "sign": "YZSWn6QUtL7pCmzLTUBgFMudEwDbK567GU2jDUzRvofcLIdbNTziWrZOo0ybMG3AMWDJdodVyfmte46HIE9afQ==",
+  "instructionHash": "f5ff2eed1385eb6ed2c4275659dd1283447e2e0d9f7897806a1582346bde43b4",
+  "sign": "bmTE7fC9cLjXroGZzt7WzjEaqZXdKCuQkb9E8JuO98AbBNxucRTyd3DnlFKhVpyynhO/mm9LzL/76jNlBCFqdg==",
   "instruction": {
+    "source": "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c",
+    "sourceSequence": 126,
+     "type":"update",
+     "target": "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c",
+     "update": "identity.citizenship.type",
+      "value":"South African"
+  }
+}             
+ 
+ 
+ 
+ Types:
+ 
+ Type - update:
+ 
+ Checks:
+ - Currency of wallet in cc
+ - balance
+ - signatures etc
+
+ Type  -  update:
+  - Type: update
+ Hash originator
+ target
+ update:
+ value
+ 
+ Checks:
+ - has balance in cc default to pay processing fee (0.001 cc)
+ - has permission to update (in the set of those with permission)
+ - field is read / write.  (entity fields such as wallet currency are read only)
+ - signatures etc
+
+ (note the circle fees amount decremented and applied to miner pool 'promise to pay' against orginating entity when first processed.  
+ When added to block amount decremented and added to each circle account equally.
+ 
+ 
+ [ TODO: confirm that lua inside a transaction can confirm balance not < 0.  Eg if balance is 150 and we have 2 payments inside the instruction of 149 payment and 1 handler fee,  each the whole instruction fails]
+ 
+ 
+ Payment: 
+ - Lookup hash of lua payment script for redis.
+ Data in Instruction:
+ Hash originator
+ originator wallet
+ Hash receiver
+ receiver wallet
+ amount
+ 
+ Checks: 
+ - has cc default balance sufficient to pay processing fee (0.001 cc to start but a global setting)
+ - confirm same currency 
+ - confirm signatures ( multi signature included)
+ - confirm balance
+ - confirm wallet timeout rules are allowed (maximum number of payments per day, maximum payment amount per payer, 
+- confirm permissions 
+
+
+Verify:
+
+
+
+updateWithEvidence:
+
+
+updateEncryptedEvidence:
+(update with hash and encrypted url that can be sent on challenge)
+
+walletRule: (create a rule for timeout 
+
+
+poolData (zero knowledge funds receive for data):
+
+
+Zero Knowledge data sharing protocol:
+
+
+merkle tree with leaf nodes hash of Random (r) plus hash public key + hash data  H(H(r|p)|data)
+merkel zero knolwege payments!
+
+
+
+ 
+{"source":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","mostRecentBlockHeight":1,"slots":[{"wallet":"Default","payment":200000000,"action":["MinerFee","pay"],"timeout":0},{"wallet":"Default","payment":0,"target":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","script":["Identity.Citizenship.Type","South African","claim","update"],"timeout":0},{"wallet":"Default","payment":500000000,"target":"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100","script":["Identity.Citizenship.Type","South African","verify","instructionHandler"],"timeout":0}]}
+
+use:  https://jsoneditoronline.org/#/ to clear up
+GREG Notes:
+
+Put in slot numbers for consuming inbound instructions?  Escrows reference permissions from previous instructions (so not stored against entity)
+
+
+Going through bitcoin script:
+https://blockgeeks.com/guides/best-bitcoin-script-guide/
+
+then look at forth interpreters in python (https://github.com/jdinunzio/pyforth) and go: https://github.com/h8gi/fifth
+or even the linux assembly one: https://github.com/AlexandreAbreu/jonesforth 
+
+
+InstructionHandler:
+
+{
+  "instructionHandlerHash": "85ceeddce78c021d6e55c8f3e422f7817df3f8f7e18c3db9dd5f0a100d1ede6d",
+  "sign": "YZSWn6QUtL7pCmzLTUBgFMudEwDbK567GU2jDUzRvofcLIdbNTziWrZOo0ybMG3AMWDJdodVyfmte46HIE9afQ==",
+  "instructionHandler": {
     "source": "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c",
     "mostRecentBlockHeight": 1,
     "slots": [
@@ -33,13 +137,4 @@ GREG: process here
       }
     ]
   }
-}             
- 
-
-{"source":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","mostRecentBlockHeight":1,"slots":[{"wallet":"Default","payment":200000000,"action":"MinerFee","timeout":0},{"wallet":"Default","payment":0,"action":"Claim","target":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","UpdateAction":"Identity.Citizenship.Type = South African","timeout":0},{"wallet":"Default","payment":500000000,"action":"ValidationRequest","target":"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100","UpdateAction":"Identity.Citizenship.Type = South African","timeout":0}]}
-
-
-use:  https://jsoneditoronline.org/#/ to clear up
-GREG Notes:
-
-Put in slot numbers for consuming inbound instructions?  Escrows reference permissions from previous instructions (so not stored against entity)
+}  

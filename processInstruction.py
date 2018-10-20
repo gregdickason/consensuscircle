@@ -25,12 +25,23 @@ def validateInstruction(instruction, blockState):
   sender = body['source']
     
   if getHashofInput(body) != hash:
-    logging.info(f'hash of instruction does not match')
+    logging.info(f'hash of instruction does not match: {getHashofInput(body)}')  
     returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
     returnValue['return'] = False
-  
+    return returnValue
+    
   pKey = blockState.getPubKey(sender)
+  
+  
   logging.debug(f'pKey is {pKey}')
+  
+  # if getPubKey of sender is None, we dont know the sender (not on chain).  We deny them
+  if pKey == None:
+    logging.info(f'Sender not known, reject')
+    returnValue['message'] = f'Public Key of sender not registered on chain'
+    returnValue['return'] = False
+    return returnValue
+  
   # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
   if verifyMessage(hash, sign, pKey) != True:
     logging.info(f'Instruction not verified - signature incorrect')

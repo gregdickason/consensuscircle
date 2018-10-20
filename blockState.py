@@ -11,10 +11,18 @@ import logging.config
 
 # Holds the blockState for the current chain we are following that we believe is valid.  We can change this if presented with a better block or chain (Where depth weighted chain distance is lower)
 # This class is specific to the environment in which the agent is running.  Same method signatures but differnet implementations per environment
-# This is for local agent with all settings and long term storage in json files, using redis and rejson for queues and instructionPool.  
-# Other versions uses cloud technologies (eg S3) and do not always load state into memory
+# This is for local agent with all settings and long term storage in redis.
+# Other versions uses cloud technologies (eg S3) 
 class blockState:
   def __init__(self):
+    # setup redis as our in memory store.  
+    # TODO - store the data in redis on shutdown of redis
+    self.red = redis.StrictRedis(host='localhost', port=6379, db=0)
+    self.pipe = self.red.pipeline()
+    
+    
+    # TODO confirm that the local redis instance is running and has the blockstate loaded: agents, entities, etc
+    # TODO - remove currentBlockchainstate.  Store to redis.  
     with open('currentBlockChainState.json') as json_data:
         self.blockState = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
     logging.debug(f'Blockchain State is {self.blockState}')
@@ -30,13 +38,8 @@ class blockState:
     self.current_instructionHandlers = {}
     self.current_entities = {}
     
-    # Load entities - stored in individual JSON files for the local copy.  This will get unweildly 
+    # Load entities - stored in redis.  This will get unweildly 
     # TODO: store long term in redis or some compact json form (binary json) 
-    for e in self.blockState['Entities']:
-      with open(e + '.json') as json_data:
-        entity = json.load(json_data)
-        logging.debug(f'loaded {entity}')
-        self.current_entities[entity['Entity']] = entity
     
     
     logging.debug(f'\nprevious block convergence matrix is {self.outputMatrix}')
@@ -67,15 +70,15 @@ class blockState:
     for e in self.level:
       self.level[e].sort()
     
-    # setup rejson as our in memory store.  
-    # TODO - store the data in redis on shutdown of redis
-    self.red = redis.StrictRedis(host='localhost', port=6379, db=0)
+    
     
     # create the instructionPool object to store instructions
     # TODO implement the redlock algorithm for locking 
     
   # Manage the instruction pool 
   def addInstruction(self, instruction, hash,sign):
+  
+    # TODO remove insOut and current_instructions - only store in redis?
     insOut = {}
     insOut['instructionHash'] = hash
     insOut['sign'] = sign
@@ -84,11 +87,27 @@ class blockState:
     logging.debug(f'\nwriting {hash} to redis\n')
     self.current_instructions[hash] = insOut
     
-    # Store to redis
-    self.red.set('instructionPool:' + hash, json.dumps(insOut))
+    # Store to redis - batch as we are writing to both the keys store and the instructionPool
     
+    self.pipe.set('instructionPool:' + hash, json.dumps(insOut))
+    self.pipe.sadd('instructionHashes',hash)
+    self.pipe.execute()
+     
     return
+  
+  # Check if an instruction is already in the pool
+  def hasInstruction(self,hash):
+    logging.debug(f'Checking if {hash} is in pool')
+    if self.red.get('instructionPool:' + hash):
+      return True
+    return False
+  
+  # gets the instructionHashes stored in redis
+  def getInstructionHashes(self):
+    # return the list of hashes in the instructionhashes
+    return list(self.red.smembers())
     
+  
   # Manage the instructionHandler pool 
   def addInstructionHandler(self, instructionHandler, hash,sign):
     
@@ -100,6 +119,7 @@ class blockState:
     self.current_instructionHandlers[hash] = insHanOut
     
     # Store to redis
+    
     self.red.set('instructionHandlerPool:' + hash, json.dumps(insHanOut))
     
     return
@@ -174,7 +194,7 @@ class blockState:
       return
   
   # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
-  # currently it is order of log(n) 
+  # currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
   # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
   def nextCircle(self,lastBlockMatrix, excludedAgents):
     nextcircle, bIndex = [],0
