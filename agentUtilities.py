@@ -165,7 +165,10 @@ def createSessionKeyFromPublicKey(pubKey):
 ### Merkle Tree Routines.  Borrowing from https://github.com/JaeDukSeo/Simple-Merkle-Tree-in-Python/blob/master/MerkleTrees.py but
 ## using ordered Merkle Trees as the order of processing instructions in a block is based on the hash of instructions / instruction handlers
 def returnMerkleRoot(myUnorderedArray):
-  # TODO check if myUnorderedArray has length 0, throw exception
+  # TODO check if myUnorderedArray has length 0, throw exception - DONE
+  if len(myUnorderedArray) == 0:
+    raise Exception('an empty unordered array was passed to returnMerkleRoot')
+
   # first hash and sort the array
   myList = [getHashofInput(x) for x in myUnorderedArray]
   # bubble sort - this is highly optimised in C code 
