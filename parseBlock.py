@@ -48,6 +48,7 @@ class parseBlock:
         self.blockPass = True
         self.blockComment = 'Block Conforms'
         
+        # TODO - should we be getting the blockState instance from the agent not creating our own instance?
         self.bState = blockState()
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
@@ -74,7 +75,7 @@ class parseBlock:
         # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed transaction rather than reprocess?
         # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
         for e in self.instructions:
-          validInstruction = validateInstruction(e)
+          validInstruction = validateInstruction(e,self.bState)
           if not validInstruction['return']:
             self.blockPass = False
             self.blockComment = validInstruction['message']

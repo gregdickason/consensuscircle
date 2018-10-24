@@ -9,6 +9,8 @@ from convergenceProcessor import blockConvergeAndPublish
 
 import logging.config
 
+ENCODING = 'utf-8'
+
 # Holds the blockState for the current chain we are following that we believe is valid.  We can change this if presented with a better block or chain (Where depth weighted chain distance is lower)
 # This class is specific to the environment in which the agent is running.  Same method signatures but differnet implementations per environment
 # This is for local agent with all settings and long term storage in redis.
@@ -17,7 +19,7 @@ class blockState:
   def __init__(self):
     # setup redis as our in memory store.  
     # TODO - store the data in redis on shutdown of redis
-    self.red = redis.StrictRedis(host='localhost', port=6379, db=0)
+    self.red = redis.StrictRedis(host='localhost', port=6379, db=0, charset=ENCODING, decode_responses=True)
     self.pipe = self.red.pipeline()
     
     
@@ -40,6 +42,11 @@ class blockState:
     
     # Load entities - stored in redis.  This will get unweildly 
     # TODO: store long term in redis or some compact json form (binary json) 
+    for e in self.blockState['Entities']:
+      with open(e + '.json') as json_data:
+        entity = json.load(json_data)
+        logging.debug(f'loaded {entity}')
+      self.current_entities[entity['Entity']] = entity
     
     
     logging.debug(f'\nprevious block convergence matrix is {self.outputMatrix}')
@@ -105,7 +112,9 @@ class blockState:
   # gets the instructionHashes stored in redis
   def getInstructionHashes(self):
     # return the list of hashes in the instructionhashes
-    return list(self.red.smembers())
+    insList = list(self.red.smembers('instructionHashes'))
+    logging.debug(f'list of instructions returned is {insList}')
+    return insList
     
   
   # Manage the instructionHandler pool 
