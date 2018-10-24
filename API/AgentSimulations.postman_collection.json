@@ -24,13 +24,13 @@
 					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
 				},
 				"url": {
-					"raw": "localhost:5000/convergeInstructions",
+					"raw": "localhost:5000/converge",
 					"host": [
 						"localhost"
 					],
 					"port": "5000",
 					"path": [
-						"convergeInstructions"
+						"converge"
 					]
 				},
 				"description": "Converge the blockchain (issue only to 1 agent and it will cascade convergence)"
@@ -52,7 +52,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"sender\":\"gregdickason\",\n\t\"recipient\":\"nicgatland\",\n\t\"hash\":\"ABC123\"\n}"
+					"raw": "{\r\n  \"instructionHash\": \"4595553afdb2382f76ac813a15896228332589b7b3f622b5a36301def5b003d5\",\r\n  \"sign\": \"bmTE7fC9cLjXroGZzt7WzjEaqZXdKCuQkb9E8JuO98AbBNxucRTyd3DnlFKhVpyynhO/mm9LzL/76jNlBCFqdg==\",\r\n  \"instruction\": {\r\n    \"source\": \"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c\",\r\n    \"mostRecentBlockHeight\": 1,\r\n    \"slots\": [\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 200000000,\r\n        \"action\": [\"MinerFee\", \"pay\"],\r\n        \"timeout\": 0\r\n      },\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 0,\r\n        \"target\": \"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c\",\r\n        \"script\": [\"Identity.Citizenship.Type\",\"South African\", \"claim\", \"update\"],\r\n        \"timeout\": 0\r\n      },\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 500000000,\r\n        \"target\": \"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100\",\r\n        \"script\": [\"Identity.Citizenship.Type\",\"South African\", \"verify\", \"instructionHandler\"],\r\n        \"timeout\": 0\r\n      }\r\n    ]\r\n  }\r\n} "
 				},
 				"url": {
 					"raw": "localhost:5000/instruction",
@@ -318,37 +318,6 @@
 			"response": []
 		},
 		{
-			"name": "blockPublished",
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
-				},
-				"url": {
-					"raw": "localhost:5000/blockPublished",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"blockPublished"
-					]
-				},
-				"description": "New block has been published - read and process"
-			},
-			"response": []
-		},
-		{
 			"name": "block",
 			"request": {
 				"auth": {
@@ -469,6 +438,105 @@
 					]
 				},
 				"description": "Returns the genesisBlock hash the agent is using"
+			},
+			"response": []
+		},
+		{
+			"name": "blockPublished",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/blockPublished?blockID=AS",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"blockPublished"
+					],
+					"query": [
+						{
+							"key": "blockID",
+							"value": "AS"
+						}
+					]
+				},
+				"description": "New block has been published - read and process"
+			},
+			"response": []
+		},
+		{
+			"name": "signHash",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n   \"agentPKey\":\"5cbda1c61193fbd4644eeca3d9d5d6572ab8ac3399dcdcfa7241dcab509d2102\",\n   \"agentSign\":\"ZfmXvfCs3RlZjp+NvzJmUPK59vwBT/3GrW5hR8ChFRXW94jwnDPDucm0lp+9HVO7LKMFx6KFPBhKV37P8mL3IQ==\",\n   \"blockHash\":\"72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd\",\n   \"blockHeight\":1\n  }"
+				},
+				"url": {
+					"raw": "localhost:5000/signHash",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"signHash"
+					]
+				},
+				"description": "Called as part of the setup of the next consensus circle (assuming the calling node is in the circle)"
+			},
+			"response": []
+		},
+		{
+			"name": "ConvergeInstructions",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5005/convergeInstructions",
+					"host": [
+						"localhost"
+					],
+					"port": "5005",
+					"path": [
+						"convergeInstructions"
+					]
+				},
+				"description": "Converge the instructions in the blockchain"
 			},
 			"response": []
 		}
