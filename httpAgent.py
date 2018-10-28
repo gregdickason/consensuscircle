@@ -237,7 +237,7 @@ def instruction():
     
     agentResponse = agent.processInstruction(values)
     
-    if agentResponse['success'] == False:
+    if not agentResponse['success']:
       return jsonify(agentResponse['message']), 400
     else:
       return jsonify(agentResponse['message']), 200
@@ -255,7 +255,7 @@ def instructionHandler():
     
     agentResponse = agent.processInstructionHandler(values)
     
-    if agentResponse['success'] == False:
+    if not agentResponse['success']:
       return jsonify(agentResponse['message']), 400
     else:
       return jsonify(agentResponse['message']), 200

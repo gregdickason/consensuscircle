@@ -247,6 +247,7 @@ class Agent:
         logging.debug('received an instruction to add')
         agentResponse = {}
         agentResponse['success'] = True
+        agentResponse['message'] = ''
         
         # Check that the required fields are in the POST'ed data, has been signed correctly, etc
         # TODO add checks in validinstruction to test all the fields passed in
@@ -261,8 +262,9 @@ class Agent:
         # checks both in our existing hashpool and in previous blocks
         if self.blockState.hasInstruction(instruction['instructionHash']):
             logging.info(f'Received instruction already have')
+            agentResponse['message'] = 'Instruction already in pool'
             # dont return length of pool - no need
-            return 
+            return agentResponse 
         
         # This is Mutexed for hash control
         # TODO add to the redis pool in the blockstate
@@ -284,13 +286,15 @@ class Agent:
         logging.debug("received an instructionHandler to add")
         agentResponse = {}
         agentResponse['success'] = True
-        
+        agentResponse['message'] = ''
         # Check that the required fields are in the POST'ed data
         validInstructionHandler = validateInstructionHandler(values)
+        
         if not validInstructionHandler['return']:
           return validInstructionHandler
 	  
-        # GREG: put into Blockstate here
+        # TODO: put into Blockstate here
+        #GREG HERE fix redis and then can check agent working
         numberInstructionHandlers = self.add_instructionHandler(values['instructionHandlerHash'], values['instructionHandler'], values['sign'])
         
         agentResponse['message'] = {
@@ -325,7 +329,7 @@ class Agent:
      myMap = {}
      myMap["previousBlock"] = self.chain[len(self.chain)-1].blockHash
      myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
-     myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.instruction_Handlerhashes)
+     myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.blockState.current_instructionHandlers)  # TODO - make sure instructionHandlers managed same as instructions in Redis.  Fix this
      myMap["instructionCount"] = len(self.blockState.current_instructions)
      # TODO update instructionHandlers
      myMap["instructionHandlerCount"] = len(self.blockState.current_instructionHandlers)
@@ -339,7 +343,7 @@ class Agent:
      candidate["gossip"].append(myGossip)
      candidate["broadcaster"] = self.agent_identifier
      candidate["signedGossip"] = signMessage(myGossip, self.agentPrivKey)
-     candidate["instructionHashes"] = list(self.instruction_hashes)
+     candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
      candidate["instructions"] = list(self.blockState.getInstructionList())
      candidate["instructionHandlerHashes"] = list(self.blockState.getInstructionHashes())
      candidate["instructionHandlers"] = list(self.blockState.getInstructionHandlerList())
