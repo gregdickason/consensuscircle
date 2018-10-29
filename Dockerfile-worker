@@ -6,7 +6,10 @@ RUN python3 -m ensurepip && pip3 install --upgrade pip setuptools rq
 
 WORKDIR /settings
 
-COPY envsettings.py /settings
+# TO DO work out exactly what code the worker needs
+COPY  . /settings
+
+WORKDIR ./src
 
 EXPOSE 5000
 

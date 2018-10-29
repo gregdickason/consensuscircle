@@ -25,7 +25,7 @@ services:
       context: .
       dockerfile: Dockerfile-system
     ports:
-      - "4000:80"
+      - "5000:5000"
     depends_on:
       - redis
       - rq-worker
