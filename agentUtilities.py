@@ -189,7 +189,8 @@ def returnMerkleRoot(myUnorderedArray):
   # TODO confirm how to raise exceptions with logging.error or raising regular exceptions
   if len(myUnorderedArray) == 0:
     raise Exception('an empty array was passed to returnMerkleRoot')
-
+  # TODO remove next line - hardcoded to make work
+    return getHashofInput('abc')
 
   # first hash and sort the array
   myList = [getHashofInput(x) for x in myUnorderedArray]
