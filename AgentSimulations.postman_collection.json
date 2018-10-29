@@ -1,0 +1,476 @@
+{
+	"info": {
+		"_postman_id": "7652af90-ed7a-46c9-9463-3e8635ec0298",
+		"name": "AgentSimulations",
+		"description": "Testing for the agents simulations with multiple agents running \n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Converge",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/convergeInstructions",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"convergeInstructions"
+					]
+				},
+				"description": "Converge the blockchain (issue only to 1 agent and it will cascade convergence)"
+			},
+			"response": []
+		},
+		{
+			"name": "Instruction",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"sender\":\"gregdickason\",\n\t\"recipient\":\"nicgatland\",\n\t\"hash\":\"ABC123\"\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/instruction",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"instruction"
+					]
+				},
+				"description": "Add an instruction to the unprocessed instructions pool"
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"agents\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/agents/register",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"agents",
+						"register"
+					]
+				},
+				"description": "Register an agent with another agent (see it as a pair it will poll for instructions and for convergence)"
+			},
+			"response": []
+		},
+		{
+			"name": "Instructions",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/instructions",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"instructions"
+					]
+				},
+				"description": "Get the current list of instructions from a node"
+			},
+			"response": []
+		},
+		{
+			"name": "Vote",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/vote",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"vote"
+					]
+				},
+				"description": "get the Vote from this node.  This will be denied if the node has not yet got to converged state or is still waiting on getting to converged state (i.e. to get the encrypted votes from others)"
+			},
+			"response": []
+		},
+		{
+			"name": "HashedVote",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/hashedVote",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"hashedVote"
+					]
+				},
+				"description": "get the HashedVote from this Agent.  Will always supply it while in circle (and deny if not in circle)"
+			},
+			"response": []
+		},
+		{
+			"name": "Entity",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/entity",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"entity"
+					]
+				},
+				"description": "Returns the agent identifier (normally public key but for simulation a unique key)"
+			},
+			"response": []
+		},
+		{
+			"name": "convergeEntity",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/convergeUIDs",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"convergeUIDs"
+					]
+				},
+				"description": "Returns the agent identifier (normally public key but for simulation a unique key)"
+			},
+			"response": []
+		},
+		{
+			"name": "setPKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"pkey\":\"9c8345cf13413cd0ff0e6af4f33cce4f0555fb3a50364b64265b05ce134af28d\"\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/setPKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"setPKey"
+					]
+				},
+				"description": "Set the public Key of the agent"
+			},
+			"response": []
+		},
+		{
+			"name": "PKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/PKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"PKey"
+					]
+				},
+				"description": "get the Public Key of this agent"
+			},
+			"response": []
+		},
+		{
+			"name": "blockPublished",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/blockPublished",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"blockPublished"
+					]
+				},
+				"description": "New block has been published - read and process"
+			},
+			"response": []
+		},
+		{
+			"name": "block",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/block",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"block"
+					]
+				},
+				"description": "Returns the block height and block hash of the highest block the agent is aware of"
+			},
+			"response": []
+		},
+		{
+			"name": "ownerPublicKey",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/ownerPublicKey",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"ownerPublicKey"
+					]
+				},
+				"description": "get the Public Key of the owner of this agent (the entity that owns the agent)"
+			},
+			"response": []
+		},
+		{
+			"name": "ownerLevel",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/ownerLevel",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"ownerLevel"
+					]
+				},
+				"description": "get the level of the owner of this agent"
+			},
+			"response": []
+		},
+		{
+			"name": "genesisBlock",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"nodes\":[\"http://localhost:5001\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:5000/genesisBlock",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"genesisBlock"
+					]
+				},
+				"description": "Returns the genesisBlock hash the agent is using"
+			},
+			"response": []
+		}
+	]
+}
