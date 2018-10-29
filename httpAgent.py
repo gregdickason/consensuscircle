@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# local node eventuallty taken over by the cloud. Runs the local server. 
+
 # Class for local HTTP connections for the blockchain.  This only accepts inbound communicationss
 # Message class does outbound
 
