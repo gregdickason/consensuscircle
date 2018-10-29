@@ -5,3 +5,5 @@ requests
 ecdsa
 rejson
 six
+nose
+flask_testing
