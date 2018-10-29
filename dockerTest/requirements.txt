@@ -1,2 +1,7 @@
 Flask
 Redis
+rq
+requests
+ecdsa
+rejson
+six
