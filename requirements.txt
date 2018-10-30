@@ -1,0 +1,9 @@
+Flask
+Redis
+rq
+requests
+ecdsa
+rejson
+six
+nose
+flask_testing

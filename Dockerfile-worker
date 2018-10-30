@@ -1,0 +1,16 @@
+FROM alpine:3.8
+
+RUN apk --no-cache add python3
+RUN apk --no-cache add redis
+RUN python3 -m ensurepip && pip3 install --upgrade pip setuptools rq
+
+WORKDIR /settings
+
+# TO DO work out exactly what code the worker needs
+COPY  . /settings
+
+WORKDIR ./src
+
+EXPOSE 5000
+
+CMD rq worker -c envsettings

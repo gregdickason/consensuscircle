@@ -1,0 +1,35 @@
+version: '3'
+services:
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    # Not yet available for OSX docker-compose
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:6379/1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+  rq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile-worker
+    depends_on:
+      - redis
+    links:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1
+  cc-client:
+    build:
+      context: .
+      dockerfile: Dockerfile-system
+    ports:
+      - "4000:80"
+    depends_on:
+      - redis
+      - rq-worker
+    links:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1
