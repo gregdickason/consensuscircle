@@ -83,8 +83,6 @@ class blockState:
     for e in self.level:
       self.level[e].sort()
 
-
-
     # create the instructionPool object to store instructions
     # TODO implement the redlock algorithm for locking
 
