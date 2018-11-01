@@ -49,7 +49,7 @@ class blockState:
     # Load entities - stored in redis.  This will get unweildly
     # TODO: store long term in redis or some compact json form (binary json)
     for e in self.blockState['Entities']:
-      with open(e + '.json') as json_data:
+      with open('entities/' + e + '.json') as json_data:
         entity = json.load(json_data)
         logging.debug(f'loaded {entity}')
       self.current_entities[entity['Entity']] = entity

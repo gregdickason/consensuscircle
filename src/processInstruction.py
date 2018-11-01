@@ -63,14 +63,14 @@ def validateInstructionHandler(instructionHandler):
     returnValue['return'] = False
     return returnValue
 
+  body = instructionHandler['instructionHandler']
+  hash = instructionHandler['instructionHandlerHash']
+  sign = instructionHandler['sign']
+
   if getHashofInput(body) != hash:
     returnValue['message'] = f'Incorrect hash for InstructionHandler at {hash}'
     returnValue['return'] = False
     return returnValue
-
-  body = instructionHandler['instructionHandler']
-  hash = instructionHandler['instructionHandlerHash']
-  sign = instructionHandler['sign']
 
   # TODO confirm signature
 
