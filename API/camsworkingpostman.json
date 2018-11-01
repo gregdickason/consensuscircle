@@ -1,0 +1,528 @@
+{
+	"version": 1,
+	"collections": [
+		{
+			"id": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+			"name": "AgentSimulations",
+			"description": "Testing for the agents simulations with multiple agents running \n",
+			"auth": null,
+			"events": null,
+			"variables": [],
+			"order": [
+				"b2349e74-81b9-4b75-b156-ba4ec3023319",
+				"21cfc85d-a294-42a0-b2d7-7c278e4744ec",
+				"aeff2a85-ce63-4a14-bf65-8553f620069f",
+				"3c5415a1-0cb9-416b-96dd-8fdc42c2b19a",
+				"1f4113b3-7caa-488b-8e6e-683e5189afb4",
+				"269019ef-a380-423a-9634-3888054d8a87",
+				"d0749faf-77ff-4abe-acfb-c42fb5f50c15",
+				"d19f1412-7692-4efd-b66f-25495639a831",
+				"49473cf5-95fd-4254-8708-d1584eef2095",
+				"ab1aa5cf-5c57-49e7-bd2b-2119e857d1c9",
+				"738bb3c2-c8f4-4d59-a52d-45d58b11833c",
+				"9d5bd24e-9e15-4807-92d1-ee5670a4fb03",
+				"e8c71df3-5ec8-4e6e-b858-4ca3f568c86a",
+				"69f2f3ed-04f2-460f-953e-7c35a0c11057",
+				"8cc786e3-a0e3-4be3-87f3-a69df1a996c5",
+				"36e0d0f3-a91b-467f-8ba5-806a7f019ac3",
+				"fc2309ae-60e3-4dc5-aef5-3c39ab7e41f4"
+			],
+			"folders_order": [],
+			"folders": [],
+			"requests": [
+				{
+					"id": "1f4113b3-7caa-488b-8e6e-683e5189afb4",
+					"name": "Vote",
+					"url": "localhost:5000/vote",
+					"description": "get the Vote from this node.  This will be denied if the node has not yet got to converged state or is still waiting on getting to converged state (i.e. to get the encrypted votes from others)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "21cfc85d-a294-42a0-b2d7-7c278e4744ec",
+					"name": "Instruction",
+					"url": "localhost:5000/instruction",
+					"description": "Add an instruction to the unprocessed instructions pool",
+					"data": [],
+					"dataMode": "raw",
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "POST",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"rawModeData": "{\r\n  \"instructionHash\": \"4595553afdb2382f76ac813a15896228332589b7b3f622b5a36301def5b003d5\",\r\n  \"sign\": \"R7un9ezCQlSpyxlVNi1+Q9ShSBVDI9AEEveFuJb78hZrVHPO7J/VC9GmqnjYbe0st8UshkJemV2TYasguunlWQ==\",\r\n  \"instruction\": {\r\n    \"source\": \"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c\",\r\n    \"mostRecentBlockHeight\": 1,\r\n    \"slots\": [\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 200000000,\r\n        \"action\": [\"MinerFee\", \"pay\"],\r\n        \"timeout\": 0\r\n      },\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 0,\r\n        \"target\": \"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c\",\r\n        \"script\": [\"Identity.Citizenship.Type\",\"South African\", \"claim\", \"update\"],\r\n        \"timeout\": 0\r\n      },\r\n      {\r\n        \"wallet\": \"Default\",\r\n        \"payment\": 500000000,\r\n        \"target\": \"a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100\",\r\n        \"script\": [\"Identity.Citizenship.Type\",\"South African\", \"verify\", \"instructionHandler\"],\r\n        \"timeout\": 0\r\n      }\r\n    ]\r\n  }\r\n} ",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "269019ef-a380-423a-9634-3888054d8a87",
+					"name": "HashedVote",
+					"url": "localhost:5000/hashedVote",
+					"description": "get the HashedVote from this Agent.  Will always supply it while in circle (and deny if not in circle)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "36e0d0f3-a91b-467f-8ba5-806a7f019ac3",
+					"name": "signHash",
+					"url": "localhost:5000/signHash",
+					"description": "Called as part of the setup of the next consensus circle (assuming the calling node is in the circle)",
+					"data": [],
+					"dataMode": "raw",
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "POST",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"rawModeData": "{\n   \"agentPKey\":\"5cbda1c61193fbd4644eeca3d9d5d6572ab8ac3399dcdcfa7241dcab509d2102\",\n   \"agentSign\":\"ZfmXvfCs3RlZjp+NvzJmUPK59vwBT/3GrW5hR8ChFRXW94jwnDPDucm0lp+9HVO7LKMFx6KFPBhKV37P8mL3IQ==\",\n   \"blockHash\":\"72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd\",\n   \"blockHeight\":1\n  }",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "3c5415a1-0cb9-416b-96dd-8fdc42c2b19a",
+					"name": "InstructionPool",
+					"url": "localhost:5000/instructions",
+					"description": "Get the current list of instructions from a node",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "49473cf5-95fd-4254-8708-d1584eef2095",
+					"name": "setPKey",
+					"url": "localhost:5000/setPKey",
+					"description": "Set the public Key of the agent",
+					"data": [],
+					"dataMode": "raw",
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "POST",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"rawModeData": "{\n\t\"pkey\":\"9c8345cf13413cd0ff0e6af4f33cce4f0555fb3a50364b64265b05ce134af28d\"\n}",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "69f2f3ed-04f2-460f-953e-7c35a0c11057",
+					"name": "genesisBlock",
+					"url": "localhost:5000/genesisBlock",
+					"description": "Returns the genesisBlock hash the agent is using",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "738bb3c2-c8f4-4d59-a52d-45d58b11833c",
+					"name": "block",
+					"url": "localhost:5000/block",
+					"description": "Returns the block height and block hash of the highest block the agent is aware of",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "8cc786e3-a0e3-4be3-87f3-a69df1a996c5",
+					"name": "blockPublished",
+					"url": "localhost:5000/blockPublished?blockID=bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json",
+					"description": "New block has been published - read and process",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [
+						{
+							"key": "blockID",
+							"value": "bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json",
+							"equals": true,
+							"description": "",
+							"enabled": true
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "9d5bd24e-9e15-4807-92d1-ee5670a4fb03",
+					"name": "ownerPublicKey",
+					"url": "localhost:5000/ownerPublicKey",
+					"description": "get the Public Key of the owner of this agent (the entity that owns the agent)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "ab1aa5cf-5c57-49e7-bd2b-2119e857d1c9",
+					"name": "PKey",
+					"url": "localhost:5000/PKey",
+					"description": "get the Public Key of this agent",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "aeff2a85-ce63-4a14-bf65-8553f620069f",
+					"name": "Register",
+					"url": "localhost:5000/agents/register",
+					"description": "Register an agent with another agent (see it as a pair it will poll for instructions and for convergence)",
+					"data": [],
+					"dataMode": "raw",
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "POST",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"rawModeData": "{\n\t\"agents\":[\"http://localhost:5001\"]\n}",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "b2349e74-81b9-4b75-b156-ba4ec3023319",
+					"name": "Converge",
+					"url": "localhost:5000/converge",
+					"description": "Converge the blockchain (issue only to 1 agent and it will cascade convergence)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "d0749faf-77ff-4abe-acfb-c42fb5f50c15",
+					"name": "Entity",
+					"url": "localhost:5000/entity",
+					"description": "Returns the agent identifier (normally public key but for simulation a unique key)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "d19f1412-7692-4efd-b66f-25495639a831",
+					"name": "convergeEntity",
+					"url": "localhost:5000/convergeUIDs",
+					"description": "Returns the agent identifier (normally public key but for simulation a unique key)",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "e8c71df3-5ec8-4e6e-b858-4ca3f568c86a",
+					"name": "ownerLevel",
+					"url": "localhost:5000/ownerLevel",
+					"description": "get the level of the owner of this agent",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				},
+				{
+					"id": "fc2309ae-60e3-4dc5-aef5-3c39ab7e41f4",
+					"name": "ConvergeInstructions",
+					"url": "localhost:5005/convergeInstructions",
+					"description": "Converge the instructions in the blockchain",
+					"data": null,
+					"dataMode": null,
+					"headerData": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"method": "GET",
+					"pathVariableData": [],
+					"queryParams": [],
+					"auth": {
+						"type": "noauth"
+					},
+					"events": null,
+					"folder": null,
+					"currentHelper": null,
+					"helperAttributes": null,
+					"collectionId": "7e0c2d89-d3da-41ac-a783-e04cabc3cc10",
+					"headers": "Content-Type: application/json\n",
+					"pathVariables": {}
+				}
+			]
+		},
+		{
+			"id": "ccb2cfa9-1222-45a0-9630-bd5ffe3813d8",
+			"name": "Consensus Circle",
+			"description": null,
+			"auth": null,
+			"events": null,
+			"variables": [],
+			"order": [],
+			"folders_order": [],
+			"folders": [],
+			"requests": []
+		}
+	],
+	"environments": [
+		{
+			"id": "c4e20156-c3a2-4236-806d-6134b13a740e",
+			"name": "My Workspace - globals",
+			"values": []
+		}
+	],
+	"headerPresets": [],
+	"globals": []
+}
