@@ -1,5 +1,5 @@
 steps:
 - name: 'docker/compose:1.19.0'
   args: ['up', '-d']
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['exec', '-it', 'workspace_cc-client_1', 'bash']
+- name: 'python3'
+  args: ['-m', '"nose"', 'agentTestandSetup.py']
