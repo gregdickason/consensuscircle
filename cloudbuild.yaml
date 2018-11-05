@@ -20,4 +20,12 @@ steps:
       - build-up
       - test
       - store-client
+- id: store-redis
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['ps', '-a']
+  waitFor:
+      - build-up
+      - test
+      - store-client
+      - store-worker
 images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA','gcr.io/$PROJECT_ID/$REPO_NAME-worker:$COMMIT_SHA']
