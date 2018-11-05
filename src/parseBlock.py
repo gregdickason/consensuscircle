@@ -37,9 +37,6 @@ class parseBlock:
         self.instructions = self.block['instructions']
         self.instructionHandlers = self.block['instructionHandlers']
 
-        # This is set externally when the distance is calculated - is it?
-        self.circleDistance = 0
-
         self.randomMatrix = []
         self.ccKeys = []
         self.blockSigs = []

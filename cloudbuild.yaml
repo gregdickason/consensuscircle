@@ -1,0 +1,31 @@
+steps:
+- id: build-up
+  name: 'docker/compose:1.19.0'
+  args: ['up', '-d']
+- id: test
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['exec', '-t', 'workspace_cc-client_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
+  waitFor:
+    - build-up
+- id: store-client
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
+  waitFor:
+      - build-up
+      - test
+- id: store-worker
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:$COMMIT_SHA']
+  waitFor:
+      - build-up
+      - test
+      - store-client
+- id: store-redis
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:$COMMIT_SHA']
+  waitFor:
+      - build-up
+      - test
+      - store-client
+      - store-worker
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA','gcr.io/$PROJECT_ID/$REPO_NAME-worker:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:$COMMIT_SHA']
