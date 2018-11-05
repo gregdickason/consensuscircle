@@ -14,3 +14,6 @@ steps:
       - build-up
       - test
 images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
+- id: store-client
+  name: 'gcr.io/cloud-builders/docker'
+  args: []'images']
