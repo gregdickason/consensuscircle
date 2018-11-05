@@ -7,3 +7,10 @@ steps:
   args: ['exec', '-t', 'workspace_cc-client_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
   waitFor:
     - build-up
+- id: store-client
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
+  waitFor:
+    - build-up
+    - test
