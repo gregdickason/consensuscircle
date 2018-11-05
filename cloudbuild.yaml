@@ -7,7 +7,3 @@ steps:
   args: ['exec', '-t', 'workspace_cc-client_1' , 'python' ,'nosetests/testGCB.py']
   waitFor:
     - build-up
-- id: deploy
-  waitFor:
-    - build-up
-    - test
