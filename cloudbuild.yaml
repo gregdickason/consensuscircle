@@ -13,7 +13,7 @@ steps:
   waitFor:
       - build-up
       - test
-images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
 - id: store-redis
   name: 'gcr.io/cloud-builders/docker'
   args: ['images']
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
