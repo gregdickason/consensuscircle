@@ -1,5 +1,13 @@
 steps:
-- name: 'docker/compose:1.19.0'
+- id: build-up
+  name: 'docker/compose:1.19.0'
   args: ['up', '-d']
-- name: 'gcr.io/cloud-builders/docker'
+- id: test
+  name: 'gcr.io/cloud-builders/docker'
   args: ['exec', '-t', 'workspace_cc-client_1' , 'python' ,'nosetests/testGCB.py']
+  waitFor:
+    - build-up
+- id: deploy
+  waitFor:
+    - build-up
+    - test
