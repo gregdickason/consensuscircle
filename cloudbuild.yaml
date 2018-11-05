@@ -9,9 +9,8 @@ steps:
     - build-up
 - id: store-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
   waitFor:
       - build-up
       - test
-
-images: ['gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
