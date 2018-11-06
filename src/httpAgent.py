@@ -26,6 +26,16 @@ agent = Agent()
 # Testing parameters - can turn network off to test if agent is offline (simulate network outage)
 networkOn = True
 
+#Testing changing code for end to end syncing
+@app.route('/ping',methods=['POST'])
+def ping():
+  # Testing parameters - is network on 
+  if not networkOn:
+    response = {'network' : f'{networkOn}'}
+    return jsonify(response), 400
+   
+  return jsonify('pong'), 200
+
 #Testing Methods - used to simulate network failures by enabling network to be turned off
 @app.route('/networkOn',methods=['POST'])
 def networkOn():
