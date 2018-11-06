@@ -6,70 +6,69 @@ steps:
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec', '-t', 'workspace_cc-client_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
   waitFor:
-    - build-up
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
   waitFor:
-      - build-up
-      - test
 - id: tag-worker
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
   waitFor:
-      - build-up
-      - test
-      - tag-client
 - id: tag-redis
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
   waitFor:
-      - build-up
-      - test
-      - tag-client
-      - tag-worker
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
   waitFor:
-      - build-up
-      - test
-      - tag-client
-      - tag-worker
-      - tag-redis
 - id: push-worker
   name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
   waitFor:
-      - build-up
-      - test
-      - tag-client
-      - tag-worker
-      - tag-redis
-      - push-client
 - id: push-redis
   name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
   waitFor:
-      - build-up
-      - test
-      - tag-client
-      - tag-worker
-      - tag-redis
-      - push-client
-      - push-worker
-- id : build-redis
+- id : deploy-redis
   name: 'gcr.io/cloud-builders/kubectl'
   args: ['create', '-f', 'deploymentScripts/redis-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
-      - build-up
-      - test
-      - tag-client
-      - tag-worker
-      - tag-redis
-      - push-client
-      - push-worker
-      - push-redis
+- id : service-redis
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['create', '-f', 'deploymentScripts/redis-service.yaml']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
+- id : deploy-rqworker
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['create', '-f', 'deploymentScripts/rq-worker-deployment.yaml']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
+- id : service-rqworker
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['create', '-f', 'deploymentScripts/rq-worker-service.yaml']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
+- id : deploy-client
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['create', '-f', 'deploymentScripts/cc-client-deployment.yaml']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
+- id : service-client
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['kubectl', 'expose', 'deployment', 'cc-client', '--type=LoadBalancer', '--port', '5000', '--target-port', '5000']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
