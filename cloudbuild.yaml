@@ -9,23 +9,23 @@ steps:
     - build-up
 - id: store-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:$COMMIT_SHA']
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
   waitFor:
       - build-up
       - test
 - id: store-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:$COMMIT_SHA']
+  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
   waitFor:
       - build-up
       - test
       - store-client
 - id: store-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:$COMMIT_SHA']
+  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
   waitFor:
       - build-up
       - test
       - store-client
       - store-worker
-images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:latest','gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:$COMMIT_SHA']
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:latest','gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
