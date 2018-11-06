@@ -58,3 +58,18 @@ steps:
       - tag-redis
       - push-client
       - push-worker
+- id : build-redis
+  name: 'gcr.io/cloud-builders/kubectl'
+  args: ['create', '-f', 'deploymentScripts/redis-deployment.yaml']
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  waitFor:
+      - build-up
+      - test
+      - tag-client
+      - tag-worker
+      - tag-redis
+      - push-client
+      - push-worker
+      - push-redis
