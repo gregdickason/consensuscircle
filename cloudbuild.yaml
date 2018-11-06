@@ -30,6 +30,25 @@ steps:
       - tag-worker
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
+  waitFor:
+      - build-up
+      - test
+      - tag-client
+      - tag-worker
+      - tag-redis
+- id: push-worker
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
+  waitFor:
+      - build-up
+      - test
+      - tag-client
+      - tag-worker
+      - tag-redis
+      - push-client
+- id: push-redis
+  name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
   waitFor:
       - build-up
@@ -37,3 +56,5 @@ steps:
       - tag-client
       - tag-worker
       - tag-redis
+      - push-client
+      - push-worker
