@@ -27,7 +27,7 @@ agent = Agent()
 networkOn = True
 
 #Testing changing code for end to end syncing
-@app.route('/ping',methods=['POST'])
+@app.route('/ping',methods=['GET'])
 def ping():
   # Testing parameters - is network on 
   if not networkOn:
