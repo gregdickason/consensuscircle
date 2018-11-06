@@ -1,7 +1,9 @@
 version: '3'
 services:
   redis:
-    image: "redis:alpine"
+    build:
+      context: .
+      dockerfile: Dockerfile-redis
     ports:
       - "6379:6379"
     # Not yet available for OSX docker-compose

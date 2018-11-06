@@ -49,7 +49,7 @@ class blockState:
     # Load entities - stored in redis.  This will get unweildly
     # TODO: store long term in redis or some compact json form (binary json)
     for e in self.blockState['Entities']:
-      with open(e + '.json') as json_data:
+      with open('entities/' + e + '.json') as json_data:
         entity = json.load(json_data)
         logging.debug(f'loaded {entity}')
       self.current_entities[entity['Entity']] = entity
@@ -82,8 +82,6 @@ class blockState:
     # sort the level lists to make it more efficient and use takeClosest (note sorting is highly optimised in Python)
     for e in self.level:
       self.level[e].sort()
-
-
 
     # create the instructionPool object to store instructions
     # TODO implement the redlock algorithm for locking
