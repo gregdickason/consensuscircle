@@ -28,3 +28,4 @@ steps:
       - test
       - store-client
       - store-worker
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME-client:latest','gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
