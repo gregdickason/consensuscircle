@@ -67,7 +67,7 @@ steps:
   waitFor:
 - id : service-client
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['kubectl', 'expose', 'deployment', 'cc-client', '--type=LoadBalancer', '--port', '5000', '--target-port', '5000']
+  args: ['expose', 'deployment', 'cc-client', '--type=LoadBalancer', '--port', '5000', '--target-port', '5000']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
