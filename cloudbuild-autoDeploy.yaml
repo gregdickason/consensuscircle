@@ -32,35 +32,35 @@ steps:
   waitFor:
 - id : deploy-redis
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/redis-deployment.yaml']
+  args: ['create', '-f', 'buildScripts/redis-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : service-redis
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/redis-service.yaml']
+  args: ['create', '-f', 'buildScripts/redis-service.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : deploy-rqworker
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/rq-worker-deployment.yaml']
+  args: ['create', '-f', 'buildScripts/rq-worker-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : service-rqworker
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/rq-worker-service.yaml']
+  args: ['create', '-f', 'buildScripts/rq-worker-service.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : deploy-client
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/cc-client-deployment.yaml']
+  args: ['create', '-f', 'buildScripts/cc-client-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
