@@ -12,7 +12,7 @@ steps:
   waitFor:
 - id: tag-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'dockertest_redis:latest', 'gcr.io/$PROJECT_ID/testredis:latest']
+  args: ['tag', 'redis:latest', 'gcr.io/$PROJECT_ID/testredis:latest']
   waitFor:
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
