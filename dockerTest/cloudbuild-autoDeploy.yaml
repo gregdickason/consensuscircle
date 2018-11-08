@@ -1,7 +1,7 @@
 steps:
 - id: build-up
   name: 'docker/compose:1.19.0'
-  args: ['up', '-d']
+  args: ['up', '-d', '-f' , 'dockerTest/docker-compose.yml']
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/testclient:latest']
@@ -20,21 +20,21 @@ steps:
   waitFor:
 - id : deploy-redis
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'redis-deployment.yaml']
+  args: ['create', '-f', 'dockerTest/redis-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : service-redis
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'redis-service.yaml']
+  args: ['create', '-f', 'dockerTest/redis-service.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
   waitFor:
 - id : deploy-client
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'client-deployment.yaml']
+  args: ['create', '-f', 'dockerTest/client-deployment.yaml']
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
   - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
