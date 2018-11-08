@@ -2,10 +2,6 @@ steps:
 - id: build-up
   name: 'docker/compose:1.19.0'
   args: ['-f' , 'dockerTest/docker-compose.yml', 'up', '-d']
-- id: tag-ps
-  name: 'gcr.io/cloud-builders/docker'
-  args: ['images']
-  waitFor:
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'dockertest_cc-client:latest', 'gcr.io/$PROJECT_ID/testclient:latest']

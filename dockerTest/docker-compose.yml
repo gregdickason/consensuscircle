@@ -4,12 +4,6 @@ services:
     image: "redis:alpine"
     ports:
       - "6379:6379"
-    # Not yet available for OSX docker-compose
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:6379/1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
   cc-client:
     build:
       context: .
