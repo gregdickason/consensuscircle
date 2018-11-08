@@ -3,19 +3,13 @@ services:
   redis:
     build:
       context: .
-      dockerfile: Dockerfile-redis
+      dockerfile: buildScripts/Dockerfile-redis
     ports:
       - "6379:6379"
-    # Not yet available for OSX docker-compose
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:6379/1"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
   rq-worker:
     build:
       context: .
-      dockerfile: Dockerfile-worker
+      dockerfile: buildScripts/Dockerfile-worker
     depends_on:
       - redis
     links:
@@ -25,7 +19,7 @@ services:
   cc-client:
     build:
       context: .
-      dockerfile: Dockerfile-system
+      dockerfile: buildScripts/Dockerfile-system
     ports:
       - "5000:5000"
     depends_on:
