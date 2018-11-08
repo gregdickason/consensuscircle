@@ -8,27 +8,27 @@ steps:
   waitFor:
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-client:latest']
   waitFor:
 - id: tag-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
+  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-worker:latest']
   waitFor:
 - id: tag-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
+  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-redis:latest']
   waitFor:
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-client:latest']
   waitFor:
 - id: push-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-worker:latest']
   waitFor:
 - id: push-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-redis:latest']
   waitFor:
 - id : deploy-redis
   name: 'gcr.io/cloud-builders/kubectl'
