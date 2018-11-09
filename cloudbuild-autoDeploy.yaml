@@ -8,67 +8,39 @@ steps:
   waitFor:
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
+  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-client:latest']
   waitFor:
 - id: tag-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
+  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-worker:latest']
   waitFor:
 - id: tag-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
+  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-redis:latest']
   waitFor:
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-client:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-client:latest']
   waitFor:
 - id: push-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-worker:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-worker:latest']
   waitFor:
 - id: push-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/$REPO_NAME-redis:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-redis:latest']
   waitFor:
-- id : deploy-redis
+- id : deploytoGKE
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/redis-deployment.yaml']
+  args: ['create', '-f', 'buildScripts/GKElaunch.yaml']
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : service-redis
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/redis-service.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : deploy-rqworker
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/rq-worker-deployment.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : service-rqworker
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/rq-worker-service.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : deploy-client
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'deploymentScripts/cc-client-deployment.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=consensuscircle-1'
   waitFor:
 - id : service-client
   name: 'gcr.io/cloud-builders/kubectl'
   args: ['expose', 'deployment', 'cc-client', '--type=LoadBalancer', '--port', '5000', '--target-port', '5000']
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=consensuscircle-1'
   waitFor:
