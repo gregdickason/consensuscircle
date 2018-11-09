@@ -19,6 +19,7 @@ from parseBlock import parseBlock
 from genesisBlock import genesisBlock
 from blockState import blockState
 from trackedAgent import trackedAgent  #TODO do we need this?
+from globalsettings import AgentSettings
 
 #utility functions - add to class?
 from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage
@@ -28,42 +29,35 @@ class Agent:
     def __init__(self):
         # TODO load from blockstate?  (handles long term state)
         #self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
+        settings = AgentSettings()
 
         self.chain = collections.deque(maxlen = 100) # TODO make part of blockState (local means in redis)
-        self.entityInstructions = 100 # global ccEntity setting needs to be read
-
+        self.entityInstructions = settings.entityInstructions
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.
-
         self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle
-        self.nextCircle = []  # next Circle.  May or may not include us
-
-        # On convergence when we are in a circle we populate these:
-        self.randomMatrix = []
-        self.randomMatrixHash = []
+        self.nextCircle , self.randomMatrix, self.randomMatrixHash = [], [], []
         self.seed = 0
 
         # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
         self.inCircle = False  # we are not in a circle by default
 
         # TODO: Remove, we track based on the config in blockState
-        self.maxAgentsInCircle = 4   # set to 1 below number as we are a member of the circle when this is tested
+        self.maxAgentsInCircle = settings.maxAgentsInCircle  # set to 1 below number as we are a member of the circle when this is tested
 
         # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain.
         self.randomMatrix = [g for g in getRandomNumbers(2,5)]
         self.seed = getSeed(2)
         self.randomMatrixHash = [g for g in hashvector(self.randomMatrix, self.seed)]
-        # only logged in debug mode to avoid outsie chance of leaking secrets
+        # only logged in debug mode to avoid outside chance of leaking secrets
         logging.debug(f'Agents random matrix, seed and hash is {self.randomMatrix}, {self.seed}, {self.randomMatrixHash}')
 
         # TODO put these as loaded from blockstate
         # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
-        with open('agentConfig.json') as json_data:
-            self.config = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed
-            self.level = self.config['level']   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
-            self.agent_identifier = self.config['agentIdentifier']
-            self.owner = self.config['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-            self.signedIdentifier = self.config['signedIdentifier']
-            self.agentPrivKey = self.config['agentPrivateKey']
+        self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
+        self.agent_identifier = settings.agentIdentifier
+        self.owner = settings.ownerPKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.signedIdentifier = settings.signedIdentifier
+        self.agentPrivKey = settings.agentPrivateKey
 
         logging.debug('Getting blockchain State')
         self.blockState = blockState()

@@ -17,9 +17,6 @@ ENCODING = 'utf-8'
 # Other versions uses cloud technologies (eg S3)
 class blockState:
   def __init__(self):
-    # setup redis as our in memory store.
-    # TODO - store the data in redis on shutdown of redis
-
     # UNCOMMENT LINE BELOW TO RUN LOCALLY AND COMMETN LINE 26
     # self.red = redis.StrictRedis(host='localhost', port=6379, db=0, charset=ENCODING, decode_responses=True)
 
