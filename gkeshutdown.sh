@@ -8,6 +8,7 @@ fi
 
 echo INFO: This script assumes you have launched on GKE if you have not then you will receive errors
 
-gcloud container clusters get-credentials $1
+gcloud container clusters get-credentials --zone australia-southeast1-b $1
 kubectl delete service cc-client rq-worker redis
-kubectl delete deployment cc-client rq-worker redis 
+kubectl delete deployment cc-client rq-worker
+kubectl delete statefulset redis

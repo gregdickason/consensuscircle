@@ -30,45 +30,17 @@ steps:
   name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-deploy-redis:latest']
   waitFor:
-- id : deploy-redis
+- id : deploytoGKE
   name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'buildScripts/redis-deployment.yaml']
+  args: ['create', '-f', 'buildScripts/GKElaunch.yaml']
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : service-redis
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'buildScripts/redis-service.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : deploy-rqworker
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'buildScripts/rq-worker-deployment.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : service-rqworker
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'buildScripts/rq-worker-service.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
-  waitFor:
-- id : deploy-client
-  name: 'gcr.io/cloud-builders/kubectl'
-  args: ['create', '-f', 'buildScripts/cc-client-deployment.yaml']
-  env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=consensuscircle-1'
   waitFor:
 - id : service-client
   name: 'gcr.io/cloud-builders/kubectl'
   args: ['expose', 'deployment', 'cc-client', '--type=LoadBalancer', '--port', '5000', '--target-port', '5000']
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=test-cluster-3'
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-b'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=consensuscircle-1'
   waitFor:

@@ -6,7 +6,7 @@ echo ERROR: provide name of GKE cluster as argument
 exit 1
 fi
 
-gcloud container clusters get-credentials $1
+gcloud container clusters get-credentials --zone australia-southeast1-b $1
 kubectl create secret generic env-secrets --from-literal=REDIS_PASS=asdf
 kubectl create -f redis-deployment_persist.yaml
 kubectl create -f client-deployment.yaml

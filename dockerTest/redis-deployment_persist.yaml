@@ -1,3 +1,6 @@
+# create a persistent disk using command:
+# gcloud compute --project=PROJECT disks create redis-disk --zone=australia-southeast1-b --type=pd-ssd --size=1GB
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -28,5 +31,14 @@ spec:
       containers:
         - name: redis
           image: gcr.io/newagent-e5dac/testredis:latest
+          args: ["--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
           ports:
             - containerPort: 6379
+          volumeMounts:
+            - name: redis-volume
+              mountPath: /data
+      volumes:
+        - name: redis-volume
+          gcePersistentDisk:
+            pdName: redis-disk
+            fsType: ext4
