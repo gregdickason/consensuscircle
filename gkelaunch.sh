@@ -7,5 +7,15 @@ exit 1
 fi
 
 gcloud container clusters get-credentials --zone australia-southeast1-b $1
-kubectl create -f buildScripts/redis-deployment.yaml
+
+if [ -z "$2" ]
+then
+echo CAUTION: launching DEPLOYMENT image
+kubectl create -f buildScripts/GKElaunch.yaml
+else
+echo CAUTION: launching TEST image
+kubectl create -f buildScripts/GKElaunch-test.yaml
+fi
+
+
 kubectl expose deployment cc-client --type=LoadBalancer --port 5000 --target-port 5000

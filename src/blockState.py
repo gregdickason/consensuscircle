@@ -25,7 +25,6 @@ class blockState:
 
     self.pipe = self.red.pipeline()
 
-
     # TODO confirm that the local redis instance is running and has the blockstate loaded: agents, entities, etc
     # TODO - remove currentBlockchainstate.  Store to redis.
     with open('currentBlockChainState.json') as json_data:
