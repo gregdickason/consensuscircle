@@ -1,31 +1,28 @@
 version: '3'
 services:
   redis:
+    image: "redis:alpine"
+    expose:
+      - "6379"
+  api:
     build:
       context: .
-      dockerfile: buildScripts/Dockerfile-redis
+      dockerfile: Dockerfile-API
     ports:
-      - "6379:6379"
-  rq-worker:
-    build:
-      context: .
-      dockerfile: buildScripts/Dockerfile-worker
+      - "8000:8000"
     depends_on:
       - redis
     links:
       - redis
     environment:
       REDIS_URL: redis://redis:6379/1
-  cc-client:
+  client:
     build:
       context: .
-      dockerfile: buildScripts/Dockerfile-system
-    ports:
-      - "5000:5000"
-    depends_on:
-      - redis
-      - rq-worker
+      dockerfile: Dockerfile-client
     links:
-      - redis
-    environment:
-      REDIS_URL: redis://redis:6379/1
+      - api
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"

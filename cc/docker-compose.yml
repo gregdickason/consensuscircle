@@ -1,0 +1,31 @@
+version: '3'
+services:
+  redis:
+    build:
+      context: .
+      dockerfile: buildScripts/Dockerfile-redis
+    expose:
+      - "6379"
+  rq-worker:
+    build:
+      context: .
+      dockerfile: buildScripts/Dockerfile-worker
+    depends_on:
+      - redis
+    links:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1
+  cc-client:
+    build:
+      context: .
+      dockerfile: buildScripts/Dockerfile-system
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - rq-worker
+    links:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1

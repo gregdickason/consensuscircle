@@ -1,32 +1,28 @@
 steps:
 - id: build-up
   name: 'docker/compose:1.19.0'
-  args: ['up', '-d']
-- id: test
-  name: 'gcr.io/cloud-builders/docker'
-  args: ['exec', '-t', 'workspace_cc-client_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
-  waitFor:
+  args: ['up', '-d']:
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_cc-client:latest', 'gcr.io/$PROJECT_ID/consensuscircle-test-client:latest']
+  args: ['tag', 'workspace_client:latest', 'gcr.io/$PROJECT_ID/consensuscircle-ang-client:latest']
   waitFor:
 - id: tag-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_rq-worker:latest', 'gcr.io/$PROJECT_ID/consensuscircle-test-worker:latest']
+  args: ['tag', 'workspace_api:latest', 'gcr.io/$PROJECT_ID/consensuscircle-ang-api:latest']
   waitFor:
 - id: tag-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/consensuscircle-test-redis:latest']
+  args: ['tag', 'workspace_redis:latest', 'gcr.io/$PROJECT_ID/consensuscircle-ang-redis:latest']
   waitFor:
 - id: push-client
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-test-client:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-ang-client:latest']
   waitFor:
 - id: push-worker
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-test-worker:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-ang-api:latest']
   waitFor:
 - id: push-redis
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-test-redis:latest']
+  args: ['push', 'gcr.io/$PROJECT_ID/consensuscircle-ang-redis:latest']
   waitFor:

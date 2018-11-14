@@ -5,7 +5,7 @@
 # Class for local HTTP connections for the blockchain.  This only accepts inbound communicationss
 # Message class does outbound
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from agent import Agent
 import logging.config
 import json
@@ -29,12 +29,12 @@ networkOn = True
 #Testing changing code for end to end syncing
 @app.route('/ping',methods=['GET'])
 def ping():
-  # Testing parameters - is network on 
+  # Testing parameters - is network on
   if not networkOn:
     response = {'network' : f'{networkOn}'}
     return jsonify(response), 400
-   
-  return jsonify('pong'), 200
+
+  return render_template('hello.html'), 200
 
 #Testing Methods - used to simulate network failures by enabling network to be turned off
 @app.route('/networkOn',methods=['POST'])
