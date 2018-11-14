@@ -1,7 +1,7 @@
 steps:
 - id: build-up
   name: 'docker/compose:1.19.0'
-  args: ['up', '-d']:
+  args: ['up', '-d']
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
   args: ['tag', 'workspace_client:latest', 'gcr.io/$PROJECT_ID/consensuscircle-ang-client:latest']
