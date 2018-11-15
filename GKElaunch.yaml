@@ -132,4 +132,3 @@ status: {}
     selector:
       app: client
     type: LoadBalancer
-    loadBalancerIP : 35.197.185.226	
