@@ -7,9 +7,10 @@ RUN python3 -m ensurepip && pip3 install --upgrade pip setuptools rq
 WORKDIR /settings
 
 # TO DO work out exactly what code the worker needs
-COPY  . /settings
-
-WORKDIR ./src
+COPY  ./worker/ /settings
+COPY ./agent/convergenceProcessor.py /settings
+COPY ./agent/consensusEmulator.py /settings
+COPY ./agent/agentUtilities.py /settings
 
 EXPOSE 5000
 
