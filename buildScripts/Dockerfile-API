@@ -23,4 +23,4 @@ WORKDIR ./src
 # Run app.py when the container launches
 # CMD start.sh
 CMD
-CMD ["python", "httpAgent.py", "-p", "5000"]
+CMD ["python", "app.py", "-p", "5000"]

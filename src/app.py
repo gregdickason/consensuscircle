@@ -5,13 +5,20 @@
 # Class for local HTTP connections for the blockchain.  This only accepts inbound communicationss
 # Message class does outbound
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request
 from agent import Agent
 import logging.config
 import json
+from redis import Redis, RedisError
+import os
+import socket
+from flask_cors import CORS
+from flask_restful import Resource, Api
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
+api = Api(app)
+CORS(app)
 
 # Setup Logging
 with open('logConfig.json') as json_data:
@@ -26,6 +33,20 @@ agent = Agent()
 # Testing parameters - can turn network off to test if agent is offline (simulate network outage)
 networkOn = True
 
+redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
+
+@app.route("/", methods=['GET'])
+def hello():
+    try:
+        visits = redis.incr("counter")
+    except RedisError:
+        visits = "<i>cannot connect to Redis, counter disabled</i>"
+
+    response = {'name' : os.getenv("NAME", "world"), 'hostname' : socket.gethostname(), 'visits' : visits}
+
+    print(jsonify(response))
+    return jsonify(response)
+
 #Testing changing code for end to end syncing
 @app.route('/ping',methods=['GET'])
 def ping():
@@ -34,7 +55,7 @@ def ping():
     response = {'network' : f'{networkOn}'}
     return jsonify(response), 400
 
-  return render_template('hello.html'), 200
+  return jsonify('pong'), 200
 
 #Testing Methods - used to simulate network failures by enabling network to be turned off
 @app.route('/networkOn',methods=['POST'])

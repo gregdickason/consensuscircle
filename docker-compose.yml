@@ -16,10 +16,10 @@ services:
       - redis
     environment:
       REDIS_URL: redis://redis:6379/1
-  cc-client:
+  api:
     build:
       context: .
-      dockerfile: buildScripts/Dockerfile-system
+      dockerfile: buildScripts/Dockerfile-API
     ports:
       - "5000:5000"
     depends_on:
@@ -29,3 +29,13 @@ services:
       - redis
     environment:
       REDIS_URL: redis://redis:6379/1
+  client:
+    build:
+      context: .
+      dockerfile: buildScripts/Dockerfile-client
+    links:
+      - api
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
