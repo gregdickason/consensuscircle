@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "disable_existing_loggers": "False",
+    "loggers": {
+        "": {
+            "level": "DEBUG"
+        },
+        "another.module": {
+            "level": "ERROR"
+        }
+    }
+}
