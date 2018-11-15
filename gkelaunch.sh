@@ -16,5 +16,3 @@ else
 echo CAUTION: launching TEST image
 kubectl create -f buildScripts/GKElaunch-test.yaml
 fi
-
-kubectl expose deployment cc-client --type=LoadBalancer --port 5000 --target-port 5000

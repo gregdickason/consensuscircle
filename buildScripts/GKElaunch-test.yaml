@@ -44,14 +44,14 @@ spec:
             fsType: ext4
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: testment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
     kompose.version: 1.1.0 (36652f6)
   creationTimestamp: null
   labels:
-    io.kompose.service: rq-worker
+    app : rq-worker
   name: rq-worker
 spec:
   replicas: 1
@@ -60,7 +60,7 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        io.kompose.service: rq-worker
+        app : rq-worker
     spec:
       containers:
       - env:
@@ -75,12 +75,6 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    kompose.cmd: kompose --file docker-compose.yml convert
-    kompose.version: 1.1.0 (36652f6)
-  creationTimestamp: null
-  labels:
-    io.kompose.service: rq-worker
   name: rq-worker
 spec:
   clusterIP: None
@@ -89,20 +83,18 @@ spec:
     port: 55555
     targetPort: 0
   selector:
-    io.kompose.service: rq-worker
-status:
-  loadBalancer: {}
+   app : rq-worker
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: testment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
     kompose.version: 1.1.0 (36652f6)
   creationTimestamp: null
   labels:
-    io.kompose.service: cc-client
-  name: cc-client
+    app : api
+  name: api
 spec:
   replicas: 1
   strategy: {}
@@ -110,16 +102,75 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        io.kompose.service: cc-client
+        app : api
+    spec:
+      containers:
+      - env:
+        - name: REDIS_URL
+          value: redis://redis:6379/1
+        image: gcr.io/newagent-e5dac/consensuscircle-test-api:latest
+        name: api
+        ports:
+          - containerPort: 5000
+        resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    app: api
+  clusterIP: 10.47.240.20
+---
+apiVersion: extensions/v1beta1
+kind: testment
+metadata:
+  annotations:
+    kompose.cmd: kompose --file docker-compose.yml convert
+    kompose.version: 1.1.0 (36652f6)
+  creationTimestamp: null
+  labels:
+    app : client
+  name: client
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app : client
     spec:
       containers:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
         image: gcr.io/newagent-e5dac/consensuscircle-test-client:latest
-        name: cc-client
+        name: client
         ports:
-        - containerPort: 5000
+        - containerPort: 3000
         resources: {}
       restartPolicy: Always
 status: {}
+---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: client
+  spec:
+    ports:
+      - port: 3000
+        targetPort: 3000
+        name: client-port
+      - port: 5000
+        targetPort: 5000
+        name: api-port
+    selector:
+      app: client
+    type: LoadBalancer
