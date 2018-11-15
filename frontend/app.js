@@ -1,5 +1,5 @@
 var app = angular.module('myApp', ['ngRoute']);
-var api_url = "http://localhost:8000/"
+var api_url = "http://35.197.185.226:8000/"
 
 app.config(function($routeProvider) {
   $routeProvider

@@ -1,8 +1,5 @@
-FROM python:3.6-slim
-# Set the working directory to /app
-WORKDIR /app
+FROM nginx
 
 # Copy the current directory contents into the container at /app
-COPY ./frontend /app
-
-CMD ["python", "-m", "http.server", "3000"]
+COPY ./frontend /usr/share/nginx/html
+COPY ./frontend/default.conf /etc/nginx/conf.d/
