@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: gcr.io/newagent-e5dac/consensuscircle-deploy-redis:latest
+          image: gcr.io/newagent-e5dac/consensuscircle-test-redis:latest
           args: ["--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
           ports:
             - containerPort: 6379
@@ -44,7 +44,7 @@ spec:
             fsType: ext4
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: testment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
@@ -66,7 +66,7 @@ spec:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-worker:latest
+        image: gcr.io/newagent-e5dac/consensuscircle-test-worker:latest
         name: rq-worker
         resources: {}
       restartPolicy: Always
@@ -86,7 +86,7 @@ spec:
    app : rq-worker
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: testment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
@@ -108,7 +108,7 @@ spec:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-api:latest
+        image: gcr.io/newagent-e5dac/consensuscircle-test-api:latest
         name: api
         ports:
           - containerPort: 5000
@@ -129,7 +129,7 @@ spec:
   clusterIP: 10.47.240.20
 ---
 apiVersion: extensions/v1beta1
-kind: Deployment
+kind: testment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
@@ -151,7 +151,7 @@ spec:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-client:latest
+        image: gcr.io/newagent-e5dac/consensuscircle-test-client:latest
         name: client
         ports:
         - containerPort: 3000

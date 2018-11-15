@@ -1,0 +1,30 @@
+version: '3'
+services:
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile-redis
+    expose:
+      - "6379"
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-API
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    links:
+      - redis
+    environment:
+      REDIS_URL: redis://redis:6379/1
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile-client
+    links:
+      - api
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"

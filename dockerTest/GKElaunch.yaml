@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: redis
-          image: gcr.io/newagent-e5dac/consensuscircle-deploy-redis:latest
+          image: gcr.io/newagent-e5dac/consensuscircle-ang-redis:latest
           args: ["--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
           ports:
             - containerPort: 6379
@@ -42,48 +42,6 @@ spec:
           gcePersistentDisk:
             pdName: redis-disk
             fsType: ext4
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  annotations:
-    kompose.cmd: kompose --file docker-compose.yml convert
-    kompose.version: 1.1.0 (36652f6)
-  creationTimestamp: null
-  labels:
-    app : rq-worker
-  name: rq-worker
-spec:
-  replicas: 1
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app : rq-worker
-    spec:
-      containers:
-      - env:
-        - name: REDIS_URL
-          value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-worker:latest
-        name: rq-worker
-        resources: {}
-      restartPolicy: Always
-status: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rq-worker
-spec:
-  clusterIP: None
-  ports:
-  - name: headless
-    port: 55555
-    targetPort: 0
-  selector:
-   app : rq-worker
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -108,10 +66,10 @@ spec:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-api:latest
+        image: gcr.io/newagent-e5dac/consensuscircle-ang-api:latest
         name: api
         ports:
-          - containerPort: 5000
+          - containerPort: 8000
         resources: {}
       restartPolicy: Always
 status: {}
@@ -122,8 +80,8 @@ metadata:
   name: api
 spec:
   ports:
-    - port: 5000
-      targetPort: 5000
+    - port: 8000
+      targetPort: 8000
   selector:
     app: api
   clusterIP: 10.47.240.20
@@ -151,7 +109,7 @@ spec:
       - env:
         - name: REDIS_URL
           value: redis://redis:6379/1
-        image: gcr.io/newagent-e5dac/consensuscircle-deploy-client:latest
+        image: gcr.io/newagent-e5dac/consensuscircle-ang-client:latest
         name: client
         ports:
         - containerPort: 3000
@@ -168,8 +126,8 @@ status: {}
       - port: 3000
         targetPort: 3000
         name: client-port
-      - port: 5000
-        targetPort: 5000
+      - port: 8000
+        targetPort: 8000
         name: api-port
     selector:
       app: client

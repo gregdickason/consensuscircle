@@ -1,0 +1,5 @@
+FROM nginx
+
+# Copy the current directory contents into the container at /app
+COPY ./frontend /usr/share/nginx/html
+COPY ./frontend/default.conf /etc/nginx/conf.d/

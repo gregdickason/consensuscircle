@@ -10,6 +10,6 @@ fi
 
 echo WARNING: This script assumes you have launched on GKE if you have not then you will receive errors
 
-kubectl delete service client api rq-worker redis
-kubectl delete deployment client api rq-worker
+kubectl delete service client redis api
+kubectl delete deployment client api
 kubectl delete statefulset redis

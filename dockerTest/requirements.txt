@@ -1,0 +1,9 @@
+Flask
+Redis
+rq
+requests
+ecdsa
+rejson
+six
+flask-cors
+flask_restful
