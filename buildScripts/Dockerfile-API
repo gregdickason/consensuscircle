@@ -2,7 +2,7 @@
 FROM python:3.6-slim
 
 # decreases repeated build time as can use the cache instead of having to read from requirements.txt
-RUN pip install Flask Redis rq requests ecdsa rejson six nose flask_testing
+RUN pip install Flask Redis rq requests ecdsa rejson six nose flask_testing flask-cors flask-restful
 
 # Set the working directory to /app
 WORKDIR /app
