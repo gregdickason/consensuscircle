@@ -1,7 +1,7 @@
 steps:
 - id: build-up
   name: 'docker/compose:1.19.0'
-  args: ['up', '-d']
+  args: ['up', '-d', '--build']
 - id: test
   name: 'gcr.io/cloud-builders/docker'
   args: ['exec', '-t', 'workspace_api_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
