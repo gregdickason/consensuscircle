@@ -4,7 +4,7 @@ steps:
   args: ['up', '-d']
 - id: test
   name: 'gcr.io/cloud-builders/docker'
-  args: ['exec', '-t', 'workspace_api_1' , 'python', '-m', 'nose', 'nosetests/agentTestandSetup.py']
+  args: ['ps','-a']
   waitFor:
 - id: tag-client
   name: 'gcr.io/cloud-builders/docker'
