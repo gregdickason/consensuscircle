@@ -62,6 +62,9 @@ def ping():
 def networkOn():
   values = request.get_json()
   required = ['network']
+
+  logging.info(f'values received {values}')
+
   if not all(k in values for k in required):
     return 'Missing fields', 400
 

@@ -10,14 +10,14 @@ app.config(function($routeProvider) {
     controller  : 'HomeController'
   })
 
-  .when('/blog', {
-    templateUrl : 'pages/blog.html',
-    controller  : 'BlogController'
+  .when('/ping', {
+    templateUrl : 'pages/ping.html',
+    controller  : 'PingController'
   })
 
-  .when('/about', {
-    templateUrl : 'pages/about.html',
-    controller  : 'AboutController'
+  .when('/toggleNetwork', {
+    templateUrl : 'pages/toggleNetwork.html',
+    controller  : 'ToggleNetworkController'
   })
 
   .otherwise({redirectTo: '/'});
@@ -26,17 +26,43 @@ app.config(function($routeProvider) {
 
 app.controller('HomeController', function($scope, $http) {
 
-// come back and do a test for going to a different part of the api
   $http.get(api_url)
     .then(function success(response) {
-      // $scope.message = 'yay'
       $scope.hostname = self.location.hostname;
       $scope.name = response.data.name;
       $scope.visits = response.data.visits;
     }, function error(response) {
-      // $scope.message = 'nay'
       $scope.message = response.data;
     });
+
+});
+
+app.controller('PingController', function($scope, $http) {
+
+  $http.get(api_url + 'ping')
+    .then(function success(response) {
+      $scope.answer = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+app.controller('ToggleNetworkController', function($scope, $http) {
+
+  $scope.status = 'unknown';
+
+  $scope.toggleNetwork = function(networkStatus) {
+    $http.post(api_url + 'networkOn', networkStatus)
+      .then(function success(response) {
+        if (response.data.networkOn == 'True')
+          $scope.status = 'on';
+        else
+          $scope.status = 'off';
+      }, function error(response) {
+        $scope.status = response.data;
+      });
+  };
 
 });
 
