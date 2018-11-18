@@ -1,0 +1,30 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Toggle Network</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+      <button class="btn btn-sm btn-outline-secondary">Share</button>
+      <button class="btn btn-sm btn-outline-secondary">Export</button>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+      <span data-feather="calendar"></span>
+      This week
+    </button>
+  </div>
+
+</div>
+
+<form ng-submit="toggleNetwork(networkStatus)" name="toggleForm">
+
+    <h3>Network is... {{status}}</h3>
+
+    <div class="form-group">
+    <select ng-model="networkStatus.network" class="form-control" name="network" id="network" required>
+        <option value="">Set network to be...</option>
+        <option value="on">On</option>
+        <option value="off">Off</option>>
+    </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
+</form>
