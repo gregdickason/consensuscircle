@@ -78,6 +78,13 @@ def networkOn():
 
 
 # Public Methods
+@app.route('/getConfig', methods=['GET'])
+def getConfig():
+    agentConfig = agent.getConfig()
+
+    return jsonify(agentConfig)
+
+
 @app.route('/updateConfig', methods=['POST'])
 def updateConfig():
    # Testing parameters - is network on
@@ -87,15 +94,15 @@ def updateConfig():
 
    values = request.get_json()
 
-   required = ['ownerLevel','agentIdentifier','ownerPKey','signId', 'agentPrivKey']
+   required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
    if not all(k in values for k in required):
      return 'Missing fields', 400
 
-   ownerLevel = values['ownerLevel']  # TODO should come from the agents owners level
+   ownerLevel = values['level']  # TODO should come from the agents owners level
    agentIdentifier = values['agentIdentifier']
-   ownerPKey = values['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-   signId = values['signId']
-   agentPrivKey = values['agentPrivKey']
+   ownerPKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+   signId = values['signedIdentifier']
+   agentPrivKey = values['agentPrivateKey']
    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
 
    return jsonify(agentResponse['message']), 201

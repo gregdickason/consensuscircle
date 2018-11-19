@@ -1,6 +1,15 @@
 var app = angular.module('myApp', ['ngRoute']);
 var api_url = "http://" + self.location.hostname + ":5000/"
 
+app.factory('SharedCore', function($http, $cookies, $location) {
+    return {
+
+        changePage: function(location) {
+            $location.path(location);
+        }
+
+  };
+})
 
 app.config(function($routeProvider) {
   $routeProvider
@@ -18,6 +27,16 @@ app.config(function($routeProvider) {
   .when('/toggleNetwork', {
     templateUrl : 'pages/toggleNetwork.html',
     controller  : 'ToggleNetworkController'
+  })
+
+  .when('/agentConfig', {
+    templateUrl : 'pages/agentConfig.html',
+    controller  : 'agentConfigController'
+  })
+
+  .when('/editAgentConfig', {
+    templateUrl : 'pages/editAgentConfig.html',
+    controller  : 'editAgentConfigController'
   })
 
   .otherwise({redirectTo: '/'});
@@ -66,10 +85,35 @@ app.controller('ToggleNetworkController', function($scope, $http) {
 
 });
 
-app.controller('BlogController', function($scope) {
-  $scope.message = 'Hello from BlogController';
+app.controller('agentConfigController', function($scope, $http) {
+
+    $http.get(api_url + 'getConfig')
+      .then(function success(response) {
+        $scope.config = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
 });
 
-app.controller('AboutController', function($scope) {
-  $scope.message = 'Hello from AboutController';
+app.controller('editAgentConfigController', function($scope, $http) {
+
+    $http.get(api_url + 'getConfig')
+      .then(function success(response) {
+        $scope.config = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.update = '';
+
+  $scope.setConfig = function(config) {
+    $http.post(api_url + 'updateConfig', config)
+      .then(function success(response) {
+          window.location.href = '#!/agentConfig';
+      }, function error(response) {
+          $scope.update = 'error in updating settings';
+      });
+  };
+
 });
