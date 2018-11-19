@@ -44,7 +44,7 @@ spec:
             fsType: ext4
 ---
 apiVersion: extensions/v1beta1
-kind: testment
+kind: Deployment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
@@ -86,7 +86,7 @@ spec:
    app : rq-worker
 ---
 apiVersion: extensions/v1beta1
-kind: testment
+kind: Deployment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
@@ -129,7 +129,7 @@ spec:
   clusterIP: 10.47.240.20
 ---
 apiVersion: extensions/v1beta1
-kind: testment
+kind: Deployment
 metadata:
   annotations:
     kompose.cmd: kompose --file docker-compose.yml convert
