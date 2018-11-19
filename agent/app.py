@@ -105,7 +105,7 @@ def updateConfig():
    agentPrivKey = values['agentPrivateKey']
    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
 
-   return jsonify(agentResponse['message'])
+   return jsonify(agentResponse['message']),201
 
 # Routine to get the current instruction pool (used as a part of convergence)
 @app.route('/instructionPool', methods=['GET'])
