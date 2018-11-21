@@ -39,6 +39,11 @@ app.config(function($routeProvider) {
     controller  : 'editAgentConfigController'
   })
 
+  .when('/instructionPool', {
+    templateUrl : 'pages/instructionPool.html',
+    controller  : 'instructionPoolController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -90,6 +95,17 @@ app.controller('agentConfigController', function($scope, $http) {
     $http.get(api_url + 'getConfig')
       .then(function success(response) {
         $scope.config = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+});
+
+app.controller('instructionPoolController', function($scope, $http) {
+
+    $http.get(api_url + 'instructionPool')
+      .then(function success(response) {
+        $scope.pool = response.data;
       }, function error(response) {
         $scope.message = response.data;
       });
