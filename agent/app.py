@@ -78,6 +78,13 @@ def networkOn():
 
 
 # Public Methods
+@app.route('/getConfig', methods=['GET'])
+def getConfig():
+    agentConfig = agent.getConfig()
+
+    return jsonify(agentConfig)
+
+
 @app.route('/updateConfig', methods=['POST'])
 def updateConfig():
    # Testing parameters - is network on
@@ -87,18 +94,18 @@ def updateConfig():
 
    values = request.get_json()
 
-   required = ['ownerLevel','agentIdentifier','ownerPKey','signId', 'agentPrivKey']
+   required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
    if not all(k in values for k in required):
      return 'Missing fields', 400
 
-   ownerLevel = values['ownerLevel']  # TODO should come from the agents owners level
+   ownerLevel = values['level']  # TODO should come from the agents owners level
    agentIdentifier = values['agentIdentifier']
-   ownerPKey = values['ownerPKey']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-   signId = values['signId']
-   agentPrivKey = values['agentPrivKey']
+   ownerPKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+   signId = values['signedIdentifier']
+   agentPrivKey = values['agentPrivateKey']
    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
 
-   return jsonify(agentResponse['message']), 201
+   return jsonify(agentResponse['message']),201
 
 # Routine to get the current instruction pool (used as a part of convergence)
 @app.route('/instructionPool', methods=['GET'])
@@ -115,15 +122,28 @@ def instructionPool():
   else:
     return jsonify(agentResponse['message']), 200
 
+@app.route('/getEntities', methods=['GET'])
+def entityList():
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
 
-@app.route('/entity', methods=['GET'])
+    return  jsonify(agent.getEntityList())
+
+@app.route('/entity', methods=['POST'])
 def returnEntity():
     # Testing parameters - is network on
     if not networkOn:
       response = {'network' : f'{networkOn}'}
       return jsonify(response), 400
 
-    entity = request.args.get('entity')
+    values = request.get_json()
+
+    required = ['entity']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    entity = values['entity']
 
     logging.info(f'returning entity {entity}')
 

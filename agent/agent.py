@@ -88,6 +88,16 @@ class Agent:
         return agentResponse
 
 
+    def getConfig(self):
+        agentConfig = {}
+        agentConfig['level'] = self.level
+        agentConfig['agentIdentifier'] = self.agent_identifier
+        agentConfig['owner'] = self.owner
+        agentConfig['signedIdentifier'] = self.signedIdentifier
+        agentConfig['agentPrivateKey'] = self.agentPrivKey
+
+        return agentConfig
+
         # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
     def register_agent(self, address):
         """
@@ -105,6 +115,8 @@ class Agent:
             raise ValueError('Invalid URL')
 
 
+    def getEntityList(self):
+        return self.blockState.getEntityList()
 
     def add_instructionHandler(self, hash, instructionHandler, sign):
 

@@ -152,6 +152,8 @@ class blockState:
       # TODO throw exception and handle in Agent
       return ''
 
+  def getEntityList(self):
+      return list(self.current_entities.keys())
 
   # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
   def sendMessage(self,agentID, message, function):

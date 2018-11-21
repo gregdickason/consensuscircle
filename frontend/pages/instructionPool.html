@@ -1,0 +1,18 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Instruction Pool</h1>
+
+</div>
+
+<div class="container-fluid">
+<p><h5>Merkle Root:</h5>
+{{pool.merkleRoot}}</p>
+<p><h5>Signed:</h5> {{pool.signed}}
+</p>
+<p>
+  <h5>Instructions:</h5>
+  <ul ng-repeat="instruction in pool.hashes">
+  <li>{{instruction}}</li>
+  </ul>
+</p>
+</div>

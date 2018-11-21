@@ -1,7 +1,6 @@
 var app = angular.module('myApp', ['ngRoute']);
 var api_url = "http://" + self.location.hostname + ":5000/"
 
-
 app.config(function($routeProvider) {
   $routeProvider
 
@@ -18,6 +17,26 @@ app.config(function($routeProvider) {
   .when('/toggleNetwork', {
     templateUrl : 'pages/toggleNetwork.html',
     controller  : 'ToggleNetworkController'
+  })
+
+  .when('/agentConfig', {
+    templateUrl : 'pages/agentConfig.html',
+    controller  : 'agentConfigController'
+  })
+
+  .when('/editAgentConfig', {
+    templateUrl : 'pages/editAgentConfig.html',
+    controller  : 'editAgentConfigController'
+  })
+
+  .when('/instructionPool', {
+    templateUrl : 'pages/instructionPool.html',
+    controller  : 'instructionPoolController'
+  })
+
+  .when('/entities', {
+    templateUrl : 'pages/entities.html',
+    controller  : 'entityController'
   })
 
   .otherwise({redirectTo: '/'});
@@ -66,10 +85,68 @@ app.controller('ToggleNetworkController', function($scope, $http) {
 
 });
 
-app.controller('BlogController', function($scope) {
-  $scope.message = 'Hello from BlogController';
+app.controller('agentConfigController', function($scope, $http) {
+
+    $http.get(api_url + 'getConfig')
+      .then(function success(response) {
+        $scope.config = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
 });
 
-app.controller('AboutController', function($scope) {
-  $scope.message = 'Hello from AboutController';
+app.controller('instructionPoolController', function($scope, $http) {
+
+    $http.get(api_url + 'instructionPool')
+      .then(function success(response) {
+        $scope.pool = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+});
+
+app.controller('editAgentConfigController', function($scope, $http) {
+
+    $http.get(api_url + 'getConfig')
+      .then(function success(response) {
+        $scope.config = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.update = '';
+
+  $scope.setConfig = function(config) {
+    $http.post(api_url + 'updateConfig', config)
+      .then(function success(response) {
+          window.location.href = '#!/agentConfig';
+      }, function error(response) {
+          $scope.update = 'error in updating settings';
+      });
+  };
+
+});
+
+app.controller('entityController', function($scope, $http) {
+
+    $http.get(api_url + 'getEntities')
+      .then(function success(response) {
+        $scope.entities = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.update = '';
+
+  $scope.chooseEntity = function(chosen) {
+    $http.post(api_url + 'entity', chosen)
+      .then(function success(response) {
+          $scope.entityDetails = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
+      });
+  };
+
 });

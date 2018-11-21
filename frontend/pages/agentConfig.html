@@ -1,0 +1,22 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Agent Settings</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <a href="#!/editAgentConfig" class="btn btn-sm btn-outline-success">Edit</a>
+  </div>
+
+</div>
+
+<div>
+<p><h5>Owner Level:</h5>
+{{config.level}}</p>
+<p><h5>Agent ID:</h5> {{config.agentIdentifier}}
+</p>
+<p><h5>Owner:</h5> {{config.owner}}
+</p>
+<p>
+<h5>Signed ID:</h5>
+{{config.signedIdentifier}}
+</p>
+<p><h5>Agent Private Key:</h5> {{config.agentPrivateKey}}</p>
+</div>
