@@ -122,6 +122,13 @@ def instructionPool():
   else:
     return jsonify(agentResponse['message']), 200
 
+@app.route('/getEntities', methods=['GET'])
+def entityList():
+    if not networkOn:
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
+
+    return  jsonify(agent.getEntityList())
 
 @app.route('/entity', methods=['GET'])
 def returnEntity():

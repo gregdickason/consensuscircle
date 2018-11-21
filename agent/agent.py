@@ -115,6 +115,8 @@ class Agent:
             raise ValueError('Invalid URL')
 
 
+    def getEntityList(self):
+        return self.blockState.getEntityList()
 
     def add_instructionHandler(self, hash, instructionHandler, sign):
 
