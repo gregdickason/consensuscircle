@@ -1,16 +1,6 @@
 var app = angular.module('myApp', ['ngRoute']);
 var api_url = "http://" + self.location.hostname + ":5000/"
 
-app.factory('SharedCore', function($http, $cookies, $location) {
-    return {
-
-        changePage: function(location) {
-            $location.path(location);
-        }
-
-  };
-})
-
 app.config(function($routeProvider) {
   $routeProvider
 
@@ -42,6 +32,11 @@ app.config(function($routeProvider) {
   .when('/instructionPool', {
     templateUrl : 'pages/instructionPool.html',
     controller  : 'instructionPoolController'
+  })
+
+  .when('/entities', {
+    templateUrl : 'pages/entities.html',
+    controller  : 'entityController'
   })
 
   .otherwise({redirectTo: '/'});
@@ -129,6 +124,28 @@ app.controller('editAgentConfigController', function($scope, $http) {
           window.location.href = '#!/agentConfig';
       }, function error(response) {
           $scope.update = 'error in updating settings';
+      });
+  };
+
+});
+
+app.controller('entityController', function($scope, $http) {
+
+    $http.get(api_url + 'getEntities')
+      .then(function success(response) {
+        $scope.entities = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.update = '';
+
+  $scope.chooseEntity = function(chosen) {
+    $http.post(api_url + 'entity', chosen)
+      .then(function success(response) {
+          $scope.entityDetails = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
       });
   };
 

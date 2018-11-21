@@ -1,0 +1,37 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Entities</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group mr-2">
+      <button class="btn btn-sm btn-outline-secondary">Share</button>
+      <button class="btn btn-sm btn-outline-secondary">Export</button>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+      <span data-feather="calendar"></span>
+      This week
+    </button>
+  </div>
+
+</div>
+
+<form ng-submit="chooseEntity(chosen)" name="entityForm">
+
+  <div class="input-group">
+    <select class="custom-select" ng-model="chosen.entity" name="entity" id="entity" required>
+      <option value="">Select an Entity to view...</option>
+      <option ng-repeat="option in entities">{{option}}</option>
+    </select>
+    <div class="input-group-append">
+      <button class="btn btn-outline-secondary" type="submit">Select</button>
+    </div>
+  </div>
+
+</form>
+
+
+<div class="container-fluid">
+  <p>To be updated once we have a firmer idea on entity structure</p>
+
+  {{entityDetails}}
+
+</div>

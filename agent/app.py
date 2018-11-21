@@ -130,14 +130,20 @@ def entityList():
 
     return  jsonify(agent.getEntityList())
 
-@app.route('/entity', methods=['GET'])
+@app.route('/entity', methods=['POST'])
 def returnEntity():
     # Testing parameters - is network on
     if not networkOn:
       response = {'network' : f'{networkOn}'}
       return jsonify(response), 400
 
-    entity = request.args.get('entity')
+    values = request.get_json()
+
+    required = ['entity']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    entity = values['entity']
 
     logging.info(f'returning entity {entity}')
 
