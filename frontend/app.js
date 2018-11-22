@@ -39,6 +39,11 @@ app.config(function($routeProvider) {
     controller  : 'entityController'
   })
 
+  .when('/genesisBlock', {
+    templateUrl : 'pages/genesisBlock.html',
+    controller  : 'genesisBlockController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -61,6 +66,17 @@ app.controller('PingController', function($scope, $http) {
   $http.get(api_url + 'ping')
     .then(function success(response) {
       $scope.answer = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+app.controller('genesisBlockController', function($scope, $http) {
+
+  $http.get(api_url + 'genesisBlock')
+    .then(function success(response) {
+      $scope.block = response.data;
     }, function error(response) {
       $scope.message = response.data;
     });
