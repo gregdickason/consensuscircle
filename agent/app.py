@@ -226,7 +226,7 @@ def genesisBlock():
         }
     return jsonify(response), 200
 
-@app.route('/blockPublished',methods=['GET'])
+@app.route('/publishBlock',methods=['POST'])
 def processBlock():
     # Testing parameters - is network on
     if not networkOn:
@@ -235,7 +235,13 @@ def processBlock():
 
     # TODO - need to receive the blockPublished (not stored on file) and process here
 
-    blockID = request.args['blockID']
+    values = request.get_json()
+
+    required = ['blockID']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    blockID = values['blockID']
 
     logging.info("new block published, retrieve validate and process it")
     # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock

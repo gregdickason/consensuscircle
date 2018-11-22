@@ -44,6 +44,11 @@ app.config(function($routeProvider) {
     controller  : 'genesisBlockController'
   })
 
+  .when('/publishBlock', {
+    templateUrl : 'pages/publishBlock.html',
+    controller  : 'publishBlockController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -160,6 +165,19 @@ app.controller('entityController', function($scope, $http) {
     $http.post(api_url + 'entity', chosen)
       .then(function success(response) {
           $scope.entityDetails = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
+      });
+  };
+
+});
+
+app.controller('publishBlockController', function($scope, $http) {
+
+  $scope.blockToPublish = function(chosen) {
+    $http.post(api_url + 'publishBlock', chosen)
+      .then(function success(response) {
+          $scope.result = response.data;
       }, function error(response) {
           $scope.update = 'error in getting entity';
       });

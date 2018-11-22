@@ -1,0 +1,35 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Publish Block</h1>
+
+</div>
+
+<form ng-submit="blockToPublish(chosen)" name="entityForm">
+
+  <div class="input-group">
+    <input class="custom-select" type="text" list="blocks"  ng-model="chosen.blockID" />
+    <datalist id="blocks">
+      <option value="">Select a block to publish...</option>
+      <option>bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json</option>
+    </datalist>
+    <div class="input-group-append">
+      <button class="btn btn-outline-secondary" type="submit">Publish</button>
+    </div>
+  </div>
+
+</form>
+
+
+<div class="container-fluid">
+  <p><h5>Chain Length:</h5>
+  {{result.chainLength}}</p>
+  <p><h5>Circle Distance:</h5>
+  {{result.circleDistance}}</p>
+  <p><h5>Last Block:</h5>
+  {{result.lastBlock}}</p>
+  <p><h5>Message:</h5>
+  {{result.message}}</p>
+  <p><h5>Error:</h5>
+  {{result.error}}</p>
+
+</div>
