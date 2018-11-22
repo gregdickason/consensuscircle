@@ -49,6 +49,11 @@ app.config(function($routeProvider) {
     controller  : 'publishBlockController'
   })
 
+  .when('/latestBlock', {
+    templateUrl : 'pages/block.html',
+    controller  : 'blockController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -80,6 +85,17 @@ app.controller('PingController', function($scope, $http) {
 app.controller('genesisBlockController', function($scope, $http) {
 
   $http.get(api_url + 'genesisBlock')
+    .then(function success(response) {
+      $scope.block = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+app.controller('blockController', function($scope, $http) {
+
+  $http.get(api_url + 'block')
     .then(function success(response) {
       $scope.block = response.data;
     }, function error(response) {
