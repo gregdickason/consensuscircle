@@ -286,7 +286,7 @@ def retrievePKey():
     return jsonify(response), 200
 
 
-@app.route('/instruction', methods=['POST'])
+@app.route('/addInstruction', methods=['POST'])
 def instruction():
     # Testing parameters - is network on
     if not networkOn:
