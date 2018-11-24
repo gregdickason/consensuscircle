@@ -70,7 +70,7 @@ def networkStatus():
 
 
 #Testing Methods - used to simulate network failures by enabling network to be turned off
-@app.route('/changeNetworkStatus',methods=['POST'])
+@app.route('/setNetworkStatus',methods=['POST'])
 def changeNetworkStatus():
   global networkOn
   values = request.get_json()

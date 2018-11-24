@@ -74,3 +74,41 @@ class TddAgent(TestCase):
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
+
+    def test_network_status_changes(self):
+             url = "http://localhost:5000/getNetworkStatus"
+             request = urllib.request.Request(url)
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(body, {'network': 'on'})
+             self.assertEqual(response.code, 200)
+
+             url = "http://localhost:5000/setNetworkStatus"
+             request = urllib.request.Request(url, data='{"network" : "off"}'.encode('utf-8'))
+             request.add_header("Content-Type","application/json")
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(response.code, 200)
+             self.assertEqual(body, {'networkOn': 'False'})
+
+             url = "http://localhost:5000/getNetworkStatus"
+             request = urllib.request.Request(url)
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(body, {'network': 'off'})
+             self.assertEqual(response.code, 200)
+
+             url = "http://localhost:5000/setNetworkStatus"
+             request = urllib.request.Request(url, data='{"network" : "on"}'.encode('utf-8'))
+             request.add_header("Content-Type","application/json")
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(response.code, 200)
+             self.assertEqual(body, {'networkOn': 'True'})
+
+             url = "http://localhost:5000/getNetworkStatus"
+             request = urllib.request.Request(url)
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(body, {'network': 'on'})
+             self.assertEqual(response.code, 200)
