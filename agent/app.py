@@ -190,7 +190,7 @@ def retrieveOwnerPublicKey():
 
     logging.info("returning owners public key")
     response = {
-            'ownerPublicKey': getOwner()
+            'ownerPublicKey': agent.getOwner()
             }
 
     return jsonify(response), 200
@@ -206,7 +206,7 @@ def retrieveOwnerLevel():
 
     logging.info("returning owners level")  # Should we have a better call - ownerDetails with level, owner public key combined?
     response = {
-            'ownerLevel': getLevel()
+            'ownerLevel': agent.getLevel()
     }
     return jsonify(response), 200
 
