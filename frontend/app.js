@@ -116,10 +116,15 @@ app.controller('blockController', function($scope, $http) {
 
 app.controller('ToggleNetworkController', function($scope, $http) {
 
-  $scope.status = 'unknown';
+  $http.get(api_url + 'getNetworkStatus')
+    .then(function success(response) {
+      $scope.status = response.data.network
+    }, function error(response) {
+      $scope.message = response.data;
+    });
 
   $scope.toggleNetwork = function(networkStatus) {
-    $http.post(api_url + 'networkOn', networkStatus)
+    $http.post(api_url + 'changeNetworkStatus', networkStatus)
       .then(function success(response) {
         if (response.data.networkOn == 'True')
           $scope.status = 'on';
