@@ -341,7 +341,7 @@ def instruction():
     else:
         return jsonify(agentResponse['message']), 200
 
-@app.route('/instructionHandler', methods=['POST'])
+@app.route('/addInstructionHandler', methods=['POST'])
 def instructionHandler():
     global networkOn
 
