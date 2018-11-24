@@ -124,7 +124,7 @@ app.controller('ToggleNetworkController', function($scope, $http) {
     });
 
   $scope.toggleNetwork = function(networkStatus) {
-    $http.post(api_url + 'changeNetworkStatus', networkStatus)
+    $http.post(api_url + 'setNetworkStatus', networkStatus)
       .then(function success(response) {
         if (response.data.networkOn == 'True')
           $scope.status = 'on';
