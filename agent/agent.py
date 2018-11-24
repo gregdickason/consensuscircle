@@ -87,6 +87,30 @@ class Agent:
 
         return agentResponse
 
+    def getLastBlock(self):
+        return self.chain[len(self.chain)-1].blockHash
+
+    def getBlockHeight(self):
+        return self.chain[len(self.chain)-1].blockHeight
+
+    def getCircleDistance(self):
+        return self.chain[len(self.chain)-1].circleDistance
+
+    def getOwner(self):
+        return self.owner
+
+    def getLevel(self):
+        return self.level
+
+    def getGenesisHash(self):
+        return self.genesisBlock.blockHash
+
+    def getPrivateKey(self):
+        return self.agent_identifier
+
+    def setPrivateKey(self, pkey):
+        self.agent_identifier = pkey
+        return
 
     def getConfig(self):
         agentConfig = {}

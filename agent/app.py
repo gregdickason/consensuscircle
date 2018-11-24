@@ -88,7 +88,6 @@ def changeNetworkStatus():
 
   logging.info(f'network is now {networkOn}')
 
-
   response = { 'networkOn' : f'{networkOn}' }
   return jsonify(response), 200
 
@@ -191,7 +190,7 @@ def retrieveOwnerPublicKey():
 
     logging.info("returning owners public key")
     response = {
-            'ownerPublicKey': agent.owner
+            'ownerPublicKey': getOwner()
             }
 
     return jsonify(response), 200
@@ -207,7 +206,7 @@ def retrieveOwnerLevel():
 
     logging.info("returning owners level")  # Should we have a better call - ownerDetails with level, owner public key combined?
     response = {
-            'ownerLevel': agent.level
+            'ownerLevel': getLevel()
     }
     return jsonify(response), 200
 
@@ -233,10 +232,10 @@ def setPKey():
     if not all(k in values for k in required):
         return 'Missing pkey field', 400
 
-    agent.agent_identifier = values['pkey']  # TODO - update the JSON with the details for future use?
+    agent.setPrivateKey(values['pkey'])  # TODO - update the JSON with the details for future use?
 
     response = {
-        'message': f'Agent pkey set to {agent.agent_identifier}'
+        'message': f'Agent pkey set to {agent.getPrivateKey()}'
     }
     return jsonify(response), 201
 
@@ -253,7 +252,7 @@ def genesisBlock():
     logging.info("genesisBlock retrieved")
     # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
     response = {
-            'blockHash': agent.genesisBlock.blockHash
+            'blockHash': agent.getGenesisHash()
         }
     return jsonify(response), 200
 
@@ -300,9 +299,9 @@ def retrieveBlock():
 
 
     response = {
-            'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
-            'blockHeight': agent.chain[len(agent.chain)-1].blockHeight,
-            'circleDistance': agent.chain[len(agent.chain)-1].circleDistance
+            'lastBlock': agent.getLastBlock(),
+            'blockHeight': agent.getBlockHeight(),
+            'circleDistance': agent.getCircleDistance()
     }
     return jsonify(response), 200
 
@@ -317,7 +316,7 @@ def retrievePKey():
 
     logging.info("returning pkey")
     response = {
-            'pkey': agent.agent_identifier
+            'pkey': agent.getPrivateKey()
     }
     return jsonify(response), 200
 
