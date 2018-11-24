@@ -39,6 +39,31 @@ app.config(function($routeProvider) {
     controller  : 'entityController'
   })
 
+  .when('/genesisBlock', {
+    templateUrl : 'pages/genesisBlock.html',
+    controller  : 'genesisBlockController'
+  })
+
+  .when('/publishBlock', {
+    templateUrl : 'pages/publishBlock.html',
+    controller  : 'publishBlockController'
+  })
+
+  .when('/latestBlock', {
+    templateUrl : 'pages/block.html',
+    controller  : 'blockController'
+  })
+
+  .when('/addInstruction', {
+    templateUrl : 'pages/addInstruction.html',
+    controller  : 'addInstructionController'
+  })
+
+  .when('/addInstructionHandler', {
+    templateUrl : 'pages/addInstructionHandler.html',
+    controller  : 'addInstructionHandlerController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -67,12 +92,39 @@ app.controller('PingController', function($scope, $http) {
 
 });
 
+app.controller('genesisBlockController', function($scope, $http) {
+
+  $http.get(api_url + 'genesisBlock')
+    .then(function success(response) {
+      $scope.block = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+app.controller('blockController', function($scope, $http) {
+
+  $http.get(api_url + 'block')
+    .then(function success(response) {
+      $scope.block = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
 app.controller('ToggleNetworkController', function($scope, $http) {
 
-  $scope.status = 'unknown';
+  $http.get(api_url + 'getNetworkStatus')
+    .then(function success(response) {
+      $scope.status = response.data.network
+    }, function error(response) {
+      $scope.message = response.data;
+    });
 
   $scope.toggleNetwork = function(networkStatus) {
-    $http.post(api_url + 'networkOn', networkStatus)
+    $http.post(api_url + 'changeNetworkStatus', networkStatus)
       .then(function success(response) {
         if (response.data.networkOn == 'True')
           $scope.status = 'on';
@@ -129,6 +181,7 @@ app.controller('editAgentConfigController', function($scope, $http) {
 
 });
 
+
 app.controller('entityController', function($scope, $http) {
 
     $http.get(api_url + 'getEntities')
@@ -148,5 +201,38 @@ app.controller('entityController', function($scope, $http) {
           $scope.update = 'error in getting entity';
       });
   };
+
+});
+
+app.controller('publishBlockController', function($scope, $http) {
+
+  $scope.blockToPublish = function(chosen) {
+    $http.post(api_url + 'publishBlock', chosen)
+      .then(function success(response) {
+          $scope.result = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
+      });
+  };
+
+});
+
+app.controller('addInstructionController', function($scope, $http) {
+
+   $scope.table = { fields: [] };
+
+   $scope.addFormField = function() {
+       $scope.table.fields.push('');
+     }
+
+  $scope.addInstruction = function(instruction) {
+    $http.post(api_url + 'addInstruction', instruction)
+      .then(function success(response) {
+          $scope.result = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
+      });
+  };
+
 
 });

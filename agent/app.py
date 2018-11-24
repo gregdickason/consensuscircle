@@ -22,8 +22,8 @@ CORS(app)
 
 # Setup Logging
 with open('logConfig.json') as json_data:
-  logDict = json.load(json_data)
-  logging.config.dictConfig(logDict)
+    logDict = json.load(json_data)
+    logging.config.dictConfig(logDict)
 
 logging.info('Instantiating Agent')
 
@@ -50,16 +50,29 @@ def hello():
 #Testing changing code for end to end syncing
 @app.route('/ping',methods=['GET'])
 def ping():
+  global networkOn
   # Testing parameters - is network on
   if not networkOn:
-    response = {'network' : f'{networkOn}'}
-    return jsonify(response), 400
+      response = {'network' : f'{networkOn}'}
+      return jsonify(response), 400
 
   return jsonify('pong'), 200
 
+@app.route('/getNetworkStatus',methods=['GET'])
+def networkStatus():
+   global networkOn
+   # Testing parameters - is network on
+   if networkOn:
+       response = {'network' : "on" }
+   else:
+       response = {'network' : "off" }
+   return jsonify(response)
+
+
 #Testing Methods - used to simulate network failures by enabling network to be turned off
-@app.route('/networkOn',methods=['POST'])
-def networkOn():
+@app.route('/changeNetworkStatus',methods=['POST'])
+def changeNetworkStatus():
+  global networkOn
   values = request.get_json()
   required = ['network']
 
@@ -69,9 +82,11 @@ def networkOn():
     return 'Missing fields', 400
 
   if values['network'] == 'off':
-    networkOn = False
+      networkOn = False
   elif values['network'] == 'on':
-    networkOn = True
+      networkOn = True
+
+  logging.info(f'network is now {networkOn}')
 
   response = { 'networkOn' : f'{networkOn}' }
   return jsonify(response), 200
@@ -80,6 +95,12 @@ def networkOn():
 # Public Methods
 @app.route('/getConfig', methods=['GET'])
 def getConfig():
+    global networkOn
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
     agentConfig = agent.getConfig()
 
     return jsonify(agentConfig)
@@ -87,55 +108,58 @@ def getConfig():
 
 @app.route('/updateConfig', methods=['POST'])
 def updateConfig():
-   # Testing parameters - is network on
-   if not networkOn:
-     response = {'network' : f'{networkOn}'}
-     return jsonify(response), 400
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
-   values = request.get_json()
+    values = request.get_json()
 
-   required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
-   if not all(k in values for k in required):
-     return 'Missing fields', 400
+    required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
 
-   ownerLevel = values['level']  # TODO should come from the agents owners level
-   agentIdentifier = values['agentIdentifier']
-   ownerPKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-   signId = values['signedIdentifier']
-   agentPrivKey = values['agentPrivateKey']
-   agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
+    ownerLevel = values['level']  # TODO should come from the agents owners level
+    agentIdentifier = values['agentIdentifier']
+    ownerPKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+    signId = values['signedIdentifier']
+    agentPrivKey = values['agentPrivateKey']
+    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
 
-   return jsonify(agentResponse['message']),201
+    return jsonify(agentResponse['message']),201
 
 # Routine to get the current instruction pool (used as a part of convergence)
 @app.route('/instructionPool', methods=['GET'])
 def instructionPool():
-  # Testing parameters - is network on
-  if not networkOn:
-    response = {'network' : f'{networkOn}'}
-    return jsonify(response), 400
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
-  agentResponse = agent.instructionPool()
+    agentResponse = agent.instructionPool()
 
-  if agentResponse['success'] == False:
-    return jsonify(agentResponse['message']), 400
-  else:
-    return jsonify(agentResponse['message']), 200
+    if agentResponse['success'] == False:
+        return jsonify(agentResponse['message']), 400
+    else:
+        return jsonify(agentResponse['message']), 200
 
 @app.route('/getEntities', methods=['GET'])
 def entityList():
+    global networkOn
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     values = request.get_json()
 
@@ -155,24 +179,26 @@ def returnEntity():
     else:
         return jsonify(agentResponse['message']), 200
 
-
-
 @app.route('/ownerPublicKey',methods=['GET'])
 def retrieveOwnerPublicKey():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     logging.info("returning owners public key")
     response = {
-            'ownerPublicKey': agent.owner
-    }
-    return jsonify(response), 200
+            'ownerPublicKey': agent.getOwner()
+            }
 
+    return jsonify(response), 200
 
 @app.route('/ownerLevel',methods=['GET'])
 def retrieveOwnerLevel():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
       response = {'network' : f'{networkOn}'}
@@ -180,17 +206,19 @@ def retrieveOwnerLevel():
 
     logging.info("returning owners level")  # Should we have a better call - ownerDetails with level, owner public key combined?
     response = {
-            'ownerLevel': agent.level
+            'ownerLevel': agent.getLevel()
     }
     return jsonify(response), 200
 
 
 @app.route('/setPKey', methods=['POST'])
 def setPKey():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     # set the public and private keys of this node.  Requires signed authority from the owner (and normally only done on setup)
     # first check this is signed by our owner.  If not reject the request
@@ -204,88 +232,103 @@ def setPKey():
     if not all(k in values for k in required):
         return 'Missing pkey field', 400
 
-    agent.agent_identifier = values['pkey']  # TODO - update the JSON with the details for future use?
+    agent.setPrivateKey(values['pkey'])  # TODO - update the JSON with the details for future use?
 
     response = {
-        'message': f'Agent pkey set to {agent.agent_identifier}'
+        'message': f'Agent pkey set to {agent.getPrivateKey()}'
     }
     return jsonify(response), 201
 
 
 @app.route('/genesisBlock', methods=['GET'])
 def genesisBlock():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     logging.info("genesisBlock retrieved")
     # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
     response = {
-            'blockHash': agent.genesisBlock.blockHash
+            'blockHash': agent.getGenesisHash()
         }
     return jsonify(response), 200
 
-@app.route('/blockPublished',methods=['GET'])
+@app.route('/publishBlock',methods=['POST'])
 def processBlock():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     # TODO - need to receive the blockPublished (not stored on file) and process here
 
-    blockID = request.args['blockID']
+    values = request.get_json()
+
+    required = ['blockID']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    blockID = values['blockID']
 
     logging.info("new block published, retrieve validate and process it")
     # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
     agentResponse = agent.processBlock(blockID)
 
     if agentResponse['success'] == False:
-      return jsonify(agentResponse['message']), 400
+        return jsonify(agentResponse['message']), 400
     else:
-      return jsonify(agentResponse['message']), 200
+        return jsonify(agentResponse['message']), 200
 
 
 @app.route('/block',methods=['GET'])
 def retrieveBlock():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     logging.info("return the Hash of the block at the top of our chain and the block height")
     # TODO generic function for returning all the blocks and contents
 
 
     response = {
-            'lastBlock': agent.chain[0].blockHash,
-            'blockHeight': agent.chain[0].blockHeight,
-            'circleDistance': agent.chain[0].circleDistance
+            'lastBlock': agent.getLastBlock(),
+            'blockHeight': agent.getBlockHeight(),
+            'circleDistance': agent.getCircleDistance()
     }
     return jsonify(response), 200
-
 
 @app.route('/PKey',methods=['GET'])
 def retrievePKey():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     logging.info("returning pkey")
     response = {
-            'pkey': agent.agent_identifier
+            'pkey': agent.getPrivateKey()
     }
     return jsonify(response), 200
 
 
-@app.route('/instruction', methods=['POST'])
+@app.route('/addInstruction', methods=['POST'])
 def instruction():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     # Add an instruction to the pool of unprocessed instructions
     logging.info("received an instruction to add")
@@ -294,16 +337,18 @@ def instruction():
     agentResponse = agent.processInstruction(values)
 
     if not agentResponse['success']:
-      return jsonify(agentResponse['message']), 400
+        return jsonify(agentResponse['message']), 400
     else:
-      return jsonify(agentResponse['message']), 200
+        return jsonify(agentResponse['message']), 200
 
 @app.route('/instructionHandler', methods=['POST'])
 def instructionHandler():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     # Add an instruction to the pool of unprocessed instructions
     logging.info("received an instructionHandler to add")
@@ -312,19 +357,21 @@ def instructionHandler():
     agentResponse = agent.processInstructionHandler(values)
 
     if not agentResponse['success']:
-      return jsonify(agentResponse['message']), 400
+        return jsonify(agentResponse['message']), 400
     else:
-      return jsonify(agentResponse['message']), 200
+        return jsonify(agentResponse['message']), 200
 
 
 # TODO remove this routine.  It is being used as to accept agents we want to follow for instrution updates
 # build routine into instruction parsing (when we will choose to randomly follow agents?)
 @app.route('/agents/register', methods=['POST'])
 def register_agents():
+    global networkOn
+
     # Testing parameters - is network on
     if not networkOn:
-      response = {'network' : f'{networkOn}'}
-      return jsonify(response), 400
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
 
     # Register other agents with this agent - add them to the set it maintains
     logging.info('register agent')
@@ -335,9 +382,9 @@ def register_agents():
     agentResponse = agent.registerAgents(agents)
 
     if agentResponse.success == False:
-      return jsonify(agentResponse.message), 400
+        return jsonify(agentResponse.message), 400
     else:
-      return jsonify(agentResponse.message), 201
+        return jsonify(agentResponse.message), 201
 
 
 if __name__ == '__main__':
