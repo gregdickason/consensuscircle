@@ -181,6 +181,7 @@ app.controller('editAgentConfigController', function($scope, $http) {
 
 });
 
+
 app.controller('entityController', function($scope, $http) {
 
     $http.get(api_url + 'getEntities')
