@@ -300,9 +300,9 @@ def retrieveBlock():
 
 
     response = {
-            'lastBlock': agent.chain[0].blockHash,
-            'blockHeight': agent.chain[0].blockHeight,
-            'circleDistance': agent.chain[0].circleDistance
+            'lastBlock': agent.chain[len(agent.chain)-1].blockHash,
+            'blockHeight': agent.chain[len(agent.chain)-1].blockHeight,
+            'circleDistance': agent.chain[len(agent.chain)-1].circleDistance
     }
     return jsonify(response), 200
 
