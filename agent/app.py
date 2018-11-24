@@ -100,7 +100,7 @@ def getConfig():
     # Testing parameters - is network on
     if not networkOn:
         response = {'network' : f'{networkOn}'}
-    return jsonify(response), 400
+        return jsonify(response), 400
 
     agentConfig = agent.getConfig()
 
