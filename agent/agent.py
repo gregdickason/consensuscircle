@@ -269,45 +269,37 @@ class Agent:
         }
         return agentResponse
 
-    # TODO: setup instruction handling and instructions.  2 sides to allow data management.
-    # For example, and offer from a company will be an instrcution handler: 'if you have these attributes and you send me this proof through an instruction, this handler will do XYZ'
-    # The above allows people to 'always opt in' through delegating agents to share some of their data (with shared keys), to opt in when they want, to partiipate in anonymous surveys (through anonymous matching of their attributes), to contribute and earn from models,or to never opt in but understand the value of the data they have
-    def processInstruction(self,instruction):
-        # Add an instruction to the pool of unprocessed instructions
-        logging.debug('received an instruction to add')
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = ''
+    #execute instruction
+    def executeInstruction(self, instruction):
+        #call blockstate to execute instruction
 
-        # Check that the required fields are in the POST'ed data, has been signed correctly, etc
+        return self.blockState.executeInstruction(instruction)
+
+
+    def processInstruction(self, instruction):
+        agentResponse = {}
+
+        # check hash
         validInstruction = validateInstruction(instruction, self.blockState)
         if not validInstruction['return']:
-          logging.debug(f'Instruction not valid: {instruction}')
-          agentResponse['success'] = False
-          agentResponse['message'] = validInstruction['message']
-          return agentResponse
-
-        # check if the hash has already been received for this instruction and if so then dont append
-        # checks both in our existing hashpool and in previous blocks
-        if self.blockState.hasInstruction(instruction['instructionHash']):
-            logging.info(f'Received instruction already have')
-            agentResponse['message'] = 'Instruction already in pool'
-            # dont return length of pool - no need
+            logging.debug(f'Instruction not valid: {instruction}')
+            agentResponse['success'] = False
+            agentResponse['message'] = validInstruction['message']
             return agentResponse
 
-        # This is Mutexed for hash control
-        # TODO add to the redis pool in the blockstate - done in blockState.addInstruction
+        #check if the instruction is already in the pool
+        if self.blockState.hasInstruction(instruction['instructionHash']):
+            logging.info(f'Received instruction already have')
+            agentResponse['success'] = False
+            agentResponse['message'] = 'Instruction already in pool'
+            return agentResponse
 
-        # TODO - update the entities too - load these GREG HERE
-        self.blockState.addInstruction(instruction['instruction'],instruction['instructionHash'],instruction['sign'])
-        # TODO get from blockstate if in pool (not from our hash list)
-        #self.instruction_hashes.add(hash)
+        # if not already in the pool add to the block state
+        self.blockState.addInstruction(instruction)
 
-        # TODO - get the length from the blockstate
+        agentResponse['message'] = "Instruction added"
+        agentResponse['success'] = True
 
-        agentResponse['message'] = {
-            'message': f'Instruction added'
-        }
         return agentResponse
 
     def processInstructionHandler(self,values):

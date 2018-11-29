@@ -82,14 +82,22 @@ class blockState:
     # create the instructionPool object to store instructions
     # TODO implement the redlock algorithm for locking
 
+  def executeInstruction(self, hash):
+      instruction = self.current_instructions[hash]
+      args = instruction['args']
+      keys = instruction['keys']
+      luaHash = instruction['luaHash']
+
+      output = self.red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
+
+      return output
+
   # Manage the instruction pool
-  def addInstruction(self, instruction, hash,sign):
+  def addInstruction(self, instruction):
 
     # TODO remove insOut and current_instructions - only store in redis?
-    insOut = {}
-    insOut['instructionHash'] = hash
-    insOut['sign'] = sign
-    insOut['instruction'] = instruction
+    insOut = instruction
+    hash = instruction['instructionHash']
 
     logging.debug(f'\nwriting {hash} to redis\n')
     self.current_instructions[hash] = insOut
@@ -199,6 +207,7 @@ class blockState:
     if pubKeyHash in self.agentPublicKeys:
       return self.agentPublicKeys[pubKeyHash]
     elif pubKeyHash in self.current_entities:
+      logging.info("HERE HERE HERE")
       return self.current_entities[pubKeyHash]['PublicKey']
     else:
       #TODO throw errors / error checking

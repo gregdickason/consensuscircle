@@ -14,6 +14,8 @@ import os
 import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
+from globalsettings import instructionInfo
+from agentUtilities import getHashofInput, signMessage
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -360,6 +362,60 @@ def instructionHandler():
         return jsonify(agentResponse['message']), 400
     else:
         return jsonify(agentResponse['message']), 200
+
+#need to add API calls for:
+#getting a list of the instruction names
+#getting a list of the luaHash's matching to the instruction names
+#getting the arguments for a particular instruction name
+#getting the keys for a particular instruction name
+
+@app.route('/testInstruction', methods=['GET'])
+def instructionTest():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+
+    publicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+    privateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+    agentID = "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c"
+    name = 'hello'
+    keys = {}
+    args = {}
+    #eventually need to add some kind of instructionID to ensure uniqueness
+
+    #check parameters NEED TO ADD TODO
+    instructionSet = instructionInfo()
+    requiredKeys = instructionSet.getInstructionKeys(name)
+    requiredArgs = instructionSet.getInstructionArgs(name)
+
+    #pull in instruction hashes
+    luaHash = instructionSet.getInstructionHash(name)
+
+    instruction = { 'name' : name,
+                    'keys' : keys,
+                    'args' : args,
+                    'luaHash' : luaHash,
+                    'sender' : agentID
+                    }
+
+    hash = getHashofInput(instruction)
+    signature = signMessage(hash, privateKey)
+
+    instructionToSend = { 'instruction' : instruction,
+                          'instructionHash' : hash,
+                          'signature' : signature
+                          }
+
+    logging.info(f"instruction to send is {instructionToSend}")
+
+    output = agent.processInstruction(instructionToSend)
+    output['hash'] = hash
+
+    return jsonify(output)
 
 
 # TODO remove this routine.  It is being used as to accept agents we want to follow for instrution updates
