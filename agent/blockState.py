@@ -83,10 +83,14 @@ class blockState:
     # TODO implement the redlock algorithm for locking
 
   def executeInstruction(self, hash):
-      instruction = self.current_instructions[hash]
-      args = instruction['args']
-      keys = instruction['keys']
-      luaHash = instruction['luaHash']
+      instruction = json.loads(self.red.get('instructionPool:'+ hash))
+      #instruction = self.current_instructions[hash]
+
+      logging.debug(f'\n instruction retrieved is {instruction}\n')
+
+      args = instruction['instruction']['args']
+      keys = instruction['instruction']['keys']
+      luaHash = instruction['instruction']['luaHash']
 
       output = self.red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
 

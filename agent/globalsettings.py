@@ -20,23 +20,26 @@ class instructionInfo:
         self.instructionArgs = {}
 
         self.instructionSet['hello'] = '59f3eb590a68c71483463553f9b2d715550be5ae'
-        self.instructionKeys['hello'] = {}
-        self.instructionArgs['hello'] = {}
+        self.instructionKeys['hello'] = []
+        self.instructionArgs['hello'] = []
 
     def getInstructionHash(self, name):
         if name in self.instructionSet.keys():
             return self.instructionSet[name]
         else:
-            return 'ERROR: Instruction name not found'
+            return None
 
     def getInstructionKeys(self, name):
         if name in self.instructionKeys.keys():
             return self.instructionKeys[name]
         else:
-            return 'ERROR: Instruction name not found'
+            return None
 
     def getInstructionArgs(self, name):
         if name in self.instructionArgs.keys():
             return self.instructionArgs[name]
         else:
-            return 'ERROR: Instruction name not found'
+            return None
+
+    def getInstructionNames(self):
+        return list(self.instructionSet.keys())

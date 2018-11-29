@@ -365,9 +365,110 @@ def instructionHandler():
 
 #need to add API calls for:
 #getting a list of the instruction names
+@app.route('/instructionNames', methods = ['GET'])
+def getInstructionNames():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    instructionSet = instructionInfo()
+
+    return jsonify(instructionSet.getInstructionNames())
+
+
 #getting a list of the luaHash's matching to the instruction names
+@app.route('/getLuaHash', methods = ['POST'])
+def getLuaHash():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['instructionName']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving a lua hash")
+
+    instructionSet = instructionInfo()
+    luaHash = instructionSet.getInstructionHash(values['instructionName'])
+
+    if luaHash == None:
+        return jsonify('ERROR: No hash found for that instruction name', 400)
+    else:
+        return jsonify(luaHash)
+
 #getting the arguments for a particular instruction name
+@app.route('/getInstructionArguments', methods = ['POST'])
+def getLuaHash():
+    global networkOn
+
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['instructionName']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving instruction arguments")
+
+    instructionSet = instructionInfo()
+    argumentList = instructionSet.getInstructionArgs(values['instructionName'])
+
+    if luaHash == None:
+        return jsonify('ERROR: No instruction with this name', 400)
+    else:
+        return jsonify(argumentList)
+
 #getting the keys for a particular instruction name
+@app.route('/getInstructionKeys', methods = ['POST'])
+def getLuaHash():
+    global networkOn
+
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['instructionName']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving instruction keys")
+
+    instructionSet = instructionInfo()
+    keyList = instructionSet.getInstructionKeys(values['instructionName'])
+
+    if luaHash == None:
+        return jsonify('ERROR: No instruction with this name', 400)
+    else:
+        return jsonify(keyList)
+
+@app.route('/executeInstruction', methods=['GET'])
+def executeTest():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    hash = "0016c636c04d2f70ae875e4c08cf95f9ff9e77531e793b374f0e116177e9f0f2"
+
+    output = agent.executeInstruction(hash)
+
+    return jsonify(output)
 
 @app.route('/testInstruction', methods=['GET'])
 def instructionTest():
@@ -383,14 +484,17 @@ def instructionTest():
     privateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
     agentID = "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c"
     name = 'hello'
-    keys = {}
-    args = {}
+    keys = []
+    args = []
     #eventually need to add some kind of instructionID to ensure uniqueness
 
     #check parameters NEED TO ADD TODO
     instructionSet = instructionInfo()
     requiredKeys = instructionSet.getInstructionKeys(name)
     requiredArgs = instructionSet.getInstructionArgs(name)
+
+    if len(requiredKeys) != len(keys) or len(args) != len(requiredArgs):
+        return jsonify("ERROR: instruction structure is incorrect")
 
     #pull in instruction hashes
     luaHash = instructionSet.getInstructionHash(name)
@@ -402,6 +506,9 @@ def instructionTest():
                     'sender' : agentID
                     }
 
+    #NOTE when we move this onto the client side we will need to either
+    #expose the lua hash or have instruction formatted differently
+    #as well as have some call to the agent that can get the unique identifier.
     hash = getHashofInput(instruction)
     signature = signMessage(hash, privateKey)
 
