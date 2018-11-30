@@ -59,6 +59,11 @@ app.config(function($routeProvider) {
     controller  : 'newInstructionController'
   })
 
+  .when('/executeInstruction', {
+    templateUrl : 'pages/executeInstruction.html',
+    controller  : 'executeInstructionController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -273,5 +278,25 @@ app.controller('newInstructionController', function($scope, $http) {
       });
   };
 
+
+});
+
+app.controller('executeInstructionController', function($scope, $http) {
+
+    $http.get(api_url + 'getPendingInstructions')
+      .then(function success(response) {
+        $scope.instructions = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.executeInstruction = function(chosen) {
+    $http.post(api_url + 'executeInstruction', chosen)
+      .then(function success(response) {
+          $scope.reponse = response.data;
+      }, function error(response) {
+          $scope.response = 'error in executing instruction';
+      });
+  };
 
 });

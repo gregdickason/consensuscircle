@@ -1,0 +1,27 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">Execute Instruction</h1>
+
+</div>
+
+<form ng-submit="executeInstruction(chosen)" name="instructionForm">
+
+  <div class="input-group">
+    <select class="custom-select" ng-model="chosen.instruction" name="instruction" id="instruction" required>
+      <option value="">Select an Instruction to execute...</option>
+      <option ng-repeat="option in instructions">{{option}}</option>
+    </select>
+    <div class="input-group-append">
+      <button class="btn btn-outline-secondary" type="submit">Select</button>
+    </div>
+  </div>
+
+</form>
+
+
+<div class="container-fluid">
+  <p><h5>Response:</h5></p>
+
+  {{reponse}}
+
+</div>

@@ -145,6 +145,17 @@ def instructionPool():
     else:
         return jsonify(agentResponse['message']), 200
 
+@app.route('/getPendingInstructions', methods=['GET'])
+def getPendingInstructions():
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    agentResponse = agent.instructionPool()
+
+    return jsonify(agentResponse['message']['hashes'])
+
 @app.route('/getEntities', methods=['GET'])
 def entityList():
     global networkOn
@@ -414,7 +425,7 @@ def getInstructionKeys():
     else:
         return jsonify(keyList)
 
-@app.route('/executeInstruction', methods=['GET'])
+@app.route('/executeInstruction', methods=['POST'])
 def executeTest():
     global networkOn
 
@@ -423,7 +434,13 @@ def executeTest():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    hash = "0016c636c04d2f70ae875e4c08cf95f9ff9e77531e793b374f0e116177e9f0f2"
+    input = request.get_json()
+
+    required = ['instruction']
+    if not all(k in input for k in required):
+        return 'Missing fields', 400
+
+    hash = input['instruction']
 
     output = agent.executeInstruction(hash)
 
