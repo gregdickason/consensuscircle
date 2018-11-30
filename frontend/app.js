@@ -54,16 +54,6 @@ app.config(function($routeProvider) {
     controller  : 'blockController'
   })
 
-  .when('/addInstruction', {
-    templateUrl : 'pages/addInstruction.html',
-    controller  : 'addInstructionController'
-  })
-
-  .when('/addInstructionHandler', {
-    templateUrl : 'pages/addInstructionHandler.html',
-    controller  : 'addInstructionHandlerController'
-  })
-
   .when('/newInstruction', {
     templateUrl : 'pages/instruction.html',
     controller  : 'newInstructionController'
@@ -222,25 +212,6 @@ app.controller('publishBlockController', function($scope, $http) {
 
 });
 
-app.controller('addInstructionController', function($scope, $http) {
-
-   $scope.table = { fields: [] };
-
-   $scope.addFormField = function() {
-       $scope.table.fields.push('');
-     }
-
-  $scope.addInstruction = function(instruction) {
-    $http.post(api_url + 'addInstruction', instruction)
-      .then(function success(response) {
-          $scope.result = response.data;
-      }, function error(response) {
-          $scope.update = 'error in getting entity';
-      });
-  };
-
-
-});
 
 app.controller('newInstructionController', function($scope, $http) {
 
