@@ -245,6 +245,11 @@ app.controller('addInstructionController', function($scope, $http) {
 app.controller('newInstructionController', function($scope, $http) {
 
   //$scope.instruction.instruction.name = "";
+  $scope.instruction = {};
+  $scope.instruction.instruction = {};
+
+  $scope.instruction.instruction.args = [];
+  $scope.instruction.instruction.keys = [];
 
   $http.get(api_url + 'getInstructionNames')
     .then(function success(response) {
@@ -258,6 +263,7 @@ app.controller('newInstructionController', function($scope, $http) {
      $http.post(api_url + 'getLuaHash', name)
        .then(function success(response) {
            $scope.luaHash = response.data;
+           $scope.instruction.instruction.luaHash = $scope.luaHash;
        }, function error(response) {
            $scope.update = 'error in getting entity';
        });
@@ -276,8 +282,6 @@ app.controller('newInstructionController', function($scope, $http) {
                $scope.update = 'error in getting entity';
            });
    }
-
-   $scope.table = { fields: [] };
 
    $scope.addFormField = function() {
        $scope.table.fields.push('');
