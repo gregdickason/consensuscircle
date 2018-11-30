@@ -1,0 +1,38 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">New Instruction</h1>
+
+</div>
+
+<form ng-submit="addInstruction(instruction)" name="instructionForm">
+
+  <div class="form-group">
+    <select class="custom-select" ng-model="instruction.instruction.name"
+            name="instructioName" id="instructionName" required
+            ng-options= "option for option in instructionTypes"
+            ng-change = "getInstructionTypeRequirements(instruction.instruction)">
+    </select>
+  </div>
+
+  <!-- <div class="form-group" ng-repeat="field in table.fields track by $index">
+
+  </div> -->
+
+
+</form>
+
+
+<div class="container-fluid">
+
+  {{table}}
+
+  <p><h5>Chain Length:</h5>
+  {{instruction.instruction.name}}</p>
+  <p><h5>Circle Distance:</h5>
+  {{argumentList}}</p>
+  <p><h5>Last Block:</h5>
+  {{keyList}}</p>
+  <p><h5>Message:</h5>
+  {{luaHash}}</p>
+
+</div>

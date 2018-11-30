@@ -64,6 +64,11 @@ app.config(function($routeProvider) {
     controller  : 'addInstructionHandlerController'
   })
 
+  .when('/newInstruction', {
+    templateUrl : 'pages/instruction.html',
+    controller  : 'newInstructionController'
+  })
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -218,6 +223,59 @@ app.controller('publishBlockController', function($scope, $http) {
 });
 
 app.controller('addInstructionController', function($scope, $http) {
+
+   $scope.table = { fields: [] };
+
+   $scope.addFormField = function() {
+       $scope.table.fields.push('');
+     }
+
+  $scope.addInstruction = function(instruction) {
+    $http.post(api_url + 'addInstruction', instruction)
+      .then(function success(response) {
+          $scope.result = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting entity';
+      });
+  };
+
+
+});
+
+app.controller('newInstructionController', function($scope, $http) {
+
+  //$scope.instruction.instruction.name = "";
+
+  $http.get(api_url + 'getInstructionNames')
+    .then(function success(response) {
+      $scope.instructionTypes = response.data;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+
+   $scope.getInstructionTypeRequirements = function(name) {
+     $http.post(api_url + 'getLuaHash', name)
+       .then(function success(response) {
+           $scope.luaHash = response.data;
+       }, function error(response) {
+           $scope.update = 'error in getting entity';
+       });
+
+       $http.post(api_url + 'getInstructionArguments', name)
+         .then(function success(response) {
+             $scope.argumentList = response.data;
+         }, function error(response) {
+             $scope.update = 'error in getting entity';
+         });
+
+         $http.post(api_url + 'getInstructionKeys', name)
+           .then(function success(response) {
+               $scope.keyList = response.data;
+           }, function error(response) {
+               $scope.update = 'error in getting entity';
+           });
+   }
 
    $scope.table = { fields: [] };
 

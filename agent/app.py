@@ -365,7 +365,7 @@ def instructionHandler():
 
 #need to add API calls for:
 #getting a list of the instruction names
-@app.route('/instructionNames', methods = ['GET'])
+@app.route('/getInstructionNames', methods = ['GET'])
 def getInstructionNames():
     global networkOn
 
@@ -391,14 +391,14 @@ def getLuaHash():
 
     values = request.get_json()
 
-    required = ['instructionName']
+    required = ['name']
     if not all(k in values for k in required):
         return 'Missing fields', 400
 
     logging.info("retrieving a lua hash")
 
     instructionSet = instructionInfo()
-    luaHash = instructionSet.getInstructionHash(values['instructionName'])
+    luaHash = instructionSet.getInstructionHash(values['name'])
 
     if luaHash == None:
         return jsonify('ERROR: No hash found for that instruction name', 400)
@@ -407,7 +407,7 @@ def getLuaHash():
 
 #getting the arguments for a particular instruction name
 @app.route('/getInstructionArguments', methods = ['POST'])
-def getLuaHash():
+def getInstructionArguments():
     global networkOn
 
     if not networkOn:
@@ -416,23 +416,23 @@ def getLuaHash():
 
     values = request.get_json()
 
-    required = ['instructionName']
+    required = ['name']
     if not all(k in values for k in required):
         return 'Missing fields', 400
 
     logging.info("retrieving instruction arguments")
 
     instructionSet = instructionInfo()
-    argumentList = instructionSet.getInstructionArgs(values['instructionName'])
+    argumentList = instructionSet.getInstructionArgs(values['name'])
 
-    if luaHash == None:
+    if argumentList == None:
         return jsonify('ERROR: No instruction with this name', 400)
     else:
         return jsonify(argumentList)
 
 #getting the keys for a particular instruction name
 @app.route('/getInstructionKeys', methods = ['POST'])
-def getLuaHash():
+def getInstructionKeys():
     global networkOn
 
     if not networkOn:
@@ -441,16 +441,16 @@ def getLuaHash():
 
     values = request.get_json()
 
-    required = ['instructionName']
+    required = ['name']
     if not all(k in values for k in required):
         return 'Missing fields', 400
 
     logging.info("retrieving instruction keys")
 
     instructionSet = instructionInfo()
-    keyList = instructionSet.getInstructionKeys(values['instructionName'])
+    keyList = instructionSet.getInstructionKeys(values['name'])
 
-    if luaHash == None:
+    if keyList == None:
         return jsonify('ERROR: No instruction with this name', 400)
     else:
         return jsonify(keyList)

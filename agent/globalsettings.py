@@ -23,6 +23,10 @@ class instructionInfo:
         self.instructionKeys['hello'] = []
         self.instructionArgs['hello'] = []
 
+        self.instructionSet['UIDummy'] = "fakehash"
+        self.instructionKeys['UIDummy'] = ['test 1', 'test 2']
+        self.instructionArgs['UIDummy'] = ['cameron', 'greg']
+
     def getInstructionHash(self, name):
         if name in self.instructionSet.keys():
             return self.instructionSet[name]
