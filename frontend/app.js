@@ -244,12 +244,15 @@ app.controller('addInstructionController', function($scope, $http) {
 
 app.controller('newInstructionController', function($scope, $http) {
 
-  //$scope.instruction.instruction.name = "";
+  //need to add hashing and Signing
   $scope.instruction = {};
   $scope.instruction.instruction = {};
-
+  $scope.started = false;
   $scope.instruction.instruction.args = [];
   $scope.instruction.instruction.keys = [];
+  $scope.instruction.instructionHash = "";
+  $scope.instruction.signature = "";
+  $scope.instruction.instruction.sender = "";
 
   $http.get(api_url + 'getInstructionNames')
     .then(function success(response) {
@@ -259,7 +262,10 @@ app.controller('newInstructionController', function($scope, $http) {
     });
 
 
+
    $scope.getInstructionTypeRequirements = function(name) {
+     $scope.started = true;
+
      $http.post(api_url + 'getLuaHash', name)
        .then(function success(response) {
            $scope.luaHash = response.data;

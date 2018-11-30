@@ -34,25 +34,16 @@
     </datalist>
   </div>
 
+  <button type="submit" class="btn btn-primary btn-lg btn-block" ng-show="started">Submit</button>
+
 </form>
 
 
 <div class="container-fluid">
 
-  <p><h5>Chain Length:</h5>
-  {{instruction.instruction.name}}</p>
-  <p><h5>Circle Distance:</h5>
-  {{argumentList}}</p>
-  <p><h5>Last Block:</h5>
-  {{keyList}}</p>
-  <p><h5>Message:</h5>
-  {{luaHash}}</p>
+  <p><h5>Input:</h5>
+  {{instruction}}</p>
 
-  <p><h5>selected keys:</h5>
-  {{instruction.instruction.keys}}</p>
-
-  <p><h5>selected args:</h5>
-  {{instruction.instruction.args}}</p>
-
-  {{instruction}}
+  <p><h5> Output:</h5>
+  {{result}}
 </div>
