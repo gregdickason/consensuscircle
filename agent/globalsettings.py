@@ -27,6 +27,11 @@ class instructionInfo:
         self.instructionKeys['UIDummy'] = ['test 1', 'test 2']
         self.instructionArgs['UIDummy'] = ['cameron', 'greg']
 
+        self.instructionSet['Simple Transaction'] = '8292d2c55210392e3bb7c7e9c98c4d5cf4154431'
+        self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
+        self.isnstructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
+
+
     def getInstructionHash(self, name):
         if name in self.instructionSet.keys():
             return self.instructionSet[name]
