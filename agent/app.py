@@ -455,9 +455,8 @@ def addInstruction():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    publicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+    # publicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
     privateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
-    agentID = "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c"
 
     #TO DO add a call to agent that can get the unique identifier.
     #eventually need to add some kind of instructionID to ensure uniqueness
@@ -479,11 +478,7 @@ def addInstruction():
     if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
         return jsonify("ERROR: instruction structure is incorrect")
 
-    #TODO move this to browser once log in is added or have an input for sender?
-    instructionToSend['instruction']['sender'] = agentID
-
     # eventually move to browser
-    instructionToSend['instructionHash'] = getHashofInput(instructionToSend['instruction'])
     instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
 
     logging.info(f"instruction to send is {instructionToSend}")

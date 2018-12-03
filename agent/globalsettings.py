@@ -29,7 +29,7 @@ class instructionInfo:
 
         self.instructionSet['Simple Transaction'] = '8292d2c55210392e3bb7c7e9c98c4d5cf4154431'
         self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
-        self.isnstructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
+        self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
 
 
     def getInstructionHash(self, name):
