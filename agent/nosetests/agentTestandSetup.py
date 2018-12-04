@@ -40,7 +40,7 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 201)
 
     def test_101_get_pkey_returns_200(self):
-             url = "http://localhost:5000/PKey"
+             url = "http://localhost:5000/getPrivateKey"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))

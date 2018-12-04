@@ -56,7 +56,7 @@ class parseBlock:
             self.randomMatrix.append(f)
 
         for e in self.consensusCircle:
-          self.ccKeys.append(e['pKey'])
+          self.ccKeys.append(e['publicKey'])
 
         logging.info(f'randomMatrix is {self.randomMatrix}')
 
@@ -143,7 +143,7 @@ class parseBlock:
         hashConvergenceHeader = getHashofInput(json.dumps(self.convergenceHeader))
         logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
-          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPubKey(self.ccKeys[i])) != True:
+          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPublicKey(self.ccKeys[i])) != True:
             self.blockPass = False
             self.blockComment = f'signature for Circle at {i} is not valid'
             return

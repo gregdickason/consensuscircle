@@ -17,11 +17,11 @@
 		 		   {"7a160e134c8bbcf888fc75083f18a9cc81722b70e96c20e35628e10b26cbac4e":["33548ec967f73d6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d4","74548ec967f73d6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d3","55548ec967f73d6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d7","66548ec967f73d6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d2","77548ec967f73d6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d2"]}]
 		 },
 
-	"consensusCircle": [{"level": "founder", "pKey": "17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920"},
-  	              {"level": "defender", "pKey": "cb4d24f31f25703dd89fee5aa4813f55a16ce8d05d76af819e02b5c9f7ace7b2"},
-  	              {"level": "defender", "pKey": "5cbda1c61193fbd4644eeca3d9d5d6572ab8ac3399dcdcfa7241dcab509d2102"},
-  	              {"level": "protector", "pKey": "f3d15dbd57deb8320663ebb5afa905ee2458445e6ab512911f39f9eea9a6f89c"},
-  	              {"level": "protector", "pKey": "7a160e134c8bbcf888fc75083f18a9cc81722b70e96c20e35628e10b26cbac4e"}],
+	"consensusCircle": [{"level": "founder", "publicKey": "17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920"},
+  	              {"level": "defender", "publicKey": "cb4d24f31f25703dd89fee5aa4813f55a16ce8d05d76af819e02b5c9f7ace7b2"},
+  	              {"level": "defender", "publicKey": "5cbda1c61193fbd4644eeca3d9d5d6572ab8ac3399dcdcfa7241dcab509d2102"},
+  	              {"level": "protector", "publicKey": "f3d15dbd57deb8320663ebb5afa905ee2458445e6ab512911f39f9eea9a6f89c"},
+  	              {"level": "protector", "publicKey": "7a160e134c8bbcf888fc75083f18a9cc81722b70e96c20e35628e10b26cbac4e"}],
 
 	"blockSignatures" :  [{"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920":"hTNtaSyAQTOJPbZvq4JeVtrcVHcvysbLUxbaJoG0vHjNaWSqcpLi4qZVVbsGBzCkmmdlHkaASdezOmPmCMrIUQ=="},
                              {"cb4d24f31f25703dd89fee5aa4813f55a16ce8d05d76af819e02b5c9f7ace7b2":"wZKf3EWQc1HzsiLb87R9Fv4a2b6OarhCF9fgIS6X3wE5SHGNSP+sn+rCnN/T3wroyAQ/U1Hm/FK54srmIilSww=="},
@@ -30,7 +30,7 @@
  			     {"7a160e134c8bbcf888fc75083f18a9cc81722b70e96c20e35628e10b26cbac4e":"4gJw4xptxKSw3WN9wjg4K/jklzmC2angq+j2gx8sNey4lK0ZNM4CZvOy64MLOCrurIcvzr3h2G9YGNCy+vm58A=="}]
 },
 "blockHash" : "72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd",
-"blockOriginatedAgent":{"pKey":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920","blockHashSigned":"TO SIGN"},
+"blockOriginatedAgent":{"publicKey":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920","blockHashSigned":"TO SIGN"},
 "instructions" : [{"instructionHash":"cffc1a33c4fa8c63450171ce0090b5daf13d11b8bad395f6e5dc07a28efc1e91", "signature":"30B+U23+/2v073gSDeHdKtGSViCLJ78zGo40se7mA0j0fiDjKPwWVdyyjoGmogHcKhyvFgfuZ2GNDHQWDZNsnw==", "instruction":{"source":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920", "someRandom": "e2548ec967f73d6ddaaf19c39c5ad8fab58ef8d7f430d5e36d653f9634f16633", "slots": [{"wallet":0,"escrowAmount":200000,"action" : "update", "somethingelse to work out":"", "target":"abs(vector1 + vector2) + AABB332D - uses consensus output as random seed (can be absolute)", "timeout":"timeInBlocksToAllow the next closest entity to update"}]}},
 			{"instructionHash":"b57cb3e6f6bedfd9dc04a65ca92af3febb70f235d86aacf4eb3f7fd187367b72","signature":"mKjleM+EabFSXeQDDP+GHQTd80T+cazbMnZGaqJ4k2ncrEFaer6UQkfIIl5eZInWl8u2F9QEQqRIIVK+pUWfKQ==" ,"instruction":{"source":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920", "someRandom": "e2548ec967f73d6ddaaf19c39c5ad8fab58ef8d7f430d5e36d653f9634f166EE", "slots": [{"wallet":0,"escrowAmount":2000,"action" : "update", "somethingelse to work out":"", "target":"abs(vector1 + vector2) + AABB332D - blah", "timeout":"timeInBlocksToAllow the next closest entity to update"}]}},
 			{"instructionHash":"bd7fc83b062edd4dc3ee42baf6d83a540a6a03b54510357d194801f8a48309b3", "signature":"YcGZp9f5zlXP9Trek21kWUJ0+9dUXDWZxHWLRfWL+hM4i4sZ2VcGOUcms5ekmN18sdCth6wExjIMeMgeDG7P5w==", "instruction":{"source":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920", "someRandom": "e2548ec967f73d6ddaaf19c39c5ad8fab58ef8d7f430d5e36d653f9634f166DD", "slots": [{"wallet":0,"escrowAmount":20,"action" : "update", "somethingelse to work out":"", "target":"abs(vector1 + vector2) + AABB333 - blah", "timeout":"blah blah"}]}}],

@@ -29,7 +29,7 @@ def blockConvergeAndPublish(candidateData):
       config = json.load(json_data)
       level = config['level']   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
       agent_identifier = config['agentIdentifier']
-      owner = config['ownerPKey']
+      owner = config['ownerPublicKey']
       signedIdentifier = config['signedIdentifier']
       agentPrivKey = config['agentPrivateKey']
 

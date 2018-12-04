@@ -55,9 +55,9 @@ class Agent:
         # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
         self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
         self.agent_identifier = settings.agentIdentifier
-        self.owner = settings.ownerPKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = settings.ownerPublicKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = settings.signedIdentifier
-        self.agentPrivKey = settings.agentPrivateKey
+        self.agentPrivateKey = settings.agentPrivateKey
 
         logging.debug('Getting blockchain State')
         self.blockState = blockState()
@@ -72,13 +72,13 @@ class Agent:
         # update config when we get setup - needs the owner to sign off to allow change
         # TODO Confirm that the owner of the agent has signed off changes or dont change
 
-    def changeConfig(self,ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey):
+    def changeConfig(self,ownerLevel, agentIdentifier, ownerPublicKey, signId, agentPrivateKey):
         agentResponse = {}
         self.level = ownerLevel # TODO should come from the agents owner's level
         self.agent_identifier = agentIdentifier
-        self.owner = ownerPKey      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = ownerPublicKey      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = signId
-        self.agentPrivKey = agentPrivKey  #TODO - do we want to accept private key updates?  (will be over SSL)
+        self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
 
         agentResponse['message'] = {
            'message': f'Updated agent config'
@@ -106,10 +106,10 @@ class Agent:
         return self.genesisBlock.blockHash
 
     def getPrivateKey(self):
-        return self.agent_identifier
+        return self.agentPrivateKey
 
-    def setPrivateKey(self, pkey):
-        self.agent_identifier = pkey
+    def setPrivateKey(self, privateKey):
+        self.agentPrivateKey = privateKey
         return
 
     def getConfig(self):
@@ -118,7 +118,7 @@ class Agent:
         agentConfig['agentIdentifier'] = self.agent_identifier
         agentConfig['owner'] = self.owner
         agentConfig['signedIdentifier'] = self.signedIdentifier
-        agentConfig['agentPrivateKey'] = self.agentPrivKey
+        agentConfig['agentPrivateKey'] = self.agentPrivateKey
 
         return agentConfig
 
@@ -177,7 +177,7 @@ class Agent:
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = self.blockState.getInstructionHashes()
         hashMerkle = returnMerkleRoot(instruction_hashes)
-        hashSigned = signMessage(hashMerkle,self.agentPrivKey)
+        hashSigned = signMessage(hashMerkle,self.agentPrivateKeys)
         agentResponse['message'] = {
                  'merkleRoot': hashMerkle,
                  'signed':hashSigned,
@@ -359,11 +359,11 @@ class Agent:
      myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
      myGossip = {}
      myGossip[self.agent_identifier] = myMap
-     myGossip["sign"] = signMessage(myMap, self.agentPrivKey)
+     myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
      myGossip["trusted"] = 1   # I trust myself
      candidate["gossip"].append(myGossip)
      candidate["broadcaster"] = self.agent_identifier
-     candidate["signedGossip"] = signMessage(myGossip, self.agentPrivKey)
+     candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
      candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
      candidate["instructions"] = list(self.blockState.getInstructionList())
      candidate["instructionHandlerHashes"] = list(self.blockState.getInstructionHashes())

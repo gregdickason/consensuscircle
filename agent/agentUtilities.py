@@ -47,6 +47,9 @@ def hashvector(v,s):
 def getHashofInput(input):
   logging.debug(f'getHashofInput called with input {input}')
   inputNoWhitespace = ''.join(str(input).split())
+
+  print(inputNoWhitespace)
+
   return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
 
 def getRandomNumbers(byteLen, numberEntries):
@@ -121,18 +124,18 @@ def binFromString(myString):
 # Public / Private key cryptography
 # Using https://github.com/warner/python-ecdsa for now.  NOTE: TIMING ATTACKS are possible so the agent can never solely sign a message in an external interface: need to mask somehow
 # TODO: Need to manage process for signing in a way that timing attacks are not practical (no repeated calls allowed for example, no leakage of time in a circle process)
-def signMessage(message, priKey):
-  logging.debug(f'signMessage call with message {message} and key {priKey}')
+def signMessage(message, privateKey):
+  logging.debug(f'signMessage call with message {message} and key {privateKey}')
 
-  sk = SigningKey.from_pem(binFromString(priKey))   # TODO: should check this is properly pem encoded before processing
+  sk = SigningKey.from_pem(binFromString(privateKey))   # TODO: should check this is properly pem encoded before processing
   # Using deterministic ecdsa signature to prevent possible leakage through non randomness.  See https://tools.ietf.org/html/rfc6979
   return binaryStringFormat(sk.sign_deterministic(str(message).encode(ENCODING),hashlib.sha256))
 
-def verifyMessage(message, signedMessage, pubKey):
-  logging.debug(f'verifyMessage call with message {message}, signedMessage {signedMessage} and key {pubKey}')
+def verifyMessage(message, signedMessage, publicKey):
+  logging.debug(f'verifyMessage call with message {message}, signedMessage {signedMessage} and key {publicKey}')
   # signed message is b64 encoded.  We decode
   # Log entry
-  vk = VerifyingKey.from_pem(binFromString(pubKey))
+  vk = VerifyingKey.from_pem(binFromString(publicKey))
   try:
     return vk.verify(binFromString(signedMessage),str(message).encode(ENCODING),hashlib.sha256)
   except BadSignatureError:
@@ -153,7 +156,6 @@ def verifyMessageFromPassPhrase(message, signedMessage, passphrase):
   vk = sk.get_verifying_key()
   return verifyMessage(message,signedMessage,binaryStringFormat(vk.to_pem()))
 
-
 def getPublicKeyFromPassPhrase(passphrase):
   logging.debug(f'getPublicKeyFromPassPhrase called with passphrase {passphrase}')
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
@@ -171,8 +173,8 @@ def getPrivateKeyFromPassPhrase(passphrase):
 # new session key based on a random variable.
 # default is perfect forward secrecy: we generate a session key everytime we interact.  This means agents do not store private keys in long
 # term storage
-def createSessionKeyFromPublicKey(pubKey):
-  logging.debug(f'createSessionKeyFromPublicKey called with pubKey {pubKey}')
+def createSessionKeyFromPublicKey(publicKey):
+  logging.debug(f'createSessionKeyFromPublicKey called with pubKey {publicKey}')
   # Random Number:
   mySecret = os.urandom()
 

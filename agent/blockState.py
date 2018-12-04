@@ -71,7 +71,7 @@ class blockState:
     self.level['member'] = []
 
     for e in self.agents:
-      self.agentPublicKeys[e['agentID']] = e['agentPubKey']
+      self.agentPublicKeys[e['agentID']] = e['agentPublicKey']
       self.level[e['level']].append(e['agentID'])
       self.agentURLs[e['agentID']] = e['agentURL']
 
@@ -208,11 +208,11 @@ class blockState:
 
   def getPubKey(self, pubKeyHash):
     # is this an agent or an entity?
-    if pubKeyHash in self.agentPublicKeys:
-      return self.agentPublicKeys[pubKeyHash]
-    elif pubKeyHash in self.current_entities:
+    if publicKeyHash in self.agentPublicKeys:
+      return self.agentPublicKeys[publicKeyHash]
+    elif publicKeyHash in self.current_entities:
       logging.info("HERE HERE HERE")
-      return self.current_entities[pubKeyHash]['PublicKey']
+      return self.current_entities[publicKeyHash]['PublicKey']
     else:
       #TODO throw errors / error checking
       return

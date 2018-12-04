@@ -123,10 +123,10 @@ def updateConfig():
 
     ownerLevel = values['level']  # TODO should come from the agents owners level
     agentIdentifier = values['agentIdentifier']
-    ownerPKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+    ownerPublicKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
     signId = values['signedIdentifier']
-    agentPrivKey = values['agentPrivateKey']
-    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey)
+    agentPrivateKey = values['agentPrivateKey']
+    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPublicKey, signId, agentPrivateKey)
 
     return jsonify(agentResponse['message']),201
 
@@ -224,8 +224,8 @@ def retrieveOwnerLevel():
     return jsonify(response), 200
 
 
-@app.route('/setPKey', methods=['POST'])
-def setPKey():
+@app.route('/setPrivateKey', methods=['POST'])
+def setPrivateKey():
     global networkOn
 
     # Testing parameters - is network on
@@ -241,14 +241,14 @@ def setPKey():
     #TODO the checks of the signature from the owner or we cant let this go through
     # TODO - store in blockstate (this is an update)
     # Check that the required fields are in the POST'ed data
-    required = ['pkey']
+    required = ['privateKey']
     if not all(k in values for k in required):
-        return 'Missing pkey field', 400
+        return 'Missing key field', 400
 
-    agent.setPrivateKey(values['pkey'])  # TODO - update the JSON with the details for future use?
+    agent.setPrivateKey(values['privateKey'])  # TODO - update the JSON with the details for future use?
 
     response = {
-        'message': f'Agent pkey set to {agent.getPrivateKey()}'
+        'message': f'Agent privateKey set to {agent.getPrivateKey()}'
     }
     return jsonify(response), 201
 
@@ -318,8 +318,8 @@ def retrieveBlock():
     }
     return jsonify(response), 200
 
-@app.route('/PKey',methods=['GET'])
-def retrievePKey():
+@app.route('/getPrivateKey',methods=['GET'])
+def retrievePrivateKey():
     global networkOn
 
     # Testing parameters - is network on
@@ -327,9 +327,9 @@ def retrievePKey():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    logging.info("returning pkey")
+    logging.info("returning privateKey")
     response = {
-            'pkey': agent.getPrivateKey()
+            'privateKey': agent.getPrivateKey()
     }
     return jsonify(response), 200
 
