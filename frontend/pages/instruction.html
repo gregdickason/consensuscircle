@@ -1,0 +1,51 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+
+  <h1 class="h2">New Instruction</h1>
+
+</div>
+
+<form ng-submit="addInstruction(instruction)" name="instructionForm">
+
+  <div class="form-group">
+    <select class="custom-select" ng-model="instruction.instruction.name"
+            name="instructioName" id="instructionName" required
+            ng-options= "option for option in instructionTypes"
+            ng-change = "getInstructionTypeRequirements(instruction.instruction)">
+    </select>
+  </div>
+
+  <div class="form-group" ng-repeat="field in keyList track by $index">
+    <label for="{{field}}">{{field}}</label>
+    <input class="custom-select" type="text" list="keys"
+           ng-model="instruction.instruction.keys[$index]"
+           placeholder="Enter or select a key..." />
+    <datalist id="keys">
+      <option>a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100</option>
+      <option>5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c</option>
+    </datalist>
+  </div>
+
+  <div class="form-group" ng-repeat="field in argumentList track by $index">
+    <label for="{{field}}">{{field}}</label>
+    <input class="custom-select" type="text" list="arguments"
+           ng-model="instruction.instruction.args[$index]"
+           placeholder="Enter or select an argument..." />
+    <datalist id="arguments">
+      <option>wallets.default.balance</option>
+      <option>1500</option>
+    </datalist>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg btn-block" ng-show="started">Submit</button>
+
+</form>
+
+
+<div class="container-fluid">
+
+  <p><h5>Input:</h5>
+  {{instruction}}</p>
+
+  <p><h5> Output:</h5>
+  {{result}}
+</div>

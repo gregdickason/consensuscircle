@@ -4,7 +4,6 @@ import logging.config
 #utility functions for processing instructions - pool is run by the agent
 from agentUtilities import getHashofInput, verifyMessage
 
-
 # validate Instruction: confirm hash values and signature.  Does not add to pool or update any temp status (done in processInstruction)
 def validateInstruction(instruction, blockState):
   returnValue = {
@@ -12,17 +11,10 @@ def validateInstruction(instruction, blockState):
         'return': True
     }
 
-  required = ['instructionHash', 'sign', 'instruction']
-  if not all(k in instruction for k in required):
-    logging.info(f'Not all instruction required fields present')
-    returnValue['message'] = f'Instruction  not well formed'
-    returnValue['return'] = False
-    return returnValue
-
   body = instruction['instruction']
   hash = instruction['instructionHash']
-  sign = instruction['sign']
-  sender = body['source']
+  sign = instruction['signature']
+  sender = body['sender']
 
   if getHashofInput(body) != hash:
     logging.info(f'hash of instruction does not match: {getHashofInput(body)}')
@@ -46,7 +38,6 @@ def validateInstruction(instruction, blockState):
     logging.info(f'Instruction for {hash} not verified - signature {sign} for {pKey} pkey incorrect')
     returnValue['message'] = f'Signature does not match'
     returnValue['return'] = False
-
 
   return returnValue
 

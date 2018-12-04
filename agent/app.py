@@ -14,6 +14,8 @@ import os
 import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
+from globalsettings import instructionInfo
+from agentUtilities import getHashofInput, signMessage
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -142,6 +144,17 @@ def instructionPool():
         return jsonify(agentResponse['message']), 400
     else:
         return jsonify(agentResponse['message']), 200
+
+@app.route('/getPendingInstructions', methods=['GET'])
+def getPendingInstructions():
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    agentResponse = agent.instructionPool()
+
+    return jsonify(agentResponse['message']['hashes'])
 
 @app.route('/getEntities', methods=['GET'])
 def entityList():
@@ -320,9 +333,121 @@ def retrievePKey():
     }
     return jsonify(response), 200
 
+#need to add API calls for:
+#getting a list of the instruction names
+@app.route('/getInstructionNames', methods = ['GET'])
+def getInstructionNames():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    instructionSet = instructionInfo()
+
+    return jsonify(instructionSet.getInstructionNames())
+
+
+#getting a list of the luaHash's matching to the instruction names
+@app.route('/getLuaHash', methods = ['POST'])
+def getLuaHash():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['name']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving a lua hash")
+
+    instructionSet = instructionInfo()
+    luaHash = instructionSet.getInstructionHash(values['name'])
+
+    if luaHash == None:
+        return jsonify('ERROR: No hash found for that instruction name', 400)
+    else:
+        return jsonify(luaHash)
+
+#getting the arguments for a particular instruction name
+@app.route('/getInstructionArguments', methods = ['POST'])
+def getInstructionArguments():
+    global networkOn
+
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['name']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving instruction arguments")
+
+    instructionSet = instructionInfo()
+    argumentList = instructionSet.getInstructionArgs(values['name'])
+
+    if argumentList == None:
+        return jsonify('ERROR: No instruction with this name', 400)
+    else:
+        return jsonify(argumentList)
+
+#getting the keys for a particular instruction name
+@app.route('/getInstructionKeys', methods = ['POST'])
+def getInstructionKeys():
+    global networkOn
+
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['name']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    logging.info("retrieving instruction keys")
+
+    instructionSet = instructionInfo()
+    keyList = instructionSet.getInstructionKeys(values['name'])
+
+    if keyList == None:
+        return jsonify('ERROR: No instruction with this name', 400)
+    else:
+        return jsonify(keyList)
+
+@app.route('/executeInstruction', methods=['POST'])
+def executeTest():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    input = request.get_json()
+
+    required = ['instruction']
+    if not all(k in input for k in required):
+        return 'Missing fields', 400
+
+    hash = input['instruction']
+
+    output = agent.executeInstruction(hash)
+
+    return jsonify(output)
 
 @app.route('/addInstruction', methods=['POST'])
-def instruction():
+def addInstruction():
     global networkOn
 
     # Testing parameters - is network on
@@ -330,39 +455,43 @@ def instruction():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    # Add an instruction to the pool of unprocessed instructions
-    logging.info("received an instruction to add")
-    values = request.get_json()
+    # publicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+    privateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
 
-    agentResponse = agent.processInstruction(values)
+    #TO DO add a call to agent that can get the unique identifier.
+    #eventually need to add some kind of instructionID to ensure uniqueness
 
-    if not agentResponse['success']:
-        return jsonify(agentResponse['message']), 400
-    else:
-        return jsonify(agentResponse['message']), 200
+    instructionToSend = request.get_json()
 
-@app.route('/addInstructionHandler', methods=['POST'])
-def instructionHandler():
-    global networkOn
+    required = ['instruction', 'instructionHash', 'signature']
+    if not all(k in instructionToSend for k in required):
+        return 'Missing fields', 400
 
-    # Testing parameters - is network on
-    if not networkOn:
-        response = {'network' : f'{networkOn}'}
-        return jsonify(response), 400
+    requiredInstructionParams = ['name', 'keys', 'args', 'luaHash', 'sender']
+    if not all (j in instructionToSend['instruction'] for j in requiredInstructionParams):
+        return 'Missing fields', 400
 
-    # Add an instruction to the pool of unprocessed instructions
-    logging.info("received an instructionHandler to add")
-    values = request.get_json()
+    instructionSet = instructionInfo()
+    requiredKeys = instructionSet.getInstructionKeys(instructionToSend['instruction']['name'])
+    requiredArgs = instructionSet.getInstructionArgs(instructionToSend['instruction']['name'])
 
-    agentResponse = agent.processInstructionHandler(values)
+    if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
+        return jsonify("ERROR: instruction structure is incorrect")
 
-    if not agentResponse['success']:
-        return jsonify(agentResponse['message']), 400
-    else:
-        return jsonify(agentResponse['message']), 200
+    # eventually move to browser
+    instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
+
+    logging.info(f"instruction to send is {instructionToSend}")
+
+    output = agent.processInstruction(instructionToSend)
+    output['hash'] = instructionToSend['instructionHash']
+
+    logging.info(f"attempting to return {output}")
+
+    return jsonify(output)
 
 
-# TODO remove this routine.  It is being used as to accept agents we want to follow for instrution updates
+# TODO remove this routine.  It is being used as to accept agents we want to follow for instruction updates
 # build routine into instruction parsing (when we will choose to randomly follow agents?)
 @app.route('/agents/register', methods=['POST'])
 def register_agents():
