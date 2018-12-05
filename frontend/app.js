@@ -227,7 +227,7 @@ app.controller('newInstructionController', function($scope, $http) {
   $scope.instruction.instruction.keys = [];
   $scope.instruction.instructionHash = "";
   $scope.instruction.signature = "";
-  $scope.instruction.instruction.sender = "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c";
+  $scope.instruction.instruction.sender = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675";
 
   $http.get(api_url + 'getInstructionNames')
     .then(function success(response) {

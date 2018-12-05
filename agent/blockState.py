@@ -206,9 +206,11 @@ class blockState:
 
 
 
-  def getPubKey(self, pubKeyHash):
+  def getPublicKey(self, publicKeyHash):
     # is this an agent or an entity?
+    logging.info(f"blockstate.getPublicKey Called with hash {publicKeyHash}")
     if publicKeyHash in self.agentPublicKeys:
+      logging.info("HERE HERE HERE")
       return self.agentPublicKeys[publicKeyHash]
     elif publicKeyHash in self.current_entities:
       logging.info("HERE HERE HERE")

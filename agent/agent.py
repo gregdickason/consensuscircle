@@ -178,7 +178,7 @@ class Agent:
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = self.blockState.getInstructionHashes()
         hashMerkle = returnMerkleRoot(instruction_hashes)
-        hashSigned = signMessage(hashMerkle,self.agentPrivateKeys)
+        hashSigned = signMessage(hashMerkle,self.agentPrivateKey)
         agentResponse['message'] = {
                  'merkleRoot': hashMerkle,
                  'signed':hashSigned,
@@ -238,7 +238,6 @@ class Agent:
 
         # TODO confirm that the block is shortest distance
         self.chain.append(newBlock)
-
 
         # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
 

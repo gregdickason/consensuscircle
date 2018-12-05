@@ -455,8 +455,7 @@ def addInstruction():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    # publicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
-    privateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
+    privateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
 
     #TO DO add a call to agent that can get the unique identifier.
     #eventually need to add some kind of instructionID to ensure uniqueness
