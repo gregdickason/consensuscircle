@@ -267,18 +267,8 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
       $scope.message = response.data;
     });
 
-
-
    $scope.getInstructionTypeRequirements = function(name) {
      $scope.started = true;
-
-     $http.post(api_url + 'getLuaHash', name)
-       .then(function success(response) {
-           $scope.luaHash = response.data;
-           $scope.instruction.instruction.luaHash = $scope.luaHash;
-       }, function error(response) {
-           $scope.update = 'error in getting entity';
-       });
 
        $http.post(api_url + 'getInstructionArguments', name)
          .then(function success(response) {

@@ -464,7 +464,7 @@ def addInstruction():
     if not all(k in instructionToSend for k in required):
         return 'Missing fields', 400
 
-    requiredInstructionParams = ['name', 'keys', 'args', 'luaHash', 'sender']
+    requiredInstructionParams = ['name', 'keys', 'args', 'sender']
     if not all (j in instructionToSend['instruction'] for j in requiredInstructionParams):
         return 'Missing fields', 400
 

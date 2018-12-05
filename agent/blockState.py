@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 from convergenceProcessor import blockConvergeAndPublish
+from globalsettings import instructionInfo
 
 import logging.config
 
@@ -84,13 +85,16 @@ class blockState:
 
   def executeInstruction(self, hash):
       instruction = json.loads(self.red.get('instructionPool:'+ hash))
-      #instruction = self.current_instructions[hash]
 
       logging.debug(f'\n instruction retrieved is {instruction}\n')
 
       args = instruction['instruction']['args']
       keys = instruction['instruction']['keys']
-      luaHash = instruction['instruction']['luaHash']
+
+      instructionSettings = instructionInfo()
+      luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
+      if luaHash == None:
+          return 'ERROR: no instruction matches the given instructionName'
 
       output = self.red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
 
