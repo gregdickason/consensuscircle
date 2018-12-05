@@ -5,7 +5,7 @@ from blockState import blockState
 
 #utility functions
 from agentUtilities import converge, hashvector, getHashofInput, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, verifyMessage, returnMerkleRoot
-from processInstruction import validateInstruction, validateInstructionHandler
+from processInstruction import validateInstruction
 
 # Parses the last block.  Does not check the chain but will return with either a fully parsed block or with blockPass set to False if the block is not well formed or hashes do not align
 # Order of execution:
@@ -95,25 +95,6 @@ class parseBlock:
           self.blockPass = False
           self.blockComment = f'instruction merkle root of {self.instructionsMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHashes)}'
           return
-
-        # Are the instructionHandlers hashed and signed?
-        # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed rather than reprocess?
-        # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
-        for e in self.instructionHandlers:
-          validInstructionHandler = validateInstructionHandler(e)
-          if not validInstructionHandler['return']:
-            self.blockPass = False
-            self.blockComment = validInstructionHandler['message']
-            return
-          # TODO Check signatures - if verifyMessage( .... )
-          self.instructionHandlerHashes.append(e['instructionHandlerHash'])
-
-        # Check instruction count is the same from header
-        if self.instructionHandlerCount != len(self.instructionHandlerHashes):
-          self.blockPass = False
-          self.blockComment = f'instructionHandlerCount is not same as number instructionHandlers'
-          return
-
 
         # Does the merkleroot of the instructionHandlers map to the header?
         if returnMerkleRoot(self.instructionHandlerHashes) != self.instructionHandlersMerkleRoot:

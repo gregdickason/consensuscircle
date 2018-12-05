@@ -23,7 +23,7 @@ from globalsettings import AgentSettings
 
 #utility functions - add to class?
 from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage
-from processInstruction import validateInstruction, validateInstructionHandler
+from processInstruction import validateInstruction
 
 class Agent:
     def __init__(self):
@@ -197,7 +197,6 @@ class Agent:
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
         newBlock = parseBlock(blockID)
 
-
         # is the block Valid?
         if newBlock.blockPass == False:
             agentResponse['message'] = {
@@ -301,29 +300,6 @@ class Agent:
         agentResponse['success'] = True
 
         return agentResponse
-
-    def processInstructionHandler(self,values):
-        # Add an instructionHandler to the pool of unprocessed instructionHandlers
-        logging.debug("received an instructionHandler to add")
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = ''
-        # Check that the required fields are in the POST'ed data
-        validInstructionHandler = validateInstructionHandler(values)
-
-        if not validInstructionHandler['return']:
-          return validInstructionHandler
-
-        # TODO: put into Blockstate here
-        #GREG HERE fix redis and then can check agent working
-        numberInstructionHandlers = self.add_instructionHandler(values['instructionHandlerHash'], values['instructionHandler'], values['sign'])
-
-        agentResponse['message'] = {
-            'message': f'Agent currently has {numberInstructionHandlers} instructionHandlers in the unprocessed pool',
-            'instructionHandlers': list(self.instruction_Handlerhashes)
-        }
-        return agentResponse
-
 
     def getEntity(self, entity):
         # gets entity as a JSON object referenced by the public key.
