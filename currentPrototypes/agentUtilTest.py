@@ -38,3 +38,12 @@ jsVk = VerifyingKey.from_string(bytes.fromhex(jsGenPublicKey), curve=NIST256p)
 
 result = jsVk.verify(bytes.fromhex(jsGenSignature), str("aaa").encode(ENCODING), hashfunc=hashlib.sha256, sigdecode=ecdsa.util.sigdecode_der)
 print(result)
+
+# verifying with openSSL
+# #! /bin/sh
+# echo 61 | xxd -r -p > dataToSign.dat
+# echo 304402203ca92ab9d691135d7b5bfc2ba4a7c3a428159e29366370837419b29ee65d8c07022017e0bd344360da9955c2ae5964ac810256a8356e1f85532465a555dedd4b34d3 | xxd -r -p > signature.dat
+# echo "-----BEGIN PUBLIC KEY-----" > key.pem
+# echo 3059301306072a8648ce3d020106082a8648ce3d03010703420004200d067a5f96240a63fb2e0192fe202de0bf4af679345285b1f8fdc90b2518569d41a2d432d1454ab6db9ac61b9d29a4c6970cea099ad081cf7570d999b3b67e | xxd -r -p | base64 -b 64 >> key.pem
+# echo "-----END PUBLIC KEY-----" >> key.pem
+# openssl dgst -sha256 -verify key.pem -signature signature.dat dataToSign.dat

@@ -7,10 +7,10 @@ class AgentSettings:
 
         #default config settings
         # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
-        self.agentIdentifier = "17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920"
-        self.agentPrivateKey = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
-        self.ownerPublicKey = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTQp0U1NCWWJ6KzRwYXlnbnhqODJUM2dFWTlsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
-        self.signedIdentifier = "amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g=="
+        self.agentIdentifier = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"
+        self.agentPrivateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
+        self.ownerPublicKey = "04ae5e9fba406e2529f979fbfb98bcffb5c390864f8cb5248161bcfee296b2827c63f364f780463d952665c8a892ec2570cc16af5f309f8eac6466439a93a8466f"
+        self.signedIdentifier = "3046022100dfd1bd9c51c0a8f28db46198d15f302908b4e45067f33e0d851b8304a787bc44022100b4c1e9ec1146c8f120a952138750d16171affb8b9145c490e9463f2b94634bfb"
         self.level = "founder"
 
 class instructionInfo:

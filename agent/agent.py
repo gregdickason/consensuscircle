@@ -54,6 +54,7 @@ class Agent:
         # TODO put these as loaded from blockstate
         # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
         self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
+        logging.debug(f'setting agent identifier to {settings.agentIdentifier}')
         self.agent_identifier = settings.agentIdentifier
         self.owner = settings.ownerPublicKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = settings.signedIdentifier
