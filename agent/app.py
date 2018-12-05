@@ -455,8 +455,6 @@ def addInstruction():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    privateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
-
     #TO DO add a call to agent that can get the unique identifier.
     #eventually need to add some kind of instructionID to ensure uniqueness
 
@@ -478,7 +476,7 @@ def addInstruction():
         return jsonify("ERROR: instruction structure is incorrect")
 
     # eventually move to browser
-    instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
+    # instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
 
     logging.info(f"instruction to send is {instructionToSend}")
 
