@@ -43,7 +43,7 @@ def validateInstruction(instruction, blockState):
 
   # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
   if verifyMessage(hash, sign, publicKey) != True:
-      logging.info(f'Instruction for {hash} not verified - signature {sign} for {pKey} pkey incorrect')
+      logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
       returnValue['message'] = f'Signature does not match'
       returnValue['return'] = False
 

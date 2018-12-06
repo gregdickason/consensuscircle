@@ -6,7 +6,8 @@ app.factory('encryption', function() {
   return {
     hashInput: function(input) {
       temp1 = input.replace(/\s/g,'');
-      temp2 = temp1.replace(/\"/g,'\'');
+      // temp2 = temp1.replace(/\"/g,'\'');
+      temp2 = temp1;
 
       var shaObj = new jsSHA("SHA-256", "TEXT");
       shaObj.update(temp2);

@@ -52,7 +52,7 @@ class parseBlock:
             self.randomMatrix.append(f)
 
         for e in self.consensusCircle:
-          self.ccKeys.append(e['publicKey'])
+          self.ccKeys.append(e['agentID'])
 
         logging.info(f'randomMatrix is {self.randomMatrix}')
 
@@ -60,7 +60,7 @@ class parseBlock:
         # Is blockhash the same
         # TODO confirm json.dumps is deterministic.  If order changes then hash will change.  May need more reliable approach
         # TODO use orderedDict for loading: https://stackoverflow.com/questions/2774361/json-output-sorting-in-python
-        self.calculatedHash = getHashofInput(json.dumps(self.blockHeader))
+        self.calculatedHash = getHashofInput(self.blockHeader)
         logging.info(f'blockhash is: \n{self.blockHash}\nCalculated:\n{self.calculatedHash}\n')
         if self.blockHash != self.calculatedHash:
             self.blockPass = False
@@ -85,10 +85,10 @@ class parseBlock:
           self.blockComment = f'instructionCount is not same as number instructions'
           return
 
-
         # Does the merkleroot of the instructions map to the header?
         if returnMerkleRoot(self.instructionHashes) != self.instructionsMerkleRoot:
           self.blockPass = False
+          logging.info(f'merkle root does not match got {returnMerkleRoot(self.instructionHashes)} expected {self.instructionsMerkleRoot}')
           self.blockComment = f'instruction merkle root of {self.instructionsMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHashes)}'
           return
 
@@ -110,7 +110,7 @@ class parseBlock:
           self.blockComment = 'length of block Signatures not same as consensusCircle'
           return
 
-        hashConvergenceHeader = getHashofInput(json.dumps(self.convergenceHeader))
+        hashConvergenceHeader = getHashofInput(self.convergenceHeader)
         logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
           if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPublicKey(self.ccKeys[i])) != True:

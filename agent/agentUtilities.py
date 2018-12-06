@@ -14,6 +14,7 @@ from ecdsa.keys import BadSignatureError
 from ecdsa.util import randrange_from_seed__trytryagain
 from base64 import b64encode, b64decode
 from collections import OrderedDict
+import json
 
 ENCODING = 'utf-8'
 
@@ -47,9 +48,10 @@ def hashvector(v,s):
 
 # Get the hash for a json string (cast to str if not).
 def getHashofInput(input):
-  logging.debug(f'getHashofInput called with input {input}')
-  inputNoWhitespace = ''.join(str(input).split())
-
+  input = json.dumps(input)
+  pattern = re.compile(r'\s+')
+  inputNoWhitespace = re.sub(pattern, '', input)
+  logging.debug(f'getHashofInput called with input {inputNoWhitespace}')
   # print(inputNoWhitespace)
 
   return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
