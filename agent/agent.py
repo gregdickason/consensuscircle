@@ -56,7 +56,7 @@ class Agent:
         self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
         logging.debug(f'setting agent identifier to {settings.agentIdentifier}')
         self.agent_identifier = settings.agentIdentifier
-        self.owner = settings.ownerPublicKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = settings.ownerID  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = settings.signedIdentifier
         self.agentPrivateKey = settings.agentPrivateKey
 
@@ -73,11 +73,11 @@ class Agent:
         # update config when we get setup - needs the owner to sign off to allow change
         # TODO Confirm that the owner of the agent has signed off changes or dont change
 
-    def changeConfig(self,ownerLevel, agentIdentifier, ownerPublicKey, signId, agentPrivateKey):
+    def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
         agentResponse = {}
         self.level = ownerLevel # TODO should come from the agents owner's level
         self.agent_identifier = agentIdentifier
-        self.owner = ownerPublicKey      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = signId
         self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
 

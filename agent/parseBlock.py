@@ -28,27 +28,23 @@ class parseBlock:
         self.consensusCircle = self.blockHeader['consensusCircle']
         self.blockSignatures = self.blockHeader['blockSignatures']
         self.instructionCount = self.convergenceHeader['instructionCount']
-        self.instructionHandlerCount = self.convergenceHeader['instructionHandlerCount']
         self.instructionsMerkleRoot = self.convergenceHeader['instructionsMerkleRoot']
-        self.instructionHandlersMerkleRoot = self.convergenceHeader['instructionHandlersMerkleRoot']
         self.previousBlock = self.convergenceHeader['previousBlock']
         self.blockHeight = self.convergenceHeader['blockHeight']
         self.randomNumbers = self.convergenceHeader['randomNumbers']  # Need to parse by circle for convergence matrix
         self.instructions = self.block['instructions']
-        self.instructionHandlers = self.block['instructionHandlers']
 
         self.randomMatrix = []
         self.ccKeys = []
         self.blockSigs = []
 
         self.instructionHashes = []
-        self.instructionHandlerHashes = []
         self.instructionBodies = []
 
         self.blockPass = True
         self.blockComment = 'Block Conforms'
 
-        # TODO - should we be getting the blockState instance from the agent not creating our own instance?
+        # TODO - should we be getting the blockState instance from the agent not creating our own instance? - YES
         self.bState = blockState()
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
@@ -96,13 +92,6 @@ class parseBlock:
           self.blockComment = f'instruction merkle root of {self.instructionsMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHashes)}'
           return
 
-        # Does the merkleroot of the instructionHandlers map to the header?
-        if returnMerkleRoot(self.instructionHandlerHashes) != self.instructionHandlersMerkleRoot:
-          self.blockPass = False
-          self.blockComment = f'instructionHandler merkle root of {self.instructionHandlersMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHandlerHashes)}'
-          return
-
-
         # Check consensus circle has signed off on the convergenceHeader
         logging.debug(f'parsing  blockSig {self.blockSignatures}')
         for e in self.blockSignatures:
@@ -132,7 +121,6 @@ class parseBlock:
 
         # check merkle roots etc - if we fail here there is a major issue as the whole circle has signed off.
         # TODO
-
 
         # Converge the Matrix
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]

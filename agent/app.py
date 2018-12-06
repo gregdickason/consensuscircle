@@ -123,10 +123,10 @@ def updateConfig():
 
     ownerLevel = values['level']  # TODO should come from the agents owners level
     agentIdentifier = values['agentIdentifier']
-    ownerPublicKey = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+    ownerID = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
     signId = values['signedIdentifier']
     agentPrivateKey = values['agentPrivateKey']
-    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerPublicKey, signId, agentPrivateKey)
+    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey)
 
     return jsonify(agentResponse['message']),201
 
