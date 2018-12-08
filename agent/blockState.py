@@ -169,7 +169,7 @@ class blockState:
       
   #  get Attribute on an entity.  
   def getAttribute(self, entity, attribute):
-    logging.debug(f'blockState.getAttribute: Getting attribute {attribute} from entity {entity}'}
+    logging.debug(f'blockState.getAttribute: Getting attribute {attribute} from entity {entity}')
     try: 
       return(self.red.hget(entity, attribute))
     except:
