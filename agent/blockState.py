@@ -166,6 +166,14 @@ class blockState:
 
   def getEntityList(self):
       return list(self.current_entities.keys())
+      
+  #  get Attribute on an entity.  
+  def getAttribute(self, entity, attribute):
+    logging.debug(f'blockState.getAttribute: Getting attribute {attribute} from entity {entity}'}
+    try: 
+      return(self.red.hget(entity, attribute))
+    except:
+      return ''
 
   # Send a message to an agent using their pkey.  We do this abstracted so does not have to be through HTTP for production clients (agents can set their comms mechanism)
   def sendMessage(self,agentID, message, function):

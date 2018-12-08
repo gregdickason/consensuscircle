@@ -337,6 +337,16 @@ class Agent:
 
         return agentResponse
 
+    def getAttribute(self, entity, attribute):
+        # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.  
+        # if the attribute does not exist returns null
+        agentResponse = {}
+        agentResponse['success'] = True
+        agentResponse['message'] = self.blockState.getAttribute(entity, attribute)
+        if agentResponse['message'] == '':
+          agentResponse['success'] = False
+
+        return agentResponse
 
 
 
