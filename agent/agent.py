@@ -144,7 +144,7 @@ class Agent:
     
     # returns the list of attributes the entity has.  Hardcoded to test
     def getAttributes(self):
-        return list['wallets.default.balance']
+        return ['wallets.default.balance']
     
 
     def add_instructionHandler(self, hash, instructionHandler, sign):
