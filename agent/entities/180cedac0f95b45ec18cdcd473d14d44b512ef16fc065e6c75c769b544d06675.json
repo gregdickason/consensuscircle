@@ -1,7 +1,0 @@
-{
-   "Entity":"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675",
-   "Permissions":{"All":["180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"]},
-   "PublicKey":"04ae5e9fba406e2529f979fbfb98bcffb5c390864f8cb5248161bcfee296b2827c63f364f780463d952665c8a892ec2570cc16af5f309f8eac6466439a93a8466f",
-   "Wallets":[{"Name":"Default","Balance":234000000000,"Escrow":0,"Currency":"CC"}],
-   "Identity":{"Name":"Gregory Dickason","Citizenship":{"Type":"British","Status":{"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675":"Claimed"}}}
-}

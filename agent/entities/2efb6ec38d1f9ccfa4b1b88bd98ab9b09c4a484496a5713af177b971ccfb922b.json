@@ -1,7 +1,0 @@
-{
-   "Entity":"2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b",
-   "Permissions":{"All":["2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b"]},
-   "PublicKey":"04ac7af4d9bf29dd5207f8ef15843e85dd1f0505f4ea95f6f9395ea9b7c564f138fec7648ff79b9ceffa3780aad55dbfe88a2ed527b964eff116a5561990093b5c",
-   "Wallets":[{"Name":"Default","Balance":532000000000,"Escrow":0,"Currency":"CC"}],
-   "Identity":{"Name":"Nick Gatland","Citizenship":{"Type":"British","Status":{"2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b":"Claimed", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675":"Validated"}}}
-}
