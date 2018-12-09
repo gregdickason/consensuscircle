@@ -164,6 +164,8 @@ def entityList():
         return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
+    
+    
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
@@ -191,6 +193,16 @@ def returnEntity():
         return jsonify(agentResponse['message']), 400
     else:
         return jsonify(agentResponse['message']), 200
+
+@app.route('/getAttributes', methods=['GET'])
+def attributeList():
+    global networkOn
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    return  jsonify(agent.getAttributes())
+
 
 @app.route('/attribute', methods=['POST'])
 def returnAttribute():

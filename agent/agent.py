@@ -141,6 +141,11 @@ class Agent:
 
     def getEntityList(self):
         return self.blockState.getEntityList()
+    
+    # returns the list of attributes the entity has.  Hardcoded to test
+    def getAttributes(self):
+        return ('wallets.default.balance')
+    
 
     def add_instructionHandler(self, hash, instructionHandler, sign):
 
