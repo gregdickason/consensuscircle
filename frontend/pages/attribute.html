@@ -14,7 +14,7 @@
 
 </div>
 
-<form ng-submit="chooseEntity(chosen)" name="entityAndAttributeForm">
+<form ng-submit="chooseEntity(chosen)" name="entityForm">
 
   <div class="input-group">
     <select class="custom-select" ng-model="chosen.entity" name="entity" id="entity" required>
@@ -25,6 +25,10 @@
       <button class="btn btn-outline-secondary" type="submit">Select</button>
     </div>
   </div>
+</form>
+
+
+<form ng-submit="chooseAttribute(chosen)" name="attributeForm">
 
 <div class="input-group">
     <select class="custom-select" ng-model="chosen.attribute" name="attribute" id="attribute" required>
@@ -36,8 +40,9 @@
     </div>
   </div>
 
-
 </form>
+
+
 
 
 <div class="container-fluid">
