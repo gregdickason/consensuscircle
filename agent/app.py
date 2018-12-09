@@ -164,6 +164,8 @@ def entityList():
         return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
+    
+    
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
@@ -191,6 +193,45 @@ def returnEntity():
         return jsonify(agentResponse['message']), 400
     else:
         return jsonify(agentResponse['message']), 200
+
+@app.route('/getAttributes', methods=['GET'])
+def attributeList():
+    global networkOn
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    return  jsonify(agent.getAttributes())
+
+
+@app.route('/attribute', methods=['POST'])
+def returnAttribute():
+    global networkOn
+
+    # Testing parameters - is network on
+    if not networkOn:
+        response = {'network' : f'{networkOn}'}
+        return jsonify(response), 400
+
+    values = request.get_json()
+
+    required = ['entity', 'attribute']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    entity = values['entity']
+    attribute = values['attribute']
+
+    logging.info(f'returning attribute {attribute} for entity {entity}')
+
+    agentResponse = agent.getAttribute(entity, attribute)
+
+    # need to do a get on the entities we are tracking that we already know about
+    if agentResponse['success'] == False:
+        return jsonify(agentResponse['message']), 400
+    else:
+        return jsonify(agentResponse['message']), 200
+
 
 @app.route('/ownerPublicKey',methods=['GET'])
 def retrieveOwnerPublicKey():

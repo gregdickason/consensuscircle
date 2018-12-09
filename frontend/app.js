@@ -70,6 +70,12 @@ app.config(function($routeProvider) {
     controller  : 'entityController'
   })
 
+  .when('/attribute', {
+      templateUrl : 'pages/attribute.html',
+      controller  : 'attributeController'
+  })
+
+
   .when('/genesisBlock', {
     templateUrl : 'pages/genesisBlock.html',
     controller  : 'genesisBlockController'
@@ -229,6 +235,39 @@ app.controller('entityController', function($scope, $http) {
           $scope.entityDetails = response.data;
       }, function error(response) {
           $scope.update = 'error in getting entity';
+      });
+  };
+
+});
+
+app.controller('attributeController', function($scope, $http) {
+
+  $http.get(api_url + 'getEntities')
+      .then(function success(response) {
+        $scope.entities = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $http.get(api_url + 'getAttributes')
+      .then(function success(response) {
+        $scope.attribute = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
+  $scope.update = '';
+
+  $scope.chooseEntity = function(chosen) {
+    $scope.entityChosen = chosen;
+  };
+
+  $scope.chooseAttribute = function(chosen) {
+    $http.post(api_url + 'attribute', $scope.entityChosen, chosen)
+      .then(function success(response) {
+          $scope.attributeDetails = response.data;
+      }, function error(response) {
+          $scope.update = 'error in getting attribute for entity';
       });
   };
 
