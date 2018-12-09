@@ -100,6 +100,12 @@ class blockState:
 
       return output
 
+  def getBlockHash(self):
+      return self.blockHash
+
+  def getBlockHeight(self):
+      return self.blockHeight
+
   # Manage the instruction pool
   def addInstruction(self, instruction):
 

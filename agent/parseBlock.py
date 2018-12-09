@@ -14,7 +14,7 @@ from processInstruction import validateInstruction
 # - Confirm that each member of the consensus circle has signed off the convergenceHeader (signed off merkle roots and random numbers).  This shows convergence
 # - Confirm Instructions and InstructionHandlers: number, merkle roots
 class parseBlock:
-    def __init__(self,blockID):
+    def __init__(self,blockID, blockState):
         with open(blockID) as json_data:
             # TODO put in exception handling and error checking if file is
             # malformed and also that this block is valid in the context of previous blocks
@@ -44,8 +44,20 @@ class parseBlock:
         self.blockPass = True
         self.blockComment = 'Block Conforms'
 
-        # TODO - should we be getting the blockState instance from the agent not creating our own instance? - YES
-        self.bState = blockState()
+        self.bState = blockState
+
+        # logging.debug(f'checking the previous block and block height is correct')
+        # if (self.blockHeight != (self.bState.getBlockHeight()+1)):
+        #     self.blockPass = False
+        #     self.blockComment = "block height incorrect"
+        #     logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {self.bState.getBlockHeight()+1}')
+        #
+        # if (self.previousBlock != (self.bState.getBlockHash())):
+        #     self.blockPass = False
+        #     self.blockComment = "previous block hash incorrect"
+        #     logging.info(f'block height is not valid. was: {self.previousBlock}, should be: {self.bState.getBlockHash()}')
+
+def validateBlock(self):
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
           for f in e.values():
@@ -76,7 +88,6 @@ class parseBlock:
             self.blockPass = False
             self.blockComment = validInstruction['message']
             return
-          # TODO Check signatures - if verifyMessage( .... )
           self.instructionHashes.append(e['instructionHash'])
 
         # Check instruction count is the same from header
@@ -118,9 +129,6 @@ class parseBlock:
             self.blockComment = f'signature for Circle at {i} is not valid'
             return
           i += 1
-
-        # check merkle roots etc - if we fail here there is a major issue as the whole circle has signed off.
-        # TODO
 
         # Converge the Matrix
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]

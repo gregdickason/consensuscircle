@@ -195,7 +195,7 @@ class Agent:
 
         logging.debug("new block published, retrieve validate and process it")
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
-        newBlock = parseBlock(blockID)
+        newBlock = parseBlock(blockID, self.blockState)
 
         # is the block Valid?
         if newBlock.blockPass == False:
