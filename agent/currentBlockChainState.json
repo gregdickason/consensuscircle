@@ -62,7 +62,7 @@
                "agentPublicKey":"04767e81d2ed73487b689a6a2da2a5ae8e3b2e908b04601effc9ff70597d4c7ed07131dc4f4377c557feae68210a09fb31a54f74aaf43560d601b4aab793ca0d8e",
                "agentURL":"http://localhost:5008",
                "level":"protector"}],
-   "Entities" : ["2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea",
-                 "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b",
-                 "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"]
+   "Entities" : ["d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f",
+                 "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507",
+                 "36cbecda6927749d20bd7fed94d7c4228be1e3f65c7fbca6f1aec776f6037249"]
    }
