@@ -249,21 +249,22 @@ app.controller('attributeController', function($scope, $http) {
         $scope.message = response.data;
       });
 
-  $http.get(api_url + 'getAttributes')
-      .then(function success(response) {
-        $scope.attribute = response.data;
-      }, function error(response) {
-        $scope.message = response.data;
-      });
-
   $scope.update = '';
+  $scope.started = false;
 
-  $scope.chooseEntity = function(chosen) {
-    $scope.entityChosen = chosen;
+  $scope.getAttributes = function(entity) {
+    $scope.started = true;
+    $http.get(api_url + 'getAttributes')
+        .then(function success(response) {
+          $scope.attributes = response.data;
+        }, function error(response) {
+          $scope.message = response.data;
+        });
+
   };
 
   $scope.chooseAttribute = function(chosen) {
-    $http.post(api_url + 'attribute', $scope.entityChosen, chosen)
+    $http.post(api_url + 'attribute', chosen)
       .then(function success(response) {
           $scope.attributeDetails = response.data;
       }, function error(response) {

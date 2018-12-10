@@ -33,7 +33,7 @@
   redis.call("HSET","d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "identity.citizenship.british.status", "claimed")
 
   redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "wallets.default.balance", "1000000")
-  redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "PublicKey", "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFaVUyOHlHcDdqbEFCaG5LWXc2QzhHZ0FzYXFscwpOeHhBK2FXZCt1eEl5bU13OVNFUmJSV250Y3ZWcmY5WTRiVFRsenAxTjNqaURXR1gxdk9iWlQ3V0RnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==")
-  redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "permissions.all", "[a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100]")
+  redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "PublicKey", "04894dbcc86a7b8e5001867298c3a0bc1a002c6aa96c371c40f9a59dfaec48ca6330f521116d15a7b5cbd5adff58e1b4d3973a753778e20d6197d6f39b653ed60e")
+  redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "permissions.all", "[e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507]")
   redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.name", "Cameron McEwan")
   redis.call("HSET","e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.citizenship.australian.status", "verified")

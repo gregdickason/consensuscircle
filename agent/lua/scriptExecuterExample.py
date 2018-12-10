@@ -17,6 +17,6 @@ if __name__ == '__main__':
 
     # fw hardcoded examples of calling LUA
     scriptCall('59f3eb590a68c71483463553f9b2d715550be5ae', [], [])  # outputs HEllo - from 'test.lua'
-    scriptCall('0f9f12bd279bd02c2a39c1dc951a73fcf4327cd9', [], [])  # sets up the entities we use as test cases.
+    scriptCall('4931e4bbbc58f1d6d566e95df0681ba855c9eaff', [], [])  # sets up the entities we use as test cases.
     # Transfer 1500 from Cameron to Greg
-    scriptCall('8292d2c55210392e3bb7c7e9c98c4d5cf4154431', ['a2e7623c29717a60913a2b36da830ab48da146eabd2453a0f0756630c25f5100','5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c'],['wallets.default.balance','wallets.default.balance','1500']) # transfer funds from entity Keys[1], wallet Args[1], to entity Keys[2], wallet Args[2], amount Args[3]
+    scriptCall('8292d2c55210392e3bb7c7e9c98c4d5cf4154431', ['e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507','d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f'],['wallets.default.balance','wallets.default.balance','1500']) # transfer funds from entity Keys[1], wallet Args[1], to entity Keys[2], wallet Args[2], amount Args[3]
