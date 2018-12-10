@@ -1,6 +1,37 @@
 var app = angular.module('myApp', ['ngRoute']);
 var api_url = "http://" + self.location.hostname + ":5000/"
 
+app.factory('encryption', function() {
+  // assumes input is already a string
+  return {
+    hashInput: function(input) {
+      temp1 = input.replace(/\s/g,'');
+      // temp2 = temp1.replace(/\"/g,'\'');
+      temp2 = temp1;
+
+      var shaObj = new jsSHA("SHA-256", "TEXT");
+      shaObj.update(temp2);
+      var hash = shaObj.getHash("HEX");
+
+      return hash;
+    },
+    sign: function(privateKey, message) {
+      var curve = "secp256r1";
+      var sigalg = "SHA256withECDSA";
+
+      var signature = new KJUR.crypto.Signature({"alg" : sigalg});
+      signature.init({d : privateKey, curve : curve});
+      signature.updateString(message);
+      var signatureHex = signature.sign();
+
+      return signatureHex;
+
+    }
+
+  };
+
+});
+
 app.config(function($routeProvider) {
   $routeProvider
 
@@ -218,21 +249,22 @@ app.controller('attributeController', function($scope, $http) {
         $scope.message = response.data;
       });
 
-  $http.get(api_url + 'getAttributes')
-      .then(function success(response) {
-        $scope.attribute = response.data;
-      }, function error(response) {
-        $scope.message = response.data;
-      });
-
   $scope.update = '';
+  $scope.started = false;
 
-  $scope.chooseEntity = function(chosen) {
-    $scope.entityChosen = chosen;
+  $scope.getAttributes = function(entity) {
+    $scope.started = true;
+    $http.get(api_url + 'getAttributes')
+        .then(function success(response) {
+          $scope.attributes = response.data;
+        }, function error(response) {
+          $scope.message = response.data;
+        });
+
   };
 
   $scope.chooseAttribute = function(chosen) {
-    $http.post(api_url + 'attribute', $scope.entityChosen, chosen)
+    $http.post(api_url + 'attribute', chosen)
       .then(function success(response) {
           $scope.attributeDetails = response.data;
       }, function error(response) {
@@ -256,7 +288,7 @@ app.controller('publishBlockController', function($scope, $http) {
 });
 
 
-app.controller('newInstructionController', function($scope, $http) {
+app.controller('newInstructionController', function($scope, $http, encryption) {
 
   //need to add hashing and Signing
   $scope.instruction = {};
@@ -266,7 +298,8 @@ app.controller('newInstructionController', function($scope, $http) {
   $scope.instruction.instruction.keys = [];
   $scope.instruction.instructionHash = "";
   $scope.instruction.signature = "";
-  $scope.instruction.instruction.sender = "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c";
+  $scope.instruction.instruction.sender = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675";
+  $scope.privateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e";
 
   $http.get(api_url + 'getInstructionNames')
     .then(function success(response) {
@@ -275,18 +308,8 @@ app.controller('newInstructionController', function($scope, $http) {
       $scope.message = response.data;
     });
 
-
-
    $scope.getInstructionTypeRequirements = function(name) {
      $scope.started = true;
-
-     $http.post(api_url + 'getLuaHash', name)
-       .then(function success(response) {
-           $scope.luaHash = response.data;
-           $scope.instruction.instruction.luaHash = $scope.luaHash;
-       }, function error(response) {
-           $scope.update = 'error in getting entity';
-       });
 
        $http.post(api_url + 'getInstructionArguments', name)
          .then(function success(response) {
@@ -308,16 +331,10 @@ app.controller('newInstructionController', function($scope, $http) {
      }
 
   $scope.addInstruction = function(instruction) {
-    instructionNoWhiteSpace = JSON.stringify(instruction.instruction)
+    instructionString = JSON.stringify(instruction.instruction)
 
-    temp1 = instructionNoWhiteSpace.replace(/\s/g,'')
-    temp2 = temp1.replace(/\"/g,'\'')
-
-    var shaObj = new jsSHA("SHA-256", "TEXT");
-    shaObj.update(temp2);
-    var hash = shaObj.getHash("HEX");
-
-    instruction.instructionHash = hash;
+    instruction.instructionHash = encryption.hashInput(instructionString);
+    instruction.signature = encryption.sign($scope.privateKey, instruction.instructionHash);
 
     $http.post(api_url + 'addInstruction', instruction)
       .then(function success(response) {

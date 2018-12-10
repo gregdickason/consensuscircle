@@ -31,16 +31,8 @@ class TddAgent(TestCase):
         pass
 
     # Order is important to allow population of state.  Use numbering from 100 in the test names to ensure the order we need
-    def test_100_updateConfig_returns_201(self):
-             url = "http://localhost:5000/updateConfig"
-             # TODO make this a jsonify request
-             request = urllib.request.Request(url, data='{"owner":"5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c","level":"founder","agentIdentifier":"17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920","signedIdentifier":"amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g==","agentPrivateKey":"LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="}'.encode('utf-8'))
-             request.add_header("Content-Type","application/json")
-             response = urllib.request.urlopen(request)
-             self.assertEqual(response.code, 201)
-
     def test_101_get_pkey_returns_200(self):
-             url = "http://localhost:5000/PKey"
+             url = "http://localhost:5000/getPrivateKey"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
@@ -131,13 +123,22 @@ class TddAgent(TestCase):
     #          self.assertEqual(response.code, 200)
     #          self.assertEqual(body, {'lastBlock': '72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd', 'circleDistance' : 'dc1ccc6bb8169fe29a332b54247ea2a0ca621039518ea994ff14a418d2daf5a8e3', 'blockHeight' : 1})
 
+    def test_a_initialConfig(self):
+        url = "http://localhost:5000/getConfig"
+        request = urllib.request.Request(url)
+        response = urllib.request.urlopen(request)
+        body = json.loads(response.read().decode('utf-8'))
+        self.assertEqual(response.code, 200)
+        self.assertEqual(body,{'agentIdentifier':'180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675','agentPrivateKey':'f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e','level':'founder','owner':'d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f','signedIdentifier':'30440220273835a615c5b40afcbd8774684ae3dad27a1c0cdc413789591f12dab0f5d4b0022061cf224c65ae3e4e1d09e34ccd5b861fcba5fd772cd7a00db10d51c632e57c36'})
+
+
     def test_initial_config_and_adjust(self):
             url = "http://localhost:5000/getConfig"
             request = urllib.request.Request(url)
             response = urllib.request.urlopen(request)
             body = json.loads(response.read().decode('utf-8'))
             self.assertEqual(response.code, 200)
-            self.assertEqual(body, {'level': 'founder', 'agentIdentifier' : '17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920', 'owner' : '5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c', 'signedIdentifier' : 'amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g==', 'agentPrivateKey' : 'LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo='})
+            self.assertEqual(body, {'agentIdentifier':'180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675','agentPrivateKey':'f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e','level':'founder','owner':'d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f','signedIdentifier':'30440220273835a615c5b40afcbd8774684ae3dad27a1c0cdc413789591f12dab0f5d4b0022061cf224c65ae3e4e1d09e34ccd5b861fcba5fd772cd7a00db10d51c632e57c36'})
 
             url = "http://localhost:5000/updateConfig"
             request = urllib.request.Request(url, data='{"level" : "4", "agentIdentifier" : "5", "owner" : "cameron", "signedIdentifier" : "signature", "agentPrivateKey" : "test:"}'.encode('utf-8'))
@@ -155,7 +156,7 @@ class TddAgent(TestCase):
             self.assertEqual(body, {'level': '4', 'agentIdentifier' : '5', 'owner' : 'cameron', 'signedIdentifier' : 'signature', 'agentPrivateKey' : 'test:'})
 
             url = "http://localhost:5000/updateConfig"
-            request = urllib.request.Request(url, data='{"level" : "founder", "agentIdentifier" : "17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920", "owner" : "5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c", "signedIdentifier" : "amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g==", "agentPrivateKey" : "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="}'.encode('utf-8'))
+            request = urllib.request.Request(url, data='{"agentIdentifier":"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675","agentPrivateKey":"f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e","level":"founder","owner":"d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f","signedIdentifier":"30440220273835a615c5b40afcbd8774684ae3dad27a1c0cdc413789591f12dab0f5d4b0022061cf224c65ae3e4e1d09e34ccd5b861fcba5fd772cd7a00db10d51c632e57c36"}'.encode('utf-8'))
             request.add_header("Content-Type","application/json")
             response = urllib.request.urlopen(request)
             body = json.loads(response.read().decode('utf-8'))
@@ -167,4 +168,4 @@ class TddAgent(TestCase):
             response = urllib.request.urlopen(request)
             body = json.loads(response.read().decode('utf-8'))
             self.assertEqual(response.code, 200)
-            self.assertEqual(body, {'level': 'founder', 'agentIdentifier' : '17120c812977a00d3607375ff4e9c74be9f58dfe31f110ecf20ff957582fc920', 'owner' : '5ad77a2a5b591824805a5d3dac653f5a54af47ca6b8161883c1c17972b90938c', 'signedIdentifier' : 'amT6nlrsler57PrP+QfDfSOvhNeE76IRnc3at3ODmvUZe9IsvwM010K44Uv21+HqrXK14oSkhNSSBave0LFW3g==', 'agentPrivateKey' : 'LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSVBsOXp4ZTIwT254QmJaR2F6ZHdKS2xWZW5kRnFkZTZmY05acnU2MFV3cWVvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcmw2ZnVrQnVKU241ZWZ2N21Mei90Y09RaGsrTXRTU0JZYnorNHBheWdueGo4MlQzZ0VZOQpsU1pseUtpUzdDVnd6QmF2WHpDZmpxeGtaa09hazZoR2J3PT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo='})
+            self.assertEqual(body, {'agentIdentifier':'180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675','agentPrivateKey':'f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e','level':'founder','owner':'d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f','signedIdentifier':'30440220273835a615c5b40afcbd8774684ae3dad27a1c0cdc413789591f12dab0f5d4b0022061cf224c65ae3e4e1d09e34ccd5b861fcba5fd772cd7a00db10d51c632e57c36'})

@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 from convergenceProcessor import blockConvergeAndPublish
+from globalsettings import instructionInfo
 
 import logging.config
 
@@ -71,7 +72,7 @@ class blockState:
     self.level['member'] = []
 
     for e in self.agents:
-      self.agentPublicKeys[e['agentID']] = e['agentPubKey']
+      self.agentPublicKeys[e['agentID']] = e['agentPublicKey']
       self.level[e['level']].append(e['agentID'])
       self.agentURLs[e['agentID']] = e['agentURL']
 
@@ -84,17 +85,26 @@ class blockState:
 
   def executeInstruction(self, hash):
       instruction = json.loads(self.red.get('instructionPool:'+ hash))
-      #instruction = self.current_instructions[hash]
 
       logging.debug(f'\n instruction retrieved is {instruction}\n')
 
       args = instruction['instruction']['args']
       keys = instruction['instruction']['keys']
-      luaHash = instruction['instruction']['luaHash']
+
+      instructionSettings = instructionInfo()
+      luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
+      if luaHash == None:
+          return 'ERROR: no instruction matches the given instructionName'
 
       output = self.red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
 
       return output
+
+  def getBlockHash(self):
+      return self.blockHash
+
+  def getBlockHeight(self):
+      return self.blockHeight
 
   # Manage the instruction pool
   def addInstruction(self, instruction):
@@ -214,13 +224,15 @@ class blockState:
 
 
 
-  def getPubKey(self, pubKeyHash):
+  def getPublicKey(self, publicKeyHash):
     # is this an agent or an entity?
-    if pubKeyHash in self.agentPublicKeys:
-      return self.agentPublicKeys[pubKeyHash]
-    elif pubKeyHash in self.current_entities:
+    logging.info(f"blockstate.getPublicKey Called with hash {publicKeyHash}")
+    if publicKeyHash in self.agentPublicKeys:
       logging.info("HERE HERE HERE")
-      return self.current_entities[pubKeyHash]['PublicKey']
+      return self.agentPublicKeys[publicKeyHash]
+    elif publicKeyHash in self.current_entities:
+      logging.info("HERE HERE HERE")
+      return self.current_entities[publicKeyHash]['PublicKey']
     else:
       #TODO throw errors / error checking
       return

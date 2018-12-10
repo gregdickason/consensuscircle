@@ -14,31 +14,26 @@
 
 </div>
 
-<form ng-submit="chooseEntity(chosen)" name="entityForm">
+<form ng-submit="chooseAttribute(chosen)" name="entityForm">
 
-  <div class="input-group">
-    <select class="custom-select" ng-model="chosen.entity" name="entity" id="entity" required>
-      <option value="">Select an Entity to view...</option>
-      <option ng-repeat="option in entities">{{option}}</option>
-    </select>
-    <div class="input-group-append">
-      <button class="btn btn-outline-secondary" type="submit">Select</button>
+
+    <div class="form-group">
+      <select class="custom-select" ng-model="chosen.entity"
+              name="entity" id="entitiyID" required
+              ng-options= "option for option in entities"
+              ng-change = "getAttributes(chosen.entity)">
+      </select>
     </div>
-  </div>
-</form>
 
-
-<form ng-submit="chooseAttribute(chosen)" name="attributeForm">
-
-<div class="input-group">
-    <select class="custom-select" ng-model="chosen.attribute" name="attribute" id="attribute" required>
-      <option value="">Select the Attribute ...</option>
-      <option ng-repeat="option in attribute">{{option}}</option>
-    </select>
-    <div class="input-group-append">
-      <button class="btn btn-outline-secondary" type="submit">Select</button>
+    <div class="form-group" ng-show="started">
+      <select class="custom-select" ng-model="chosen.attribute" name="attribute" id="attribute" required>
+        <option value="">Select the Attribute ...</option>
+        <option ng-repeat="option in attributes">{{option}}</option>
+      </select>
     </div>
-  </div>
+
+    <button type="submit" class="btn btn-primary btn-lg btn-block" ng-show="started">Submit</button>
+
 
 </form>
 

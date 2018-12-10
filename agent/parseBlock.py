@@ -5,7 +5,7 @@ from blockState import blockState
 
 #utility functions
 from agentUtilities import converge, hashvector, getHashofInput, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, verifyMessage, returnMerkleRoot
-from processInstruction import validateInstruction, validateInstructionHandler
+from processInstruction import validateInstruction
 
 # Parses the last block.  Does not check the chain but will return with either a fully parsed block or with blockPass set to False if the block is not well formed or hashes do not align
 # Order of execution:
@@ -14,7 +14,7 @@ from processInstruction import validateInstruction, validateInstructionHandler
 # - Confirm that each member of the consensus circle has signed off the convergenceHeader (signed off merkle roots and random numbers).  This shows convergence
 # - Confirm Instructions and InstructionHandlers: number, merkle roots
 class parseBlock:
-    def __init__(self,blockID):
+    def __init__(self,blockID, blockState):
         with open(blockID) as json_data:
             # TODO put in exception handling and error checking if file is
             # malformed and also that this block is valid in the context of previous blocks
@@ -28,35 +28,43 @@ class parseBlock:
         self.consensusCircle = self.blockHeader['consensusCircle']
         self.blockSignatures = self.blockHeader['blockSignatures']
         self.instructionCount = self.convergenceHeader['instructionCount']
-        self.instructionHandlerCount = self.convergenceHeader['instructionHandlerCount']
         self.instructionsMerkleRoot = self.convergenceHeader['instructionsMerkleRoot']
-        self.instructionHandlersMerkleRoot = self.convergenceHeader['instructionHandlersMerkleRoot']
         self.previousBlock = self.convergenceHeader['previousBlock']
         self.blockHeight = self.convergenceHeader['blockHeight']
         self.randomNumbers = self.convergenceHeader['randomNumbers']  # Need to parse by circle for convergence matrix
         self.instructions = self.block['instructions']
-        self.instructionHandlers = self.block['instructionHandlers']
 
         self.randomMatrix = []
         self.ccKeys = []
         self.blockSigs = []
 
         self.instructionHashes = []
-        self.instructionHandlerHashes = []
         self.instructionBodies = []
 
         self.blockPass = True
         self.blockComment = 'Block Conforms'
 
-        # TODO - should we be getting the blockState instance from the agent not creating our own instance?
-        self.bState = blockState()
+        self.bState = blockState
+
+        # logging.debug(f'checking the previous block and block height is correct')
+        # if (self.blockHeight != (self.bState.getBlockHeight()+1)):
+        #     self.blockPass = False
+        #     self.blockComment = "block height incorrect"
+        #     logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {self.bState.getBlockHeight()+1}')
+        #
+        # if (self.previousBlock != (self.bState.getBlockHash())):
+        #     self.blockPass = False
+        #     self.blockComment = "previous block hash incorrect"
+        #     logging.info(f'block height is not valid. was: {self.previousBlock}, should be: {self.bState.getBlockHash()}')
+
+def validateBlock(self):
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
           for f in e.values():
             self.randomMatrix.append(f)
 
         for e in self.consensusCircle:
-          self.ccKeys.append(e['pKey'])
+          self.ccKeys.append(e['agentID'])
 
         logging.info(f'randomMatrix is {self.randomMatrix}')
 
@@ -64,7 +72,7 @@ class parseBlock:
         # Is blockhash the same
         # TODO confirm json.dumps is deterministic.  If order changes then hash will change.  May need more reliable approach
         # TODO use orderedDict for loading: https://stackoverflow.com/questions/2774361/json-output-sorting-in-python
-        self.calculatedHash = getHashofInput(json.dumps(self.blockHeader))
+        self.calculatedHash = getHashofInput(self.blockHeader)
         logging.info(f'blockhash is: \n{self.blockHash}\nCalculated:\n{self.calculatedHash}\n')
         if self.blockHash != self.calculatedHash:
             self.blockPass = False
@@ -80,7 +88,6 @@ class parseBlock:
             self.blockPass = False
             self.blockComment = validInstruction['message']
             return
-          # TODO Check signatures - if verifyMessage( .... )
           self.instructionHashes.append(e['instructionHash'])
 
         # Check instruction count is the same from header
@@ -89,38 +96,12 @@ class parseBlock:
           self.blockComment = f'instructionCount is not same as number instructions'
           return
 
-
         # Does the merkleroot of the instructions map to the header?
         if returnMerkleRoot(self.instructionHashes) != self.instructionsMerkleRoot:
           self.blockPass = False
+          logging.info(f'merkle root does not match got {returnMerkleRoot(self.instructionHashes)} expected {self.instructionsMerkleRoot}')
           self.blockComment = f'instruction merkle root of {self.instructionsMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHashes)}'
           return
-
-        # Are the instructionHandlers hashed and signed?
-        # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed rather than reprocess?
-        # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
-        for e in self.instructionHandlers:
-          validInstructionHandler = validateInstructionHandler(e)
-          if not validInstructionHandler['return']:
-            self.blockPass = False
-            self.blockComment = validInstructionHandler['message']
-            return
-          # TODO Check signatures - if verifyMessage( .... )
-          self.instructionHandlerHashes.append(e['instructionHandlerHash'])
-
-        # Check instruction count is the same from header
-        if self.instructionHandlerCount != len(self.instructionHandlerHashes):
-          self.blockPass = False
-          self.blockComment = f'instructionHandlerCount is not same as number instructionHandlers'
-          return
-
-
-        # Does the merkleroot of the instructionHandlers map to the header?
-        if returnMerkleRoot(self.instructionHandlerHashes) != self.instructionHandlersMerkleRoot:
-          self.blockPass = False
-          self.blockComment = f'instructionHandler merkle root of {self.instructionHandlersMerkleRoot} != calculated merkle root of {returnMerkleRoot(self.instructionHandlerHashes)}'
-          return
-
 
         # Check consensus circle has signed off on the convergenceHeader
         logging.debug(f'parsing  blockSig {self.blockSignatures}')
@@ -140,18 +121,14 @@ class parseBlock:
           self.blockComment = 'length of block Signatures not same as consensusCircle'
           return
 
-        hashConvergenceHeader = getHashofInput(json.dumps(self.convergenceHeader))
+        hashConvergenceHeader = getHashofInput(self.convergenceHeader)
         logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
-          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPubKey(self.ccKeys[i])) != True:
+          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPublicKey(self.ccKeys[i])) != True:
             self.blockPass = False
             self.blockComment = f'signature for Circle at {i} is not valid'
             return
           i += 1
-
-        # check merkle roots etc - if we fail here there is a major issue as the whole circle has signed off.
-        # TODO
-
 
         # Converge the Matrix
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]

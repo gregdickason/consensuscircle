@@ -4,14 +4,17 @@ import hashlib
 import socket
 import argparse
 import os
+import re
 
 import logging.config
 
+import ecdsa
 from ecdsa import SigningKey, VerifyingKey, NIST256p
 from ecdsa.keys import BadSignatureError
 from ecdsa.util import randrange_from_seed__trytryagain
 from base64 import b64encode, b64decode
 from collections import OrderedDict
+import json
 
 ENCODING = 'utf-8'
 
@@ -45,9 +48,15 @@ def hashvector(v,s):
 
 # Get the hash for a json string (cast to str if not).
 def getHashofInput(input):
-  logging.debug(f'getHashofInput called with input {input}')
-  inputNoWhitespace = ''.join(str(input).split())
-  return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
+
+    input = json.dumps(input)
+
+    pattern = re.compile(r'\s+')
+    inputNoWhitespace = re.sub(pattern, '', input)
+    logging.debug(f'getHashofInput called with input {inputNoWhitespace}')
+    # print(inputNoWhitespace)
+
+    return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
 
 def getRandomNumbers(byteLen, numberEntries):
   logging.debug(f'getRandomNumbers called with byteLen {byteLen}, numberEntries {numberEntries}')
@@ -108,33 +117,25 @@ def returnHashDistance(blockHash, agentIdentifier):
 # TODO use curve 25519 which is not from NIST and unlikely to have NSA backdoor?  ( https://github.com/warner/python-ed25519 ) - need local c compiler (get from https://ed25519.cr.yp.to/?)
 # read https://security.stackexchange.com/questions/50878/ecdsa-vs-ecdh-vs-ed25519-vs-curve25519 for some context
 
-# Stores the public key, signatures, etc in pure strings to enable appropriate JSON serialisation / deserialisation.  the "b'...'" format fails to deserialise
-def binaryStringFormat(byte_content):
-  logging.debug(f'binaryStringFormat called with byte_content {byte_content}')
-  base64_bytes = b64encode(byte_content)
-  return base64_bytes.decode(ENCODING)
-
-def binFromString(myString):
-  logging.debug(f'binFromString called with string {myString}')
-  return b64decode(myString)
-
-# Public / Private key cryptography
+# Public / Private key cryptography - HEX EDIT
 # Using https://github.com/warner/python-ecdsa for now.  NOTE: TIMING ATTACKS are possible so the agent can never solely sign a message in an external interface: need to mask somehow
 # TODO: Need to manage process for signing in a way that timing attacks are not practical (no repeated calls allowed for example, no leakage of time in a circle process)
-def signMessage(message, priKey):
-  logging.debug(f'signMessage call with message {message} and key {priKey}')
+def signMessage(message, privateKey):
+  logging.debug(f'signMessage call with message {message} and key {privateKey}')
 
-  sk = SigningKey.from_pem(binFromString(priKey))   # TODO: should check this is properly pem encoded before processing
+  sk = SigningKey.from_string(bytes.fromhex(privateKey), curve = NIST256p)   # TODO: should check this is properly pem encoded before processing
   # Using deterministic ecdsa signature to prevent possible leakage through non randomness.  See https://tools.ietf.org/html/rfc6979
-  return binaryStringFormat(sk.sign_deterministic(str(message).encode(ENCODING),hashlib.sha256))
+  return sk.sign_deterministic(str(message).encode(ENCODING), hashfunc=hashlib.sha256, sigencode=ecdsa.util.sigencode_der).hex()
 
-def verifyMessage(message, signedMessage, pubKey):
-  logging.debug(f'verifyMessage call with message {message}, signedMessage {signedMessage} and key {pubKey}')
-  # signed message is b64 encoded.  We decode
+def verifyMessage(message, signedMessage, publicKey):
+  logging.debug(f'verifyMessage call with message {message}, signedMessage {signedMessage} and key {publicKey}')
+
+  publicKey = re.sub('^04', '', publicKey)
+
   # Log entry
-  vk = VerifyingKey.from_pem(binFromString(pubKey))
+  vk = VerifyingKey.from_string(bytes.fromhex(publicKey), curve = NIST256p)
   try:
-    return vk.verify(binFromString(signedMessage),str(message).encode(ENCODING),hashlib.sha256)
+    return vk.verify(bytes.fromhex(signedMessage),str(message).encode(ENCODING),hashfunc=hashlib.sha256, sigdecode=ecdsa.util.sigdecode_der)
   except BadSignatureError:
     # Log bad signature.  TODO import bad signature error
     return False
@@ -144,35 +145,35 @@ def signMessageFromPassPhrase(message, passphrase):
   logging.debug(f'signMessageFromPassPhrase call with message {message} and passphrase {passphrase}')
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
   sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
-  return signMessage(message,binaryStringFormat(sk.to_pem()))
+  return signMessage(message,sk.to_string().hex())
 
 def verifyMessageFromPassPhrase(message, signedMessage, passphrase):
   logging.debug(f'verifyMessageFromPassPhrase call with message {message}, signedMessage {signedMessage} and passphrase {passphrase}')
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
   sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
   vk = sk.get_verifying_key()
-  return verifyMessage(message,signedMessage,binaryStringFormat(vk.to_pem()))
-
+  return verifyMessage(message,signedMessage,vk.to_string().hex())
 
 def getPublicKeyFromPassPhrase(passphrase):
   logging.debug(f'getPublicKeyFromPassPhrase called with passphrase {passphrase}')
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
   sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
   vk = sk.get_verifying_key()
-  return binaryStringFormat(vk.to_pem())
+  return '04' + vk.to_string().hex()
 
 def getPrivateKeyFromPassPhrase(passphrase):
   logging.debug(f'getPrivateKeyFromPassPhrase called with passphrase {passphrase}')
   secexp = randrange_from_seed__trytryagain(hashlib.sha256(str(passphrase).encode(ENCODING)).hexdigest(), NIST256p.order)
   sk = SigningKey.from_secret_exponent(secexp, curve=NIST256p)
-  return binaryStringFormat(sk.to_pem())
+  return sk.to_string().hex()
+
 
 # Diffie - Hellman.  Using ecdsa BUT not the private key of the current agent as want perfect forward secrecy.  We therefore trade a
 # new session key based on a random variable.
 # default is perfect forward secrecy: we generate a session key everytime we interact.  This means agents do not store private keys in long
 # term storage
-def createSessionKeyFromPublicKey(pubKey):
-  logging.debug(f'createSessionKeyFromPublicKey called with pubKey {pubKey}')
+def createSessionKeyFromPublicKey(publicKey):
+  logging.debug(f'createSessionKeyFromPublicKey called with pubKey {publicKey}')
   # Random Number:
   mySecret = os.urandom()
 

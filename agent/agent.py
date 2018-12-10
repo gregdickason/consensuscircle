@@ -23,7 +23,7 @@ from globalsettings import AgentSettings
 
 #utility functions - add to class?
 from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage
-from processInstruction import validateInstruction, validateInstructionHandler
+from processInstruction import validateInstruction
 
 class Agent:
     def __init__(self):
@@ -54,10 +54,11 @@ class Agent:
         # TODO put these as loaded from blockstate
         # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
         self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
+        logging.debug(f'setting agent identifier to {settings.agentIdentifier}')
         self.agent_identifier = settings.agentIdentifier
-        self.owner = settings.ownerPKey  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = settings.ownerID  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = settings.signedIdentifier
-        self.agentPrivKey = settings.agentPrivateKey
+        self.agentPrivateKey = settings.agentPrivateKey
 
         logging.debug('Getting blockchain State')
         self.blockState = blockState()
@@ -72,13 +73,13 @@ class Agent:
         # update config when we get setup - needs the owner to sign off to allow change
         # TODO Confirm that the owner of the agent has signed off changes or dont change
 
-    def changeConfig(self,ownerLevel, agentIdentifier, ownerPKey, signId, agentPrivKey):
+    def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
         agentResponse = {}
         self.level = ownerLevel # TODO should come from the agents owner's level
         self.agent_identifier = agentIdentifier
-        self.owner = ownerPKey      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.owner = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = signId
-        self.agentPrivKey = agentPrivKey  #TODO - do we want to accept private key updates?  (will be over SSL)
+        self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
 
         agentResponse['message'] = {
            'message': f'Updated agent config'
@@ -106,10 +107,10 @@ class Agent:
         return self.genesisBlock.blockHash
 
     def getPrivateKey(self):
-        return self.agent_identifier
+        return self.agentPrivateKey
 
-    def setPrivateKey(self, pkey):
-        self.agent_identifier = pkey
+    def setPrivateKey(self, privateKey):
+        self.agentPrivateKey = privateKey
         return
 
     def getConfig(self):
@@ -118,7 +119,7 @@ class Agent:
         agentConfig['agentIdentifier'] = self.agent_identifier
         agentConfig['owner'] = self.owner
         agentConfig['signedIdentifier'] = self.signedIdentifier
-        agentConfig['agentPrivateKey'] = self.agentPrivKey
+        agentConfig['agentPrivateKey'] = self.agentPrivateKey
 
         return agentConfig
 
@@ -182,7 +183,7 @@ class Agent:
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = self.blockState.getInstructionHashes()
         hashMerkle = returnMerkleRoot(instruction_hashes)
-        hashSigned = signMessage(hashMerkle,self.agentPrivKey)
+        hashSigned = signMessage(hashMerkle,self.agentPrivateKey)
         agentResponse['message'] = {
                  'merkleRoot': hashMerkle,
                  'signed':hashSigned,
@@ -199,8 +200,7 @@ class Agent:
 
         logging.debug("new block published, retrieve validate and process it")
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
-        newBlock = parseBlock(blockID)
-
+        newBlock = parseBlock(blockID, self.blockState)
 
         # is the block Valid?
         if newBlock.blockPass == False:
@@ -242,7 +242,6 @@ class Agent:
 
         # TODO confirm that the block is shortest distance
         self.chain.append(newBlock)
-
 
         # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
 
@@ -307,29 +306,6 @@ class Agent:
 
         return agentResponse
 
-    def processInstructionHandler(self,values):
-        # Add an instructionHandler to the pool of unprocessed instructionHandlers
-        logging.debug("received an instructionHandler to add")
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = ''
-        # Check that the required fields are in the POST'ed data
-        validInstructionHandler = validateInstructionHandler(values)
-
-        if not validInstructionHandler['return']:
-          return validInstructionHandler
-
-        # TODO: put into Blockstate here
-        #GREG HERE fix redis and then can check agent working
-        numberInstructionHandlers = self.add_instructionHandler(values['instructionHandlerHash'], values['instructionHandler'], values['sign'])
-
-        agentResponse['message'] = {
-            'message': f'Agent currently has {numberInstructionHandlers} instructionHandlers in the unprocessed pool',
-            'instructionHandlers': list(self.instruction_Handlerhashes)
-        }
-        return agentResponse
-
-
     def getEntity(self, entity):
         # gets entity as a JSON object referenced by the public key.
         # TODO Error handling or return 'Entity not found JSON object'
@@ -374,11 +350,11 @@ class Agent:
      myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
      myGossip = {}
      myGossip[self.agent_identifier] = myMap
-     myGossip["sign"] = signMessage(myMap, self.agentPrivKey)
+     myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
      myGossip["trusted"] = 1   # I trust myself
      candidate["gossip"].append(myGossip)
      candidate["broadcaster"] = self.agent_identifier
-     candidate["signedGossip"] = signMessage(myGossip, self.agentPrivKey)
+     candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
      candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
      candidate["instructions"] = list(self.blockState.getInstructionList())
      candidate["instructionHandlerHashes"] = list(self.blockState.getInstructionHashes())
