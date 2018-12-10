@@ -13,7 +13,8 @@
      TODO: data associated with payment (eg description) to be stored with instruction but not in redis
      TODO: blockchain long term storage reduced to headers only for scalability (instructions kept off chain), then further to instructionMerkle root chain (can have a global merkel roo for instructions with current block plus previous hashed: gives single checkpoint?)
        
-     ARGV[1]: if 'mining' it is a balance check to confirm that the payment does not exhaust the balance.  This is 
+     ARGV[1]: 'test'  - looks local state and sees if will work
+     if 'mining' it is a balance check to confirm that the payment does not exhaust the balance.  This is 
        done to a separate 'mining' state where the balance is decremented for the sender and NOT incremented for receiver.
        The sender needs enough confirmed funds from the most recent blockchain state to process all instructions.  Once balance reaches 0 
        further instructions are rejected.  
