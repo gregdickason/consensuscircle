@@ -22,7 +22,7 @@ class blockState:
     # self.red = redis.StrictRedis(host='localhost', port=6379, db=0, charset=ENCODING, decode_responses=True)
 
     self.red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
-    #redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
+    # self.red.flushdb()
 
     self.pipe = self.red.pipeline()
 
@@ -38,49 +38,8 @@ class blockState:
     self.depthWeightedChainDistancePreviousBlock = self.blockState['depthWeightedChainDistancePreviousBlock']
     self.root = '5000'   # Used to root the current state in redis
 
-    # add in current_instructions with get / set mechanisms that then link to REDIS here
-    self.current_instructions = {}
-    self.current_instructionHandlers = {}
-    self.current_entities = {}
-
-    # Load entities - stored in redis.  This will get unweildly
-    # TODO: store long term in redis or some compact json form (binary json)
-    for e in self.blockState['Entities']:
-      with open('entities/' + e + '.json') as json_data:
-        entity = json.load(json_data)
-        logging.debug(f'loaded {entity}')
-      self.current_entities[entity['Entity']] = entity
-
-
     logging.debug(f'\nprevious block convergence matrix is {self.outputMatrix}')
-    # get the agent public keys into a binary matrix
 
-    self.agents = self.blockState['agents']
-    self.agentPublicKeys = {}
-    self.agentURLs = {}
-
-    # define the levels we accept and the number per level:
-    self.agentLevels = {'founder':1,'defender':1,'protector':1,'contributor':2,'member':0}
-
-    # Looks for levels.  This is not efficient but will not be used in production (where these will be DB lookups)
-    # storing in lists so we can sort and find nearest matches.  Will slow down if we need to remove some numbers (eg if nearest not available)
-    self.level = {}
-    self.level['founder'] = []
-    self.level['defender'] = []
-    self.level['protector'] = []
-    self.level['contributor'] = []
-    self.level['member'] = []
-
-    for e in self.agents:
-      self.agentPublicKeys[e['agentID']] = e['agentPublicKey']
-      self.level[e['level']].append(e['agentID'])
-      self.agentURLs[e['agentID']] = e['agentURL']
-
-    # sort the level lists to make it more efficient and use takeClosest (note sorting is highly optimised in Python)
-    for e in self.level:
-      self.level[e].sort()
-
-    # create the instructionPool object to store instructions
     # TODO implement the redlock algorithm for locking
 
   def executeInstruction(self, hash):
@@ -163,24 +122,26 @@ class blockState:
     logging.debug(f'Returning instructionHandlerss for getInstructionHandlerList: {self.current_instructionHandlers.values()}')
     return self.current_instructionHandlers.values()
 
-
-  # All entities in memory
-  # TODO: use redis to store enties and persist to disk when needed. (or as backup store on Redis)
   def getEntity(self, entity):
     logging.debug(f'Getting entity {entity} in blockState)')
-    try:
-      return self.current_entities[entity]
-    except:
-      # TODO throw exception and handle in Agent
-      return ''
+
+    if self.red.sismember("entities", entity) == 1:
+        return self.red.hgetall(entity)
+
+    logging.debug(f'ERROR: no entity with ID {entity} in blockState)')
+    return "ERROR: No entity with that ID"
 
   def getEntityList(self):
-      return list(self.current_entities.keys())
-      
-  #  get Attribute on an entity.  
+      return list(self.red.smembers("entities"))
+
+  #  get Attribute on an entity.
   def getAttribute(self, entity, attribute):
     logging.debug(f'blockState.getAttribute: Getting attribute {attribute} from entity {entity}')
-    try: 
+
+    if self.red.sismember("entities", entity) == 0:
+        return "ERROR: invalid entity ID"
+
+    try:
       return(self.red.hget(entity, attribute))
     except:
       return ''
@@ -222,17 +183,11 @@ class blockState:
     logging.debug(f'Sent {jsondata} - on default queue')
     return
 
-
-
-  def getPublicKey(self, publicKeyHash):
+  def getPublicKey(self, id):
     # is this an agent or an entity?
     logging.info(f"blockstate.getPublicKey Called with hash {publicKeyHash}")
-    if publicKeyHash in self.agentPublicKeys:
-      logging.info("HERE HERE HERE")
-      return self.agentPublicKeys[publicKeyHash]
-    elif publicKeyHash in self.current_entities:
-      logging.info("HERE HERE HERE")
-      return self.current_entities[publicKeyHash]['PublicKey']
+    if (self.red.sismember("entities", id) == 1) or (self.red.sismember("agents", id) == 1) or (self.red.sismember("owners", id) == 1):
+      return self.red.hget(id, "publicKey")
     else:
       #TODO throw errors / error checking
       return
