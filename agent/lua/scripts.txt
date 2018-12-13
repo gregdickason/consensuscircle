@@ -1,4 +1,3 @@
 payment.lua
 test.lua
-setupTestAccounts.lua
 setup.lua

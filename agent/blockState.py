@@ -18,27 +18,11 @@ ENCODING = 'utf-8'
 # Other versions uses cloud technologies (eg S3)
 class blockState:
   def __init__(self):
-    # UNCOMMENT LINE BELOW TO RUN LOCALLY AND COMMETN LINE 26
-    # self.red = redis.StrictRedis(host='localhost', port=6379, db=0, charset=ENCODING, decode_responses=True)
-
     self.red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
-    # self.red.flushdb()
 
     self.pipe = self.red.pipeline()
-
-    # TODO confirm that the local redis instance is running and has the blockstate loaded: agents, entities, etc
-    # TODO - remove currentBlockchainstate.  Store to redis.
-    with open('currentBlockChainState.json') as json_data:
-        self.blockState = json.load(json_data)  # TODO put in exception handling and error checking if file is malformed and also that this block is valid in the context of previous blocks
-    logging.debug(f'Blockchain State is {self.blockState}')
-    self.outputMatrix = self.blockState['blockRandomMatrix']
-    self.merkleTreeRoot = self.blockState['blockMerkleRoot']  # Random for simulation
-    self.blockHash = self.blockState['blockHash']   # Hash of the highest block in chain
-    self.blockHeight = self.blockState['blockHeight']
-    self.depthWeightedChainDistancePreviousBlock = self.blockState['depthWeightedChainDistancePreviousBlock']
-    self.root = '5000'   # Used to root the current state in redis
-
-    logging.debug(f'\nprevious block convergence matrix is {self.outputMatrix}')
+    self.latestBlockHash = self.red.hget("state", "latestBlock")
+    logging.debug(f'latestBlock is {self.latestBlockHash}')
 
     # TODO implement the redlock algorithm for locking
 

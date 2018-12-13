@@ -164,8 +164,8 @@ def entityList():
         return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
-    
-    
+
+
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
@@ -515,9 +515,6 @@ def addInstruction():
 
     if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
         return jsonify("ERROR: instruction structure is incorrect")
-
-    # eventually move to browser
-    # instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
 
     logging.info(f"instruction to send is {instructionToSend}")
 

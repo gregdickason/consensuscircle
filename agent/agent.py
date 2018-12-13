@@ -14,9 +14,7 @@ import collections
 import copy
 
 # classes managing the aspects of the blockchain an agent needs in this simulation: the lastBlock, the agents they are following for updates.
-from lastBlock import lastBlock
 from parseBlock import parseBlock
-from genesisBlock import genesisBlock
 from blockState import blockState
 from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
@@ -62,16 +60,6 @@ class Agent:
 
         logging.debug('Getting blockchain State')
         self.blockState = blockState()
-        logging.debug('Parsing Genesis Block')
-        self.genesisBlock = genesisBlock()
-
-        # add genesis block to the chain on startup if we have no state we can read from
-        if self.blockState.blockHeight == 0:
-            self.chain.append(self.genesisBlock)
-        # TODO elif we already have state then we need to get other blocks from agents to see if we are up to date
-
-        # update config when we get setup - needs the owner to sign off to allow change
-        # TODO Confirm that the owner of the agent has signed off changes or dont change
 
     def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
         agentResponse = {}
@@ -102,9 +90,6 @@ class Agent:
 
     def getLevel(self):
         return self.level
-
-    def getGenesisHash(self):
-        return self.genesisBlock.blockHash
 
     def getPrivateKey(self):
         return self.agentPrivateKey
@@ -142,11 +127,11 @@ class Agent:
 
     def getEntityList(self):
         return self.blockState.getEntityList()
-    
+
     # returns the list of attributes the entity has.  Hardcoded to test
     def getAttributes(self):
         return ['wallets.default.balance']
-    
+
 
     def add_instructionHandler(self, hash, instructionHandler, sign):
 
@@ -315,11 +300,10 @@ class Agent:
         if agentResponse['message'] == '':
           agentResponse['success'] = False
 
-
         return agentResponse
 
     def getAttribute(self, entity, attribute):
-        # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.  
+        # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.
         # if the attribute does not exist returns null
         agentResponse = {}
         agentResponse['success'] = True
@@ -328,8 +312,6 @@ class Agent:
           agentResponse['success'] = False
 
         return agentResponse
-
-
 
 # TODO Put this in a separate module with class that loads up from persistent storage?
     def postCandidateStructure(self):
