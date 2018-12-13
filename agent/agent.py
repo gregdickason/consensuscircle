@@ -313,6 +313,9 @@ class Agent:
 
         return agentResponse
 
+    def getGenesisHash(self):
+        return self.blockState.getGenesisHash()
+
 # TODO Put this in a separate module with class that loads up from persistent storage?
     def postCandidateStructure(self):
      # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process

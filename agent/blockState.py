@@ -44,10 +44,13 @@ class blockState:
       return output
 
   def getBlockHash(self):
-      return self.blockHash
+      return self.latestBlockHash
 
   def getBlockHeight(self):
-      return self.blockHeight
+      return self.red.hget(latestBlockHash, "blockHeight")
+
+  def getGenesisHash(self):
+      return self.red.hget("state", "genesisBlock")
 
   # Manage the instruction pool
   def addInstruction(self, instruction):
