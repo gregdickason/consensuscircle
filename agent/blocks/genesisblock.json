@@ -9,5 +9,6 @@
   "blockHash" : "BB958FFD583C6AC180FF650133961712439BA4D5BCC88734F496EF3F9C20E5E7",
   "depthWeightedChainDistancePreviousBlock" : 12.3,
   "previousBlock" : "None",
-  "nextBlock" : "None"
+  "nextBlock" : "None",
+  "circleDistance" : 0
 }

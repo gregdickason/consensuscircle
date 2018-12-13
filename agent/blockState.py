@@ -47,7 +47,10 @@ class blockState:
       return self.latestBlockHash
 
   def getBlockHeight(self):
-      return self.red.hget(latestBlockHash, "blockHeight")
+      return int(self.red.hget(self.latestBlockHash, "blockHeight"))
+
+  def getCircleDistance(self):
+      return int(self.red.hget(self.latestBlockHash, "circleDistance"))
 
   def getGenesisHash(self):
       return self.red.hget("state", "genesisBlock")

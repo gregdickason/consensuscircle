@@ -352,11 +352,7 @@ def retrieveBlock():
     # TODO generic function for returning all the blocks and contents
 
 
-    response = {
-            'lastBlock': agent.getLastBlock(),
-            'blockHeight': agent.getBlockHeight(),
-            'circleDistance': agent.getCircleDistance()
-    }
+    response = agent.getLastBlock()
     return jsonify(response), 200
 
 @app.route('/getPrivateKey',methods=['GET'])

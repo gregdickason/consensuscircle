@@ -29,7 +29,6 @@ class Agent:
         #self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
         settings = AgentSettings()
 
-        self.chain = collections.deque(maxlen = 100) # TODO make part of blockState (local means in redis)
         self.entityInstructions = settings.entityInstructions
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.
         self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle
@@ -77,13 +76,11 @@ class Agent:
         return agentResponse
 
     def getLastBlock(self):
-        return self.chain[len(self.chain)-1].blockHash
-
-    def getBlockHeight(self):
-        return self.chain[len(self.chain)-1].blockHeight
-
-    def getCircleDistance(self):
-        return self.chain[len(self.chain)-1].circleDistance
+        return {
+            'lastBlock': self.blockState.getBlockHash(),
+            'blockHeight': self.blockState.getBlockHeight(),
+            'circleDistance': self.blockState.getCircleDistance()
+        }
 
     def getOwner(self):
         return self.owner

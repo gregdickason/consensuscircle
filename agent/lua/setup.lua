@@ -108,7 +108,7 @@ if redis.call("EXISTS", "entities") == 0 then
   redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.citizenship.australian.status", "verified")
 end
 
---[[ set up geneis block --]]
+--[[ set up genesis block --]]
 if redis.call("EXISTS", "state") == 0 then
   redis.call("HSET", "state", "genesisBlock", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
   redis.call("HSET", "state", "latestBlock", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
@@ -116,4 +116,5 @@ if redis.call("EXISTS", "state") == 0 then
   redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "previousBlock", "None")
   redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "nextBlock", "None")
   redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "filePath", "blocks/genesisBlock.json")
+  redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "circleDistance", 0)
 end

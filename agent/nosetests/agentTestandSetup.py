@@ -59,7 +59,7 @@ class TddAgent(TestCase):
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
-             self.assertEqual(body, {'blockHash': '695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4'})
+             self.assertEqual(body, {'blockHash': '695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4'})
 
     def test_network_status_changes(self):
              url = "http://localhost:5000/getNetworkStatus"
@@ -105,7 +105,7 @@ class TddAgent(TestCase):
              response = urllib.request.urlopen(request)
              body = json.loads(response.read().decode('utf-8'))
              self.assertEqual(response.code, 200)
-             self.assertEqual(body, {'lastBlock': '695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4', 'circleDistance' : 0, 'blockHeight' : 0})
+             self.assertEqual(body, {'lastBlock': '695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4', 'circleDistance' : 0, 'blockHeight' : 0})
 
     # def test_publish_block_then_latest_block(self):
     #          url = "http://localhost:5000/publishBlock"
