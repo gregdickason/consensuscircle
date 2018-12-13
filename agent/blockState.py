@@ -56,27 +56,27 @@ class blockState:
             return True
 
     def getBlockHeight(self, id=None):
-        if id = None:
+        if id == None:
             return int(self.red.hget(self.latestBlockHash, "blockHeight"))
-        else if self.red.sismember("blocks", id) == 1:
+        elif self.red.sismember("blocks", id) == 1:
             return (int(self.red.hget(id, "blockHeight")))
-        else
+        else:
             return "ERROR: invalid ID"
 
     def getCircleDistance(self, id=None):
-        if id = None:
+        if id == None:
             return int(self.red.hget(self.latestBlockHash, "circleDistance"))
-        else if self.red.sismember("blocks", id) == 1:
+        elif self.red.sismember("blocks", id) == 1:
             return (int(self.red.hget(id, "circleDistance")))
-        else
+        else:
             return "ERROR: invalid ID"
 
     def getPreviousBlock(self, id=None):
-        if id = None:
+        if id == None:
             prevBlock = self.red.hget(self.latestBlockHash, "nextBlock")
-        else if self.red.sismember("blocks", id) == 1:
+        elif self.red.sismember("blocks", id) == 1:
             prevBlock = self.red.hget(id, "nextBlock")
-        else
+        else:
             # to do perhaps through an exception here
             prevBlock = "ERROR"
 
@@ -86,11 +86,11 @@ class blockState:
             return prevBlock
 
     def getNextBlock(self, id=None):
-        if id = None:
+        if id == None:
             nextBlock = self.red.hget(self.latestBlockHash, "nextBlock")
-        else if self.red.sismember("blocks", id) == 1:
+        elif self.red.sismember("blocks", id) == 1:
             nextBlock = self.red.hget(id, "nextBlock")
-        else
+        else:
             # to do perhaps through an exception here
             nextBlock = "ERROR"
 

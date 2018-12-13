@@ -43,7 +43,7 @@ class parseBlock:
         self.blockComment = 'Block Conforms'
 
         logging.debug(f'checking previous block {self.previousBlock} exists')
-        if !(bState.blockExists(self.previousBlock)):
+        if not (bState.blockExists(self.previousBlock)):
             self.blockPass = False
             self.blockComment = "previous block does not exist"
 
