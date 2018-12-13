@@ -1,10 +1,8 @@
 import json
 import logging.config
 
-from blockState import blockState
-
 #utility functions
-from agentUtilities import converge, hashvector, getHashofInput, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, verifyMessage, returnMerkleRoot
+from agentUtilities import converge, hashvector, getHashofInput, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, verifyMessage, returnMerkleRoot, returnCircleDistance
 from processInstruction import validateInstruction
 
 # Parses the last block.  Does not check the chain but will return with either a fully parsed block or with blockPass set to False if the block is not well formed or hashes do not align
@@ -14,8 +12,8 @@ from processInstruction import validateInstruction
 # - Confirm that each member of the consensus circle has signed off the convergenceHeader (signed off merkle roots and random numbers).  This shows convergence
 # - Confirm Instructions and InstructionHandlers: number, merkle roots
 class parseBlock:
-    def __init__(self,blockID, blockState):
-        with open(blockID) as json_data:
+    def __init__(self,blockID, bState, entityInstructions):
+        with open("blocks/" + blockID) as json_data:
             # TODO put in exception handling and error checking if file is
             # malformed and also that this block is valid in the context of previous blocks
             self.block = json.load(json_data)
@@ -44,20 +42,17 @@ class parseBlock:
         self.blockPass = True
         self.blockComment = 'Block Conforms'
 
-        self.bState = blockState
+        logging.debug(f'checking previous block {self.previousBlock} exists')
+        if !(bState.blockExists(self.previousBlock)):
+            self.blockPass = False
+            self.blockComment = "previous block does not exist"
 
-        # logging.debug(f'checking the previous block and block height is correct')
-        # if (self.blockHeight != (self.bState.getBlockHeight()+1)):
-        #     self.blockPass = False
-        #     self.blockComment = "block height incorrect"
-        #     logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {self.bState.getBlockHeight()+1}')
-        #
-        # if (self.previousBlock != (self.bState.getBlockHash())):
-        #     self.blockPass = False
-        #     self.blockComment = "previous block hash incorrect"
-        #     logging.info(f'block height is not valid. was: {self.previousBlock}, should be: {self.bState.getBlockHash()}')
+        logging.debug(f'checking the block height is correct relative to the identified previous block')
+        if (self.blockHeight != (bState.getBlockHeight(self.previousBlock)+1)):
+            self.blockPass = False
+            self.blockComment = "block height incorrect"
+            logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {bState.getBlockHeight()+1}')
 
-def validateBlock(self):
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
           for f in e.values():
@@ -83,7 +78,7 @@ def validateBlock(self):
         # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed transaction rather than reprocess?
         # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
         for e in self.instructions:
-          validInstruction = validateInstruction(e,self.bState)
+          validInstruction = validateInstruction(e,bState)
           if not validInstruction['return']:
             self.blockPass = False
             self.blockComment = validInstruction['message']
@@ -124,7 +119,7 @@ def validateBlock(self):
         hashConvergenceHeader = getHashofInput(self.convergenceHeader)
         logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
-          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], self.bState.getPublicKey(self.ccKeys[i])) != True:
+          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], bState.getPublicKey(self.ccKeys[i])) != True:
             self.blockPass = False
             self.blockComment = f'signature for Circle at {i} is not valid'
             return
@@ -133,5 +128,7 @@ def validateBlock(self):
         # Converge the Matrix
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]
         logging.info(f'Converged Matrix is {self.outputMatrix}')
+
+        self.circleDistance = returnCircleDistance(self.ccKeys, bState.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
 
         return

@@ -182,50 +182,33 @@ class Agent:
 
         logging.debug("new block published, retrieve validate and process it")
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
-        newBlock = parseBlock(blockID, self.blockState)
+        newBlock = parseBlock(blockID, self.blockState, self.entityInstructions)
 
         # is the block Valid?
         if newBlock.blockPass == False:
             agentResponse['message'] = {
-                     'chainLength' : len(self.chain) - 1,
-                     'lastBlock': self.chain[len(self.chain)-1].blockHash,
+                     'chainLength' : self.blockState.getBlockHeight(),
+                     'lastBlock': self.blockState.getBlockHash(),
                       'error': newBlock.blockComment
              }
             agentResponse['success'] = False
             return agentResponse
 
-        # if this is the same blockHeight we have already processed - check if circle distance is closer (i.e. there is more random outputs and therefore more
-        # coinbase transactions to recognise, plus we need to reprocess who should be in the circle)
-        # TODO - Circle Distance Check, Look at even lower in the stack as lower height still forkable
-        if newBlock.blockHeight == self.chain[len(self.chain)-1].blockHeight:
-            logging.debug(f'Block published - same height as previous block.  Ignore for now')
-            agentResponse['message'] = {
-                'chainLength' : len(self.chain) - 1,
-                'lastBlock': self.chain[len(self.chain)-1].blockHash,
-                'circleDistance': self.chain[len(self.chain)-1].circleDistance
-            }
-            return agentResponse
-        elif newBlock.previousBlock != self.chain[len(self.chain)-1].blockHash:
-            # This is not building on the top of our chain.  Need to work out if in the chain and deeper down, a fork or are we missing a block.  Do we need to sync
-            # TODO If not then calculate the circleDistance and if lower then use this block (accept the fork)  --> which means undoing instructions that have completed
-            # TODO on this (look at blockheight, etc).  Also need to make sure we cant be attacked with something random that consumes processing power
-            # if lower down we need to reprocess the coinbase transactions
-            logging.debug(f'Block published - not referencing previous block hash')
-            agentResponse['message'] = {
-                   'message' : 'Received block not in chain.  need to manage it TODO'
-                  }
-            return agentResponse
+        if (getNextBlock(newBlock.previousBlock) != None): #there is some kind of fork
+            if (getNextBlock(newBlock.previousBlock) == self.blockState.getBlockHash()):
+                # we have a fork at the current block check which of the proposed and the
+                # current block have the smaller circle distance to the previous.
+                logging.info("we have a fork of just the latest block")
+            else:
+                logging.info("we have a deeper fork")
+                #get weighted circle distance and compare. potentially rule out
+
 
         # Normal processing, new block built on our chain.  READ NOTES
+        # execute instructions on the block state and update the block state to the latest
 
-        # Newblock circle distance needs to be calculated off the old block outputMatrix
-        newBlock.circleDistance = returnCircleDistance(newBlock.ccKeys, self.chain[len(self.chain)-1].outputMatrix, newBlock.instructionCount,self.entityInstructions)
+
         logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
-
-        # TODO confirm that the block is shortest distance
-        self.chain.append(newBlock)
-
-        # TODO process instructions and remove from unprocessed pool if in the block  (TODO work out how to roll back if a new block is better)
 
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
         logging.debug(f'New block output matrix is {newBlock.outputMatrix}')
@@ -249,9 +232,9 @@ class Agent:
         logging.info(f'\nNext circle is {self.nextCircle}\n')
 
         agentResponse['message'] = {
-            'chainLength' : len(self.chain) - 1,
-            'lastBlock': self.chain[len(self.chain)-1].blockHash,
-            'circleDistance': newBlock.circleDistance
+            'chainLength' : newBlock.blockHeight,
+            'lastBlock': newBlock.blockHash,
+            'circleDistance': newBlock.blockComment
         }
         return agentResponse
 
@@ -321,14 +304,14 @@ class Agent:
 
      # TODO Use an orderedMap here for consistent Hash
      myMap = {}
-     myMap["previousBlock"] = self.chain[len(self.chain)-1].blockHash
+     myMap["previousBlock"] = self.blockState.getBlockHash()
      myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
      myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.blockState.current_instructionHandlers)  # TODO - make sure instructionHandlers managed same as instructions in Redis.  Fix this
      myMap["instructionCount"] = len(self.blockState.current_instructions)
      # TODO update instructionHandlers
      myMap["instructionHandlerCount"] = len(self.blockState.current_instructionHandlers)
      # TODO fix as chain 0 isnt highest block?  Append issue?
-     myMap["blockHeight"] = self.chain[len(self.chain)-1].blockHeight + 1 # 1 higher for next block
+     myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
      myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
      myGossip = {}
      myGossip[self.agent_identifier] = myMap
