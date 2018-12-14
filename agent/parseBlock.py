@@ -45,7 +45,7 @@ class parseBlock:
         logging.debug(f'checking previous block {self.previousBlock} exists')
         if not (bState.blockExists(self.previousBlock)):
             self.blockPass = False
-            self.blockComment = "previous block does not exist"
+            self.blockComment = "previous block is not known to this agent"
 
         logging.debug(f'checking the block height is correct relative to the identified previous block')
         if (self.blockHeight != (bState.getBlockHeight(self.previousBlock)+1)):

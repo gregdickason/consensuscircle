@@ -15,6 +15,11 @@ class AgentSettings:
         self.signedIdentifier = "30440220273835a615c5b40afcbd8774684ae3dad27a1c0cdc413789591f12dab0f5d4b0022061cf224c65ae3e4e1d09e34ccd5b861fcba5fd772cd7a00db10d51c632e57c36"
         self.level = "founder"
 
+class blockSettings:
+    def __init__(self):
+        #TODO fill this
+        self.blockKeys = ['nextBlock', 'previousBlock', 'outputMatrix', 'filePath']
+
 class instructionInfo:
     def __init__(self):
         self.instructionSet = {}

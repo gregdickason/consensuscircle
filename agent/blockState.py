@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 from convergenceProcessor import blockConvergeAndPublish
-from globalsettings import instructionInfo
+from globalsettings import instructionInfo, blockSettings
 
 import logging.config
 
@@ -46,8 +46,58 @@ class blockState:
     def getBlockHash(self):
         return self.latestBlockHash
 
+    def rollBack(self, to):
+        #roll back the state to the block 'to'
+        return "TODO"
+
     def getOutputMatrix(self, id):
-        return "DO THIS"
+        #TODO check this is how this should be done
+        # for now it is an example of how you could reach into
+        # the filesystem for a more complex block argument not stored
+        # in redis
+
+        block = self.getDetailedBlock(id)
+
+        return block["outputMatrix"]
+
+    def getDetailedBlock(self, id):
+        # checking block exists
+        if not self.getBlockExists(id):
+            return "ERROR"
+            # throw an exception
+
+        filePath = self.red.hget(id, "filePath")
+        with open(filePath) as json_data:
+            block = json.load(json_data)
+
+        bSettings = blockSettings()
+        if not all(k in block for k in bSettings):
+            return "ERROR: Block file has been corrupted"
+            # throw an exception
+
+        return block
+
+    def getHeightDiff(self, id):
+        prevBlock = self.getPreviousBlock(self.latestBlockHash)
+        height = 1
+        while (prevBlock != id):
+            height = height + 1
+            prevBlock = self.getPreviousBlock(prevBlock)
+
+        return height
+
+    def getWeightedCircleDistance(self, id):
+        prevBlock = self.getPreviousBlock(self.latestBlockHash)
+        height = 1
+        currCircleDistance = int(self.red.hget(self.latestBlockHash, "circleDistance"))
+        sumCircleDistance = currCircleDistance
+
+        while (prevBlock != id):
+            height = height + 1
+            sumCircleDistance= sumCircleDistance + self.getCircleDistance(prevBlock)
+            prevBlock = self.getPreviousBlock(prevBlock)
+
+        weightedCircleDistance = sumCircleDistance/height
 
     def blockExists(self, id):
         if (self.red.sismember("blocks", id) == 0):

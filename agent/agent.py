@@ -121,39 +121,12 @@ class Agent:
         else:
             raise ValueError('Invalid URL')
 
-
     def getEntityList(self):
         return self.blockState.getEntityList()
 
     # returns the list of attributes the entity has.  Hardcoded to test
     def getAttributes(self):
         return ['wallets.default.balance']
-
-
-    def add_instructionHandler(self, hash, instructionHandler, sign):
-
-        # Check hash is right - if not error (TODO: block the calling agent)
-        # Also check if we trust the sender.  If not then block.  TODO - create trusted senders list we share with others
-        if getHashofInput(instructionHandler) != hash:
-            return 0
-
-        # check if the hash has already been received for this instruction and if so then dont append
-        # TODO get from blockstate if in the pool
-        if hash in self.instruction_Handlerhashes:
-            logging.info(f'Received instructionHandler already have, instructionHandler hashes are {self.instruction_Handlerhashes}')
-            return len(self.blockState.current_Handlerinstructions)
-
-        # This is Mutexed for hash control
-        # TODO add to the redis pool in the blockstate
-        # TODO Separate InstructionHandler mutex?  or no mutex?
-
-        self.blockState.addInstructionHandler(instructionHandler,hash,sign)
-        # TODO get from blockstate if in pool (not from our hash list)
-        self.instruction_Handlerhashes.add(hash)
-        logging.debug(f'instructionHandler hashes are {self.instruction_Handlerhashes}')
-        # TODO - get the length from the blockstate
-        return len(self.instruction_Handlerhashes)
-
 
     # Routine to get the current instruction pool we dont test convergence, any following agent can get this to populate their pool
     def instructionPool(self):
@@ -194,19 +167,40 @@ class Agent:
             agentResponse['success'] = False
             return agentResponse
 
+        # forking - if forks can be of depth > 1 before agent seeing a block in the fork
+        # then parse block will need to be updated
         if (getNextBlock(newBlock.previousBlock) != None): #there is some kind of fork
             if (getNextBlock(newBlock.previousBlock) == self.blockState.getBlockHash()):
-                # we have a fork at the current block check which of the proposed and the
-                # current block have the smaller circle distance to the previous.
-                logging.info("we have a fork of just the latest block")
+                # circle distance is calculated in parseBlock relative to the named previous block
+                # so all you need to do is retrieve and compare the circle distance value
+                # for the two competing blocks
+                if (self.blockState.getCircleDistance() < newBlock.circleDistance):
+                    agentResponse['message'] = {
+                             'chainLength' : self.blockState.getBlockHeight(),
+                             'lastBlock': self.blockState.getBlockHash(),
+                              'error': 'newBlock was a fork on current block and current block had a smaller circle distance'
+                     }
+                    agentResponse['success'] = False
+                    return agentResponse
+                else:
+                    self.blockState.rollBack(newBlock.previousBlock)
             else:
-                logging.info("we have a deeper fork")
                 #get weighted circle distance and compare. potentially rule out
-
+                heightDiff = self.blockState.getHeightDiff(newBlock.previous)
+                newBlockWeightedCircleDistance = newBlock.circleDistance + newBlock.circleDistance * (heightDiff - 1)
+                if (self.blockState.getWeightedCircleDistance(newBlock.previous) < newBlockWeightedCircleDistance):
+                    agentResponse['message'] = {
+                             'chainLength' : self.blockState.getBlockHeight(),
+                             'lastBlock': self.blockState.getBlockHash(),
+                              'error': 'newBlock was a fork on current block and current chain had a smaller weighted circle distance'
+                     }
+                    agentResponse['success'] = False
+                else:
+                    self.blockState.rollBack(newBlock.previousBlock)
 
         # Normal processing, new block built on our chain.  READ NOTES
         # execute instructions on the block state and update the block state to the latest
-
+        self.blockState.addNewBlock(newBlock)
 
         logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
 
