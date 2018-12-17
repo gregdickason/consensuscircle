@@ -38,6 +38,10 @@ class instructionInfo:
         self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
         self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
 
+        self.instructionSet['resetdb'] = "162de1456eb95aa94407ac0b66a8f9eb471a724e"
+        self.instructionKeys['resetdb'] = []
+        self.instructionArgs['resetdb'] = []
+
 
     def getInstructionHash(self, name):
         if name in self.instructionSet.keys():

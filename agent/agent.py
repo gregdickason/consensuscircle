@@ -202,7 +202,7 @@ class Agent:
         # execute instructions on the block state and update the block state to the latest
         self.blockState.addNewBlock(newBlock)
 
-        logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance}\n')
+        logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance()}\n')
 
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
         logging.debug(f'New block output matrix is {newBlock.getOutputMatrix()}')

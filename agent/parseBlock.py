@@ -43,7 +43,7 @@ class parseBlock:
         self.blockComment = 'Block Conforms'
 
         logging.debug(f'checking block not on chain {self.blockHash}')
-        if not (bState.blockExists(self.blockHash)):
+        if (bState.blockExists(self.blockHash)):
             self.blockPass = False
             self.blockComment = "this block is already on the chain"
 

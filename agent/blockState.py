@@ -199,7 +199,6 @@ class blockState:
         hash = instruction['instructionHash']
 
         logging.debug(f'\nwriting {hash} to redis\n')
-        self.current_instructions[hash] = insOut
 
         # Store to redis - batch as we are writing to both the keys store and the instructionPool
 
@@ -222,23 +221,6 @@ class blockState:
         insList = list(self.red.smembers('instructionHashes'))
         logging.debug(f'list of instructions returned is {insList}')
         return insList
-
-
-    # Manage the instructionHandler pool
-    def addInstructionHandler(self, instructionHandler, hash,sign):
-
-        logging.debug(f'\nwriting {hash} to redis\n')
-        insHanOut = {}
-        insHanOut['instructionHandlerHash'] = hash
-        insHanOut['sign'] = sign
-        insHanOut['instructionHandler'] = instructionHandler
-        self.current_instructionHandlers[hash] = insHanOut
-
-        # Store to redis
-
-        self.red.set('instructionHandlerPool:' + hash, json.dumps(insHanOut))
-
-        return
 
     def getInstructionList(self):
         logging.debug(f'Returning instructions for getInstructionList: {self.current_instructions.values()}')
