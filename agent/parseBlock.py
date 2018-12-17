@@ -144,3 +144,6 @@ class parseBlock:
 
     def getBlockHeight(self):
         return self.blockHeight
+
+    def getInstructions(self):
+        return self.instructions

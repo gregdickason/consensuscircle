@@ -31,7 +31,7 @@ class blockState:
         id = newBlock.getBlockHash()
 
         newBlockPipe = self.red.pipeline(transaction=True)
-        newBlockPip.sadd("blocks", id)
+        newBlockPipe.sadd("blocks", id)
         newBlockPipe.hset("state", "latestBlock", id)
         newBlockPipe.hset(id, "previousBlock", newBlock.getPreviousBlock())
         newBlockPipe.hset(newBlock.getPreviousBlock(), "nextBlock", id)
@@ -40,6 +40,8 @@ class blockState:
         newBlockPipe.hset(id, "blockHeight", newBlock.getBlockHeight())
 
         instructions = newBlock.getInstructions()
+        instructionSettings = instructionInfo()
+
         for instruction in instructions:
             args = instruction['instruction']['args']
             keys = instruction['instruction']['keys']
@@ -47,11 +49,11 @@ class blockState:
             newBlockPipe.evalsha(luaHash, len(keys), *(keys+args))
 
         # write out and add filePath
-        filepath = "blocks/" + id + ".json"
-        blockFile = open(filePath, 'rw')
-        blockFile.write(json.dumps(newBlock))
+        filePath = "blocks/" + id + ".json"
+        blockFile = open(filePath, 'w')
+        blockFile.write(json.dumps(vars(newBlock)))
         blockFile.close()
-        newBlockPipe.hset(id, "filePath", filepath)
+        newBlockPipe.hset(id, "filePath", filePath)
 
         newBlockPipe.execute()
 
@@ -93,7 +95,7 @@ class blockState:
 
     def getDetailedBlock(self, id):
         # checking block exists
-        if not self.getBlockExists(id):
+        if not self.blockExists(id):
             return "ERROR"
             # throw an exception
 
@@ -101,9 +103,11 @@ class blockState:
         with open(filePath) as json_data:
             block = json.load(json_data)
 
-        bSettings = blockSettings()
-        if not all(k in block for k in bSettings):
-            return "ERROR: Block file has been corrupted"
+        # add this in once you have moved off dummy settings and finalised
+        # block structure
+        # bSettings = blockSettings()
+        # if not all(k in block for k in bSettings):
+        #     return "ERROR: Block file has been corrupted"
             # throw an exception
 
         return block
@@ -121,7 +125,7 @@ class blockState:
         # currently based on the assumption of an alternate block chain of depth 1
         prevBlock = self.getPreviousBlock(self.latestBlockHash)
         height = 1
-        currCircleDistance = int(self.red.hget(self.latestBlockHash, "circleDistance"))
+        currCircleDistance = int(self.red.hget(self.latestBlockHash, "circleDistance"),16)
         sumCircleDistance = currCircleDistance
 
         while (prevBlock != id):
@@ -149,9 +153,9 @@ class blockState:
 
     def getCircleDistance(self, id=None):
         if id == None:
-            return int(self.red.hget(self.latestBlockHash, "circleDistance"))
+            return int(self.red.hget(self.latestBlockHash, "circleDistance"),16)
         elif self.red.sismember("blocks", id) == 1:
-            return (int(self.red.hget(id, "circleDistance")))
+            return (int(self.red.hget(id, "circleDistance"),16))
         else:
             return "ERROR: invalid ID"
 
@@ -306,7 +310,7 @@ class blockState:
 
     def getPublicKey(self, id):
         # is this an agent or an entity?
-        logging.info(f"blockstate.getPublicKey Called with hash {publicKeyHash}")
+        logging.info(f"blockstate.getPublicKey Called with hash {id}")
         if (self.red.sismember("entities", id) == 1) or (self.red.sismember("agents", id) == 1) or (self.red.sismember("owners", id) == 1):
             return self.red.hget(id, "publicKey")
         else:

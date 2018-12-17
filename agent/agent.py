@@ -169,12 +169,12 @@ class Agent:
 
         # forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
-        if (getNextBlock(newBlock.previousBlock) != None): #there is some kind of fork
-            if (getNextBlock(newBlock.previousBlock) == self.blockState.getBlockHash()):
+        if (self.blockState.getNextBlock(newBlock.previousBlock) != None): #there is some kind of fork
+            if (self.blockState.getNextBlock(newBlock.previousBlock) == self.blockState.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value
                 # for the two competing blocks
-                if (self.blockState.getCircleDistance() < newBlock.circleDistance):
+                if (self.blockState.getCircleDistance() < int(newBlock.circleDistance,16)):
                     agentResponse['message'] = {
                              'chainLength' : self.blockState.getBlockHeight(),
                              'lastBlock': self.blockState.getBlockHash(),
