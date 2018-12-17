@@ -322,11 +322,12 @@ class blockState:
   # currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
   # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
     def nextCircle(self,lastBlockMatrix, excludedAgents):
-        nextcircle, bIndex = [],0
+        nextCircle, bIndex = [],0
         logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}')
         # TODO - efficiency of deepcopy will not scale.  Different approach excluding agents needed.
         # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
         levels = list(self.red.smembers("levels"))
+        logging.debug(f'levels is {levels}')
 
         # self.templevel = copy.deepcopy(self.level)
         # logging.debug(f'templevel is {self.templevel}')
@@ -339,17 +340,19 @@ class blockState:
         #         self.templevel[levelName].remove(i)
 
         # find next agent and delete from level so cant be chosen twice:
-        bIndex = 0
         for level in levels:
-            possibleAgents = list(self.red.smembers("level"))
+            possibleAgents = list(self.red.smembers(level))
+            logging.debug(f'possibleAgents is {possibleAgents}')
             possibleAgents.sort() #taken from the old sorting on initialisation
             while possibleAgents and (bIndex < len(lastBlockMatrix)):
                 nextAgent = self.takeClosest(possibleAgents, lastBlockMatrix[bIndex])
+                logging.debug(f'next agent is: {nextAgent}')
                 possibleAgents.remove(nextAgent)
                 nextCircle.append(nextAgent)
                 bIndex = bIndex + 1
 
-        return nextcircle
+        logging.debug(f'nextCircle is {nextCircle}')
+        return nextCircle
 
 
     # Utility functions we dont need when using a database / dynamoDB etc:

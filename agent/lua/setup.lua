@@ -5,7 +5,7 @@ if redis.call("EXISTS", "levels") == 0 then
   redis.call("SADD", "levels", 'defenders')
   redis.call("SADD", "levels", 'protectors')
   redis.call("SADD", "levels", "contributors")
-  redis.call("SADD", "levels", "member")
+  redis.call("SADD", "levels", "members")
 end
 
 if redis.call("EXISTS", "agents") == 0 then

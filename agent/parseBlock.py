@@ -135,7 +135,13 @@ class parseBlock:
         del self.block
         del self.convergenceHeader
         del self.consensusCircle
-
+        del self.blockSignatures
+        del self.instructionCount
+        del self.instructionsMerkleRoot
+        del self.previousBlock
+        del self.blockHeight
+        del self.randomNumbers
+        del self.randomMatrix
 
         return
 
@@ -143,13 +149,13 @@ class parseBlock:
         return self.blockHash
 
     def getPreviousBlock(self):
-        return self.previousBlock
+        return self.blockHeader['convergenceHeader']['previousBlock']
 
     def getCircleDistance(self):
         return self.circleDistance
 
     def getBlockHeight(self):
-        return self.blockHeight
+        return self.blockHeader['convergenceHeader']['blockHeight']
 
     def getInstructions(self):
         return self.instructions
