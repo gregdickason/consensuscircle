@@ -135,3 +135,12 @@ class parseBlock:
 
     def getBlockHash(self):
         return self.blockHash
+
+    def getPreviousBlock(self):
+        return self.previousBlock
+
+    def getCircleDistance(self):
+        return self.circleDistance
+
+    def getBlockHeight(self):
+        return self.blockHeight
