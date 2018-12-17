@@ -158,23 +158,23 @@ class Agent:
         newBlock = parseBlock(blockID, self.blockState, self.entityInstructions)
 
         # is the block Valid?
-        if newBlock.blockPass == False:
+        if newBlock.getBlockPass == False:
             agentResponse['message'] = {
                      'chainLength' : self.blockState.getBlockHeight(),
                      'lastBlock': self.blockState.getBlockHash(),
-                      'error': newBlock.blockComment
+                      'error': newBlock.getBlockComment
              }
             agentResponse['success'] = False
             return agentResponse
 
         # forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
-        if (self.blockState.getNextBlock(newBlock.previousBlock) != None): #there is some kind of fork
-            if (self.blockState.getNextBlock(newBlock.previousBlock) == self.blockState.getBlockHash()):
+        if (self.blockState.getNextBlock(newBlock.getPreviousBlock) != None): #there is some kind of fork
+            if (self.blockState.getNextBlock(newBlock.getPreviousBlock) == self.blockState.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value
                 # for the two competing blocks
-                if (self.blockState.getCircleDistance() < int(newBlock.circleDistance,16)):
+                if (self.blockState.getCircleDistance() < int(newBlock.getCircleDistance,16)):
                     agentResponse['message'] = {
                              'chainLength' : self.blockState.getBlockHeight(),
                              'lastBlock': self.blockState.getBlockHash(),
@@ -183,12 +183,12 @@ class Agent:
                     agentResponse['success'] = False
                     return agentResponse
                 else:
-                    self.blockState.rollBack(newBlock.previousBlock)
+                    self.blockState.rollBack(newBlock.getPreviousBlock)
             else:
                 #get weighted circle distance and compare. potentially rule out
-                heightDiff = self.blockState.getHeightDiff(newBlock.previous)
-                newBlockWeightedCircleDistance = newBlock.circleDistance + newBlock.circleDistance * (heightDiff - 1)
-                if (self.blockState.getWeightedCircleDistance(newBlock.previous) < newBlockWeightedCircleDistance):
+                heightDiff = self.blockState.getHeightDiff(newBlock.getPreviousBlock)
+                newBlockWeightedCircleDistance = newBlock.getCircleDistance + newBlock.getCircleDistance * (heightDiff - 1)
+                if (self.blockState.getWeightedCircleDistance(newBlock.getPreviousBlock) < newBlockWeightedCircleDistance):
                     agentResponse['message'] = {
                              'chainLength' : self.blockState.getBlockHeight(),
                              'lastBlock': self.blockState.getBlockHash(),
@@ -196,17 +196,17 @@ class Agent:
                      }
                     agentResponse['success'] = False
                 else:
-                    self.blockState.rollBack(newBlock.previousBlock)
+                    self.blockState.rollBack(newBlock.getPreviousBlock)
 
         # Normal processing, new block built on our chain.  READ NOTES
         # execute instructions on the block state and update the block state to the latest
         self.blockState.addNewBlock(newBlock)
 
-        logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.circleDistance}\n')
+        logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance}\n')
 
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
-        logging.debug(f'New block output matrix is {newBlock.outputMatrix}')
-        self.nextCircle = self.blockState.nextCircle(newBlock.outputMatrix, [])  # No excluded agents for now
+        logging.debug(f'New block output matrix is {newBlock.getOutputMatrix}')
+        self.nextCircle = self.blockState.nextCircle(newBlock.getOutputMatrix, [])  # No excluded agents for now
 
         # TODO: check if already in a circle and what this block means - do we stop processing?
 

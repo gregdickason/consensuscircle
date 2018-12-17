@@ -131,7 +131,11 @@ class parseBlock:
 
         self.circleDistance = returnCircleDistance(self.ccKeys, bState.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
 
+        # remove anything that there is duplicates of for printing
         del self.block
+        del self.convergenceHeader
+        del self.consensusCircle
+
 
         return
 
@@ -149,3 +153,12 @@ class parseBlock:
 
     def getInstructions(self):
         return self.instructions
+
+    def getBlockPass(self):
+        return self.blockPass
+
+    def getBlockComment(self):
+        return self.blockComment
+
+    def getOutputMatrix(self):
+        return self.outputMatrix
