@@ -132,3 +132,6 @@ class parseBlock:
         self.circleDistance = returnCircleDistance(self.ccKeys, bState.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
 
         return
+
+    def getBlockHash(self):
+        return self.blockHash

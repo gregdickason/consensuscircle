@@ -26,6 +26,37 @@ class blockState:
 
         # TODO implement the redlock algorithm for locking
 
+    def addNewBlock(self, newBlock):
+        # update redis and run instructions (LUA Script)
+        id = newBlock.getBlockHash()
+
+        newBlockPipe = self.red.pipeline(transaction=True)
+        newBlockPip.sadd("blocks", id)
+        newBlockPipe.hset("state", "latestBlock", id)
+        newBlockPipe.hset(id, "previousBlock", newBlock.getPreviousBlock())
+        newBlockPipe.hset(newBlock.getPreviousBlock(), "nextBlock", id)
+        newBlockPipe.hset(id, "nextBlock", "None")
+        newBlockPipe.hset(id, "circleDistance", newBlock.getCircleDistance())
+        newBlockPipe.hset(id, "blockHeight", newBlock.getBlockHeight())
+
+        instructions = newBlock.getInstructions()
+        for instruction in instructions:
+            args = instruction['instruction']['args']
+            keys = instruction['instruction']['keys']
+            luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
+            newBlockPipe.evalsha(luaHash, len(keys), *(keys+args))
+
+        # write out and add filePath
+        filepath = "blocks/" + id + ".json"
+        blockFile = open(filePath, 'rw')
+        blockFile.write(json.dumps(newBlock))
+        blockFile.close()
+        newBlockPipe.hset(id, "filePath", filepath)
+
+        newBlockPipe.execute()
+
+        return
+
     def executeInstruction(self, hash):
         instruction = json.loads(self.red.get('instructionPool:'+ hash))
 
@@ -87,6 +118,7 @@ class blockState:
         return height
 
     def getWeightedCircleDistance(self, id):
+        # currently based on the assumption of an alternate block chain of depth 1
         prevBlock = self.getPreviousBlock(self.latestBlockHash)
         height = 1
         currCircleDistance = int(self.red.hget(self.latestBlockHash, "circleDistance"))
@@ -98,6 +130,8 @@ class blockState:
             prevBlock = self.getPreviousBlock(prevBlock)
 
         weightedCircleDistance = sumCircleDistance/height
+
+        return weightedCircleDistance
 
     def blockExists(self, id):
         if (self.red.sismember("blocks", id) == 0):

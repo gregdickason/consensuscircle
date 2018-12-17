@@ -118,3 +118,5 @@ if redis.call("EXISTS", "state") == 0 then
   redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "filePath", "blocks/genesisBlock.json")
   redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "circleDistance", 0)
 end
+
+redis.call("SADD", "blocks", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
