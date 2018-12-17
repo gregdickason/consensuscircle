@@ -47,7 +47,6 @@ class parseBlock:
             self.blockPass = False
             self.blockComment = "this block is already on the chain"
 
-
         logging.debug(f'checking previous block {self.previousBlock} exists')
         if not (bState.blockExists(self.previousBlock)):
             self.blockPass = False

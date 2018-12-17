@@ -21,8 +21,7 @@ class blockState:
         self.red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
 
         self.pipe = self.red.pipeline()
-        self.latestBlockHash = self.red.hget("state", "latestBlock")
-        logging.debug(f'latestBlock is {self.latestBlockHash}')
+        logging.debug(f'latestBlock is {self.red.hget("state", "latestBlock")}')
         # self.red.flushdb()
 
         # TODO implement the redlock algorithm for locking
@@ -78,7 +77,7 @@ class blockState:
         return output
 
     def getBlockHash(self):
-        return self.latestBlockHash
+        return self.red.hget("state", "latestBlock")
 
     def rollBack(self, to):
         #roll back the state to the block 'to'
@@ -114,7 +113,7 @@ class blockState:
         return block
 
     def getHeightDiff(self, id):
-        prevBlock = self.getPreviousBlock(self.latestBlockHash)
+        prevBlock = self.getPreviousBlock(self.red.hget("state", "latestBlock"))
         height = 1
         while (prevBlock != id):
             height = height + 1
@@ -124,9 +123,9 @@ class blockState:
 
     def getWeightedCircleDistance(self, id):
         # currently based on the assumption of an alternate block chain of depth 1
-        prevBlock = self.getPreviousBlock(self.latestBlockHash)
+        prevBlock = self.getPreviousBlock(self.red.hget("state", "latestBlock"))
         height = 1
-        currCircleDistance = int(self.red.hget(self.latestBlockHash, "circleDistance"),16)
+        currCircleDistance = int(self.red.hget(self.red.hget("state", "latestBlock"), "circleDistance"),16)
         sumCircleDistance = currCircleDistance
 
         while (prevBlock != id):
@@ -146,7 +145,7 @@ class blockState:
 
     def getBlockHeight(self, id=None):
         if id == None:
-            return int(self.red.hget(self.latestBlockHash, "blockHeight"))
+            return int(self.red.hget(self.red.hget("state", "latestBlock"), "blockHeight"))
         elif self.red.sismember("blocks", id) == 1:
             return (int(self.red.hget(id, "blockHeight")))
         else:
@@ -154,7 +153,7 @@ class blockState:
 
     def getCircleDistance(self, id=None):
         if id == None:
-            return int(self.red.hget(self.latestBlockHash, "circleDistance"),16)
+            return int(self.red.hget(self.red.hget("state", "latestBlock"), "circleDistance"),16)
         elif self.red.sismember("blocks", id) == 1:
             return (int(self.red.hget(id, "circleDistance"),16))
         else:
@@ -162,7 +161,7 @@ class blockState:
 
     def getPreviousBlock(self, id=None):
         if id == None:
-            prevBlock = self.red.hget(self.latestBlockHash, "nextBlock")
+            prevBlock = self.red.hget(self.red.hget("state", "latestBlock"), "nextBlock")
         elif self.red.sismember("blocks", id) == 1:
             prevBlock = self.red.hget(id, "nextBlock")
         else:
@@ -176,7 +175,7 @@ class blockState:
 
     def getNextBlock(self, id=None):
         if id == None:
-            nextBlock = self.red.hget(self.latestBlockHash, "nextBlock")
+            nextBlock = self.red.hget(self.red.hget("state", "latestBlock"), "nextBlock")
         elif self.red.sismember("blocks", id) == 1:
             nextBlock = self.red.hget(id, "nextBlock")
         else:

@@ -170,11 +170,12 @@ class Agent:
         # forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
         if (self.blockState.getNextBlock(newBlock.getPreviousBlock()) != None): #there is some kind of fork
+            logging.debug('A FORK HAS BEEN DISCOVERED!')
             if (self.blockState.getNextBlock(newBlock.getPreviousBlock()) == self.blockState.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value
                 # for the two competing blocks
-                if (self.blockState.getCircleDistance() < int(newBlock.getCircleDistance(),16)):
+                if (self.blockState.getCircleDistance() <= int(newBlock.getCircleDistance(),16)):
                     agentResponse['message'] = {
                              'chainLength' : self.blockState.getBlockHeight(),
                              'lastBlock': self.blockState.getBlockHash(),
@@ -300,10 +301,8 @@ class Agent:
      myMap = {}
      myMap["previousBlock"] = self.blockState.getBlockHash()
      myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
-     myMap["instructionHandlersMerkleRoot"] = returnMerkleRoot(self.blockState.current_instructionHandlers)  # TODO - make sure instructionHandlers managed same as instructions in Redis.  Fix this
-     myMap["instructionCount"] = len(self.blockState.current_instructions)
+     myMap["instructionCount"] = len(self.blockState.getInstructionList())
      # TODO update instructionHandlers
-     myMap["instructionHandlerCount"] = len(self.blockState.current_instructionHandlers)
      # TODO fix as chain 0 isnt highest block?  Append issue?
      myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
      myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
@@ -316,8 +315,6 @@ class Agent:
      candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
      candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
      candidate["instructions"] = list(self.blockState.getInstructionList())
-     candidate["instructionHandlerHashes"] = list(self.blockState.getInstructionHashes())
-     candidate["instructionHandlers"] = list(self.blockState.getInstructionHandlerList())
 
      # we send randomMatrix and seed too so this can be reused
      mySettings = {}
