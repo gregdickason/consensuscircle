@@ -23,6 +23,7 @@ class blockState:
         self.pipe = self.red.pipeline()
         self.latestBlockHash = self.red.hget("state", "latestBlock")
         logging.debug(f'latestBlock is {self.latestBlockHash}')
+        # self.red.flushdb()
 
         # TODO implement the redlock algorithm for locking
 
@@ -323,27 +324,30 @@ class blockState:
     def nextCircle(self,lastBlockMatrix, excludedAgents):
         nextcircle, bIndex = [],0
         logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}')
-        # TODO - efficiency of deepcopy will not scale.  Different approach excluding agents needed.  Code this
-        self.templevel = copy.deepcopy(self.level)
-        logging.debug(f'templevel is {self.templevel}')
+        # TODO - efficiency of deepcopy will not scale.  Different approach excluding agents needed.
+        # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
+        levels = list(self.red.smembers("levels"))
+
+        # self.templevel = copy.deepcopy(self.level)
+        # logging.debug(f'templevel is {self.templevel}')
 
         # remove all the excludedAgents per level:
-        for level in excludedAgents:
-            levelName = level['level']
-            for i in level[levelName]:
-                logging.debug(f'removing {i}')
-                self.templevel[levelName].remove(i)
+        # for agent in excludedAgents:
+        #     levelName = agent['level']
+        #     for i in level[levelName]:
+        #         logging.debug(f'removing {i}')
+        #         self.templevel[levelName].remove(i)
 
         # find next agent and delete from level so cant be chosen twice:
-        for i in self.agentLevels.keys():
-            j = 0
-            while j < self.agentLevels[i]:
-                # note deletes the templevel agent in the takeClosest method
-                nextAgent = self.takeClosest(self.templevel[i],lastBlockMatrix[bIndex])
-                nextcircle.append(nextAgent)
-                self.templevel[i].remove(nextAgent)
-                bIndex += 1
-                j += 1
+        bIndex = 0
+        for level in levels:
+            possibleAgents = list(self.red.smembers("level"))
+            possibleAgents.sort() #taken from the old sorting on initialisation
+            while possibleAgents and (bIndex < len(lastBlockMatrix)):
+                nextAgent = self.takeClosest(possibleAgents, lastBlockMatrix[bIndex])
+                possibleAgents.remove(nextAgent)
+                nextCircle.append(nextAgent)
+                bIndex = bIndex + 1
 
         return nextcircle
 
