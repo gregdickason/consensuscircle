@@ -75,8 +75,25 @@ def executeInstruction(hash):
     return output
 
 def rollBack(to):
+    # GREG TO DO
     #roll back the state to the block 'to'
     return "TODO"
+
+def tryInstruction(hash):
+    # GREG TO DO
+    # instruction = getInstruction(hash)
+    #
+    # args = instruction['instruction']['args']
+    # keys = instruction['instruction']['keys']
+    #
+    # instructionSettings = instructionInfo()
+    # luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
+    # if luaHash == None:
+    #     return 'ERROR: no instruction matches the given instructionName'
+    #
+    # output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
+
+    return True
 
   # Manage the instruction pool
 def addInstruction(instruction):

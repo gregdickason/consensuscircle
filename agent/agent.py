@@ -30,39 +30,41 @@ class Agent:
         #self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
         settings = AgentSettings()
 
+        self.maxAgentsInCircle = settings.maxAgentsInCircle  # set to 1 below number as we are a member of the circle when this is tested
         self.entityInstructions = settings.entityInstructions
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.
-        self.trackedCircleAgents = {}  # dictionary(map) that this agent uses to converge: checking the outputs from other agents to allow gossip checks and for the convergence protocol to determine the next circle
-        self.nextCircle , self.randomMatrix, self.randomMatrixHash = [], [], []
         self.seed = 0
 
         # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
-        self.inCircle = False  # we are not in a circle by default
 
-        # TODO: Remove, we track based on the config in blockState
-        self.maxAgentsInCircle = settings.maxAgentsInCircle  # set to 1 below number as we are a member of the circle when this is tested
-
+        # TODO make this a claim id process
         # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain.
-        self.randomMatrix = [g for g in getRandomNumbers(2,5)]
-        self.seed = getSeed(2)
-        self.randomMatrixHash = [g for g in hashvector(self.randomMatrix, self.seed)]
-        # only logged in debug mode to avoid outside chance of leaking secrets
-        logging.debug(f'Agents random matrix, seed and hash is {self.randomMatrix}, {self.seed}, {self.randomMatrixHash}')
+        self.agentID = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"
+        redisUtilities.setMyID(self.agentID)
+        self.agentPrivateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
 
-        # TODO put these as loaded from blockstate
-        # We have default settings we load on startup that get overridden by the appropriate setup call if signed correctly (
-        self.level = settings.level   # TODO this should be confirmed by the agent from the owners level (not independent).  In the blockState object
-        logging.debug(f'setting agent identifier to {settings.agentIdentifier}')
-        self.agent_identifier = settings.agentIdentifier
-        self.owner = settings.ownerID  # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-        self.signedIdentifier = settings.signedIdentifier
-        self.agentPrivateKey = settings.agentPrivateKey
+        # pull in from redis the agent settings
+        self.ownerID = redisUtilities.getOwnerID(self.agentID)
+        self.signedIdentifier = redisUtilities.getSignedIdentifier(self.agentID)
+        self.agentPublicKey = redisUtilities.getPublicKey(self.agentID)
+        self.level = redisUtilities.getLevel(self.agentID)
+
+        # # create additional variables
+        # self.randomMatrix = [g for g in getRandomNumbers(2,5)]
+        # self.seed = getSeed(2)
+        # self.randomMatrixHash = [g for g in hashvector(self.randomMatrix, self.seed)]
+        # # only logged in debug mode to avoid outside chance of leaking secrets
+        # logging.debug(f'Agents random matrix, seed and hash is {self.randomMatrix}, {self.seed}, {self.randomMatrixHash}')
+        #
+        # redisUtilities.setRandomMatrix(self.agentID, self.randomMatrix)
+        # redisUtilities.setSeed(self.agentID, self.seed)
+        # redisUtilities.setRandomMatrixHash(self.agentID, self.randomMatrixHash)
 
     def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
         agentResponse = {}
         self.level = ownerLevel # TODO should come from the agents owner's level
-        self.agent_identifier = agentIdentifier
-        self.owner = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
+        self.agentID = agentIdentifier
+        self.ownerID = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
         self.signedIdentifier = signId
         self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
 
@@ -81,7 +83,7 @@ class Agent:
         }
 
     def getOwner(self):
-        return self.owner
+        return self.ownerID
 
     def getLevel(self):
         return self.level
@@ -96,8 +98,8 @@ class Agent:
     def getConfig(self):
         agentConfig = {}
         agentConfig['level'] = self.level
-        agentConfig['agentIdentifier'] = self.agent_identifier
-        agentConfig['owner'] = self.owner
+        agentConfig['agentIdentifier'] = self.agentID
+        agentConfig['owner'] = self.ownerID
         agentConfig['signedIdentifier'] = self.signedIdentifier
         agentConfig['agentPrivateKey'] = self.agentPrivateKey
 
@@ -292,11 +294,11 @@ class Agent:
      # myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
      # myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
      # myGossip = {}
-     # myGossip[self.agent_identifier] = myMap
+     # myGossip[self.agentID] = myMap
      # myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
      # myGossip["trusted"] = 1   # I trust myself
      # candidate["gossip"].append(myGossip)
-     # candidate["broadcaster"] = self.agent_identifier
+     # candidate["broadcaster"] = self.agentID
      # candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
      # candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
      # candidate["instructions"] = list(self.blockState.getInstructionList())

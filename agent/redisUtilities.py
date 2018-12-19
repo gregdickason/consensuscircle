@@ -60,9 +60,8 @@ def getInstructionHashes():
     logging.debug(f'list of instructions returned is {insList}')
     return insList
 
-def getInstructionList():
-    logging.debug(f'Returning instructions for getInstructionList: {current_instructions.values()}')
-    return current_instructions.values()
+def getInstruction(hash):
+    return json.loads(red.hget("instructionPool:" + hash))
 
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')
@@ -173,3 +172,71 @@ def getNextBlock(id=None):
 
 def getGenesisHash():
     return red.hget("state", "genesisBlock")
+
+# ADD ERROR MANAGEMENT
+def setMyID(id):
+    red.hset("state", "myID", id)
+    return
+
+def getMyID():
+    return red.hget("state", "myID")
+
+def getOwnerID(id=None):
+    if id == None:
+        return red.hget(red.hget("state", "myID"), "ownerID")
+    elif red.sismember("agents", id) == 1:
+        return red.hget(id, "ownerID")
+    else:
+        return "ERROR: invalid ID"
+
+def getSignedIdentifier(id=None):
+    if id == None:
+        return red.hget(red.hget("state", "myID"), "signedID")
+    elif red.sismember("agents", id) == 1:
+        return red.hget(id, "signedID")
+    else:
+        return "ERROR: invalid ID"
+
+def getLevel(id=None):
+    if id == None:
+        return red.hget(red.hget("state", "myID"), "level")
+    elif red.sismember("agents", id) == 1:
+        return red.hget(id, "level")
+    else:
+        return "ERROR: invalid ID"
+
+# def setRandomMatrix(id, randomMatrix):
+#     red.hset(id, "randomMatrix", json.dumps(randomMatrix))
+#     return
+#
+# def getRandomMatrix(id=None):
+#     if id == None:
+#         return red.hget(red.hget("state", "myID"), "randomMatrix")
+#     elif red.sismember("agents", id) == 1:
+#         return red.hget(id, "randomMatrix")
+#     else:
+#         return "ERROR: invalid ID"
+#
+# def setSeed(id, seed):
+#     red.hset(id, "randomMatrix", json.dumps(seed))
+#     return
+#
+# def getSeed(id=None):
+#     if id == None:
+#         return red.hget(red.hget("state", "myID"), "seed")
+#     elif red.sismember("agents", id) == 1:
+#         return red.hget(id, "seed")
+#     else:
+#         return "ERROR: invalid ID"
+#
+# def setRandomMatrixHash(id, hash):
+#     red.hset(id, "randomMatrixHash", json.dumps(hash))
+#     return
+#
+# def getRandomMatrix(id=None):
+#     if id == None:
+#         return red.hget(red.hget("state", "myID"), "randomMatrixHash")
+#     elif red.sismember("agents", id) == 1:
+#         return red.hget(id, "randomMatrixHash")
+#     else:
+#         return "ERROR: invalid ID"
