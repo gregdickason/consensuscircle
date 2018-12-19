@@ -209,7 +209,7 @@ class Agent:
         logging.debug(f'New block output matrix is {newBlock.getOutputMatrix()}')
 
         # move to RQ Worker
-        # blockUtilities.generateNextCircle()
+        blockUtilities.generateNextCircle()
 
         # logging.info(f'\nNext circle is {self.nextCircle}\n')
 
@@ -277,41 +277,3 @@ class Agent:
 
     def getGenesisHash(self):
         return redisUtilities.getGenesisHash()
-
-# TODO Put this in a separate module with class that loads up from persistent storage?
-    def postCandidateStructure(self):
-     # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process
-     candidate = {}
-     candidate["gossip"] = []
-
-     # TODO Use an orderedMap here for consistent Hash
-     # myMap = {}
-     # myMap["previousBlock"] = self.blockState.getBlockHash()
-     # myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
-     # myMap["instructionCount"] = len(self.blockState.getInstructionList())
-     # # TODO update instructionHandlers
-     # # TODO fix as chain 0 isnt highest block?  Append issue?
-     # myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
-     # myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
-     # myGossip = {}
-     # myGossip[self.agentID] = myMap
-     # myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
-     # myGossip["trusted"] = 1   # I trust myself
-     # candidate["gossip"].append(myGossip)
-     # candidate["broadcaster"] = self.agentID
-     # candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
-     # candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
-     # candidate["instructions"] = list(self.blockState.getInstructionList())
-
-     # we send randomMatrix and seed too so this can be reused
-     mySettings = {}
-     mySettings["randomMatrix"] = list(self.randomMatrix)
-     mySettings["seed"] = self.seed
-     candidate["agentSettings"] = mySettings
-
-     # post structure - do this through blockState
-     blockUtilities.postJob(candidate)
-     logging.debug(f'candidate = {candidate}')
-
-
-     return

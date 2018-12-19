@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import redis
 from rq import Queue
-from convergenceProcessor import generateNextCircle
+import convergenceProcessor
 from globalsettings import instructionInfo, blockSettings
 
 import logging.config
@@ -141,11 +141,8 @@ def addInstruction(instruction):
 
 # postJob is internal and used to communicate to queue.  In the local implementation this is to a redis queue (pip install rq)
 # Note if using redis on Windows need to run linux subsystem (https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-def postJob(data):
-
+def postJob():
     # you dont need to make a new redis connection you can use the existing one that is defined above (line 26)
     q = Queue('5000', connection=red)  # send to default queue for now
-    jsondata = json.dumps(data)
-    job = q.enqueue(generateNextCircle, jsondata)
-    logging.debug(f'Sent {jsondata} - on default queue')
+    job = q.enqueue(convergenceProcessor.generateNextCircle)
     return

@@ -5,7 +5,6 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import redis
 from rq import Queue
-from convergenceProcessor import generateNextCircle
 from globalsettings import instructionInfo, blockSettings
 
 import logging.config

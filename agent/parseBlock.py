@@ -30,7 +30,7 @@ class parseBlock:
         self.instructionsMerkleRoot = self.convergenceHeader['instructionsMerkleRoot']
         self.previousBlock = self.convergenceHeader['previousBlock']
         self.blockHeight = self.convergenceHeader['blockHeight']
-        self.randomNumbers = self.convergenceHeader['randomNumbers']  # Need to parse by circle for convergence matrix
+        self.randomNumbers = self.blockHeader['randomNumbers']  # Need to parse by circle for convergence matrix
         self.instructions = self.block['instructions']
 
         self.randomMatrix = []
