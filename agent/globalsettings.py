@@ -38,7 +38,7 @@ class instructionInfo:
         self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
         self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
 
-        self.instructionSet['resetdb'] = "162de1456eb95aa94407ac0b66a8f9eb471a724e"
+        self.instructionSet['resetdb'] = "62273a6001074b90cfeda8b20edc24d15393cb9d"
         self.instructionKeys['resetdb'] = []
         self.instructionArgs['resetdb'] = []
 

@@ -15,7 +15,8 @@ import copy
 
 # classes managing the aspects of the blockchain an agent needs in this simulation: the lastBlock, the agents they are following for updates.
 from parseBlock import parseBlock
-from blockState import blockState
+import blockUtilities
+import redisUtilities
 from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
 
@@ -57,9 +58,6 @@ class Agent:
         self.signedIdentifier = settings.signedIdentifier
         self.agentPrivateKey = settings.agentPrivateKey
 
-        logging.debug('Getting blockchain State')
-        self.blockState = blockState()
-
     def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
         agentResponse = {}
         self.level = ownerLevel # TODO should come from the agents owner's level
@@ -77,9 +75,9 @@ class Agent:
 
     def getLastBlock(self):
         return {
-            'lastBlock': self.blockState.getBlockHash(),
-            'blockHeight': self.blockState.getBlockHeight(),
-            'circleDistance': self.blockState.getCircleDistance()
+            'lastBlock': redisUtilities.getBlockHash(),
+            'blockHeight': redisUtilities.getBlockHeight(),
+            'circleDistance': redisUtilities.getCircleDistance()
         }
 
     def getOwner(self):
@@ -122,7 +120,7 @@ class Agent:
             raise ValueError('Invalid URL')
 
     def getEntityList(self):
-        return self.blockState.getEntityList()
+        return redisUtilities.getEntityList()
 
     # returns the list of attributes the entity has.  Hardcoded to test
     def getAttributes(self):
@@ -136,7 +134,7 @@ class Agent:
         # TODO - get this from the blockstate
 
         # Need to get the merkle root from the instruction pool. - I
-        instruction_hashes = self.blockState.getInstructionHashes()
+        instruction_hashes = redisUtilities.getInstructionHashes()
         hashMerkle = returnMerkleRoot(instruction_hashes)
         hashSigned = signMessage(hashMerkle,self.agentPrivateKey)
         agentResponse['message'] = {
@@ -155,13 +153,13 @@ class Agent:
 
         logging.debug("new block published, retrieve validate and process it")
         # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
-        newBlock = parseBlock(blockID, self.blockState, self.entityInstructions)
+        newBlock = parseBlock(blockID, self.entityInstructions)
 
         # is the block Valid?
         if newBlock.getBlockPass() == False:
             agentResponse['message'] = {
-                     'chainLength' : self.blockState.getBlockHeight(),
-                     'lastBlock': self.blockState.getBlockHash(),
+                     'chainLength' : redisUtilities.getBlockHeight(),
+                     'lastBlock': redisUtilities.getBlockHash(),
                       'error': newBlock.getBlockComment()
              }
             agentResponse['success'] = False
@@ -169,62 +167,49 @@ class Agent:
 
         # forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
-        if (self.blockState.getNextBlock(newBlock.getPreviousBlock()) != None): #there is some kind of fork
+        if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) != None): #there is some kind of fork
             logging.debug('A FORK HAS BEEN DISCOVERED!')
-            if (self.blockState.getNextBlock(newBlock.getPreviousBlock()) == self.blockState.getBlockHash()):
+            if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) == redisUtilities.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value
                 # for the two competing blocks
-                if (self.blockState.getCircleDistance() <= int(newBlock.getCircleDistance(),16)):
+                if (redisUtilities.getCircleDistance() <= int(newBlock.getCircleDistance(),16)):
                     agentResponse['message'] = {
-                             'chainLength' : self.blockState.getBlockHeight(),
-                             'lastBlock': self.blockState.getBlockHash(),
+                             'chainLength' : redisUtilities.getBlockHeight(),
+                             'lastBlock': redisUtilities.getBlockHash(),
                               'error': 'newBlock was a fork on current block and current block had a smaller circle distance'
                      }
                     agentResponse['success'] = False
                     return agentResponse
                 else:
-                    self.blockState.rollBack(newBlock.getPreviousBlock())
+                    blockUtilities.rollBack(newBlock.getPreviousBlock())
             else:
                 #get weighted circle distance and compare. potentially rule out
-                heightDiff = self.blockState.getHeightDiff(newBlock.getPreviousBlock)
+                heightDiff = redisUtilities.getHeightDiff(newBlock.getPreviousBlock)
                 newBlockWeightedCircleDistance = newBlock.getCircleDistance() + newBlock.getCircleDistance() * (heightDiff - 1)
-                if (self.blockState.getWeightedCircleDistance(newBlock.getPreviousBlock()) < newBlockWeightedCircleDistance):
+                if (redisUtilities.getWeightedCircleDistance(newBlock.getPreviousBlock()) < newBlockWeightedCircleDistance):
                     agentResponse['message'] = {
-                             'chainLength' : self.blockState.getBlockHeight(),
-                             'lastBlock': self.blockState.getBlockHash(),
+                             'chainLength' : redisUtilities.getBlockHeight(),
+                             'lastBlock': redisUtilities.getBlockHash(),
                               'error': 'newBlock was a fork on current block and current chain had a smaller weighted circle distance'
                      }
                     agentResponse['success'] = False
                 else:
-                    self.blockState.rollBack(newBlock.getPreviousBlock())
+                    blockUtilities.rollBack(newBlock.getPreviousBlock())
 
         # Normal processing, new block built on our chain.  READ NOTES
         # execute instructions on the block state and update the block state to the latest
-        self.blockState.addNewBlock(newBlock)
+        blockUtilities.addNewBlock(newBlock)
 
         logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance()}\n')
 
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
         logging.debug(f'New block output matrix is {newBlock.getOutputMatrix()}')
-        self.nextCircle = self.blockState.nextCircle(newBlock.getOutputMatrix(), [])  # No excluded agents for now
 
-        # TODO: check if already in a circle and what this block means - do we stop processing?
+        # move to RQ Worker
+        # blockUtilities.generateNextCircle()
 
-        # Am I in the circle?
-        # TODO - check if in potentially a secondary circle.  If so start the convergence using this one in case primary fails
-        if self.agent_identifier in self.nextCircle:
-          self.inCircle = True
-
-          # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
-          self.randomMatrix = [g for g in getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
-          self.seed = getSeed(32)
-          logging.info(f'\n** Agent is in next Circle**\n')
-          # TODO setup candidate data structure and send to convergenceProcessor
-          self.postCandidateStructure()
-
-
-        logging.info(f'\nNext circle is {self.nextCircle}\n')
+        # logging.info(f'\nNext circle is {self.nextCircle}\n')
 
         agentResponse['message'] = {
             'chainLength' : newBlock.getBlockHeight(),
@@ -237,14 +222,14 @@ class Agent:
     def executeInstruction(self, instruction):
         #call blockstate to execute instruction
 
-        return self.blockState.executeInstruction(instruction)
+        return blockUtilities.executeInstruction(instruction)
 
 
     def processInstruction(self, instruction):
         agentResponse = {}
 
         # check hash
-        validInstruction = validateInstruction(instruction, self.blockState)
+        validInstruction = validateInstruction(instruction)
         if not validInstruction['return']:
             logging.debug(f'Instruction not valid: {instruction}')
             agentResponse['success'] = False
@@ -252,14 +237,14 @@ class Agent:
             return agentResponse
 
         #check if the instruction is already in the pool
-        if self.blockState.hasInstruction(instruction['instructionHash']):
+        if redisUtilities.hasInstruction(instruction['instructionHash']):
             logging.info(f'Received instruction already have')
             agentResponse['success'] = False
             agentResponse['message'] = 'Instruction already in pool'
             return agentResponse
 
         # if not already in the pool add to the block state
-        self.blockState.addInstruction(instruction)
+        blockUtilities.addInstruction(instruction)
 
         agentResponse['message'] = "Instruction added"
         agentResponse['success'] = True
@@ -271,7 +256,7 @@ class Agent:
         # TODO Error handling or return 'Entity not found JSON object'
         agentResponse = {}
         agentResponse['success'] = True
-        agentResponse['message'] = self.blockState.getEntity(entity)
+        agentResponse['message'] = redisUtilities.getEntity(entity)
         if agentResponse['message'] == '':
           agentResponse['success'] = False
 
@@ -282,14 +267,14 @@ class Agent:
         # if the attribute does not exist returns null
         agentResponse = {}
         agentResponse['success'] = True
-        agentResponse['message'] = self.blockState.getAttribute(entity, attribute)
+        agentResponse['message'] = redisUtilities.getAttribute(entity, attribute)
         if agentResponse['message'] == '':
           agentResponse['success'] = False
 
         return agentResponse
 
     def getGenesisHash(self):
-        return self.blockState.getGenesisHash()
+        return redisUtilities.getGenesisHash()
 
 # TODO Put this in a separate module with class that loads up from persistent storage?
     def postCandidateStructure(self):
@@ -298,23 +283,23 @@ class Agent:
      candidate["gossip"] = []
 
      # TODO Use an orderedMap here for consistent Hash
-     myMap = {}
-     myMap["previousBlock"] = self.blockState.getBlockHash()
-     myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
-     myMap["instructionCount"] = len(self.blockState.getInstructionList())
-     # TODO update instructionHandlers
-     # TODO fix as chain 0 isnt highest block?  Append issue?
-     myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
-     myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
-     myGossip = {}
-     myGossip[self.agent_identifier] = myMap
-     myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
-     myGossip["trusted"] = 1   # I trust myself
-     candidate["gossip"].append(myGossip)
-     candidate["broadcaster"] = self.agent_identifier
-     candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
-     candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
-     candidate["instructions"] = list(self.blockState.getInstructionList())
+     # myMap = {}
+     # myMap["previousBlock"] = self.blockState.getBlockHash()
+     # myMap["instructionsMerkleRoot"] = returnMerkleRoot(self.blockState.getInstructionHashes())
+     # myMap["instructionCount"] = len(self.blockState.getInstructionList())
+     # # TODO update instructionHandlers
+     # # TODO fix as chain 0 isnt highest block?  Append issue?
+     # myMap["blockHeight"] = (self.blockState.getBlockHeight() + 1) # 1 higher for next block
+     # myMap["randomNumberHash"] = [g for g in hashvector(self.randomMatrix, self.seed)]
+     # myGossip = {}
+     # myGossip[self.agent_identifier] = myMap
+     # myGossip["sign"] = signMessage(myMap, self.agentPrivateKey)
+     # myGossip["trusted"] = 1   # I trust myself
+     # candidate["gossip"].append(myGossip)
+     # candidate["broadcaster"] = self.agent_identifier
+     # candidate["signedGossip"] = signMessage(myGossip, self.agentPrivateKey)
+     # candidate["instructionHashes"] = list(self.blockState.getInstructionHashes())
+     # candidate["instructions"] = list(self.blockState.getInstructionList())
 
      # we send randomMatrix and seed too so this can be reused
      mySettings = {}
@@ -323,7 +308,7 @@ class Agent:
      candidate["agentSettings"] = mySettings
 
      # post structure - do this through blockState
-     self.blockState.postJob(candidate)
+     blockUtilities.postJob(candidate)
      logging.debug(f'candidate = {candidate}')
 
 

@@ -10,8 +10,25 @@ from rq import Queue
 
 # Test Initial implementation creates next block without convergence - signs off from all agents in circle
 
-# Load the agent config.  Do we just have an agent entity?
-def blockConvergeAndPublish(candidateData):
+def generateNextCircle():
+
+    # should always be the latest block that you are generating the next circle from
+    self.nextCircle = redisUtilities.nextCircle(redisUtilities.getOutputMatrix(), [])  # No excluded agents for now
+
+    # Am I in the circle?
+    # TODO - check if in potentially a secondary circle.  If so start the convergence using this one in case primary fails
+    if self.agent_identifier in self.nextCircle:
+      self.inCircle = True
+
+      # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
+      self.randomMatrix = [g for g in getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
+      self.seed = getSeed(32)
+      logging.info(f'\n** Agent is in next Circle**\n')
+      # TODO setup candidate data structure and send to convergenceProcessor
+      self.postCandidateStructure()
+
+
+
     # CandidateStructure contains the candidate from our Agent or from ourselves based on previous call
 
     # For each input from other nodes in circle:
@@ -73,3 +90,53 @@ def blockConvergeAndPublish(candidateData):
     # Post updated block to other
 
     return
+
+  # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
+  # currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
+  # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
+    def nextCircle(self,lastBlockMatrix, excludedAgents):
+        nextCircle, bIndex = [],0
+        logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}')
+        # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
+        levels = list(self.red.smembers("levels"))
+        logging.debug(f'levels is {levels}')
+
+        # find next agent and delete from level so cant be chosen twice:
+        for level in levels:
+            possibleAgents = list(self.red.smembers(level))
+            logging.debug(f'possibleAgents is {possibleAgents}')
+            # may want to optimise this sort
+            possibleAgents.sort() #taken from the old sorting on initialisation
+            while possibleAgents and (bIndex < len(lastBlockMatrix)):
+                nextAgent = self.takeClosest(possibleAgents, lastBlockMatrix[bIndex])
+                logging.debug(f'next agent is: {nextAgent}')
+                possibleAgents.remove(nextAgent)
+                nextCircle.append(nextAgent)
+                bIndex = bIndex + 1
+
+        logging.debug(f'nextCircle is {nextCircle}')
+        return nextCircle
+
+
+    # Utility functions we dont need when using a database / dynamoDB etc:
+    # from https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value/12141511#12141511
+    def takeClosest(self,myList, myNumber):
+        """
+        Assumes myList is sorted. Returns closest value to myNumber.
+        If two numbers are equally close, return the smallest number.
+        Ignore anything in the excludedList
+        """
+
+        logging.debug(f'takeClosest: {myList} and {myNumber}')
+        # for efficiency could remove before returning (rather than search through twice on the return call)
+        pos = bisect_left(myList, myNumber)
+        if pos == 0:
+            return myList[0]
+        if pos == len(myList):
+            return myList[-1]
+        before = myList[pos - 1]
+        after = myList[pos]
+        if int(after,16) - int(myNumber,16) < int(myNumber,16) - int(before,16):
+            return after
+        else:
+            return before

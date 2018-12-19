@@ -4,6 +4,7 @@ import logging.config
 #utility functions
 from agentUtilities import converge, hashvector, getHashofInput, getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, verifyMessage, returnMerkleRoot, returnCircleDistance
 from processInstruction import validateInstruction
+import redisUtilities
 
 # Parses the last block.  Does not check the chain but will return with either a fully parsed block or with blockPass set to False if the block is not well formed or hashes do not align
 # Order of execution:
@@ -12,7 +13,7 @@ from processInstruction import validateInstruction
 # - Confirm that each member of the consensus circle has signed off the convergenceHeader (signed off merkle roots and random numbers).  This shows convergence
 # - Confirm Instructions and InstructionHandlers: number, merkle roots
 class parseBlock:
-    def __init__(self,blockID, bState, entityInstructions):
+    def __init__(self,blockID, entityInstructions):
         with open("blocks/" + blockID) as json_data:
             # TODO put in exception handling and error checking if file is
             # malformed and also that this block is valid in the context of previous blocks
@@ -43,20 +44,20 @@ class parseBlock:
         self.blockComment = 'Block Conforms'
 
         logging.debug(f'checking block not on chain {self.blockHash}')
-        if (bState.blockExists(self.blockHash)):
+        if (redisUtilities.blockExists(self.blockHash)):
             self.blockPass = False
             self.blockComment = "this block is already on the chain"
 
         logging.debug(f'checking previous block {self.previousBlock} exists')
-        if not (bState.blockExists(self.previousBlock)):
+        if not (redisUtilities.blockExists(self.previousBlock)):
             self.blockPass = False
             self.blockComment = "previous block is not known to this agent"
 
         logging.debug(f'checking the block height is correct relative to the identified previous block')
-        if (self.blockHeight != (bState.getBlockHeight(self.previousBlock)+1)):
+        if (self.blockHeight != (redisUtilities.getBlockHeight(self.previousBlock)+1)):
             self.blockPass = False
             self.blockComment = "block height incorrect"
-            logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {bState.getBlockHeight()+1}')
+            logging.info(f'block height is not valid. was: {self.blockHeight}, should be: {redisUtilities.getBlockHeight()+1}')
 
         logging.debug(f'random Numbers are {self.randomNumbers}')
         for e in self.randomNumbers:
@@ -83,7 +84,7 @@ class parseBlock:
         # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed transaction rather than reprocess?
         # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
         for e in self.instructions:
-          validInstruction = validateInstruction(e,bState)
+          validInstruction = validateInstruction(e)
           if not validInstruction['return']:
             self.blockPass = False
             self.blockComment = validInstruction['message']
@@ -124,7 +125,7 @@ class parseBlock:
         hashConvergenceHeader = getHashofInput(self.convergenceHeader)
         logging.info(f'\nhash of convergenceHeader is {hashConvergenceHeader}\n')
         while i < clen:
-          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], bState.getPublicKey(self.ccKeys[i])) != True:
+          if verifyMessage(hashConvergenceHeader,self.blockSigs[i], redisUtilities.getPublicKey(self.ccKeys[i])) != True:
             self.blockPass = False
             self.blockComment = f'signature for Circle at {i} is not valid'
             return
@@ -134,7 +135,7 @@ class parseBlock:
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]
         logging.info(f'Converged Matrix is {self.outputMatrix}')
 
-        self.circleDistance = returnCircleDistance(self.ccKeys, bState.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
+        self.circleDistance = returnCircleDistance(self.ccKeys, redisUtilities.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
 
         # remove anything that there is duplicates of for printing
         del self.block
@@ -149,6 +150,9 @@ class parseBlock:
         del self.randomMatrix
 
         return
+
+    def getOutputMatrix(self):
+        return self.outputMatrix
 
     def getBlockHash(self):
         return self.blockHash

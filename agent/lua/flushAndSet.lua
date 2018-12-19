@@ -127,3 +127,4 @@ redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda00
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "nextBlock", "None")
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "filePath", "blocks/genesisBlock.json")
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "circleDistance", 0)
+redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "outputMatrix" , '["9d9345cf13413cd0ff0e6af4f33cce4f0555fb3a50364b64265b05ce134af28d","ab054baffa288cf1f3b56c18bf2c34c44a2663f4b8b99282e1e48f85daf1fa57","9b07655fa560fc2f2e1a072d877859bc70b801713f71d3d914f265423ed1bf54","caa0b0dc94f405d2d1112d0bde4b33da8fbc9b7902dd7088b0b76c14afb6e359", "e4548ec967f73c6ddaaf19b39c0ad8aab58ef8d7f310d5e36a653f9634f166d8"]')
