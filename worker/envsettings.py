@@ -1,3 +1,3 @@
 import os
 
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/1')
+REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/1')

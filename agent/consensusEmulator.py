@@ -27,8 +27,8 @@ def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
            "instructionsMerkleRoot" : proposedInstructions["instructionsMerkleRoot"],
            "instructionCount" : proposedInstructions["instructionCount"],
            "blockHeight" : proposedInstructions["blockHeight"],
+           "randomNumbers" : getRandomNumbers(circle)
     }
-    response["randomNumbers"] = getRandomNumbers(circle)
     response["signatures"] = getSignatures(reponse["header"], circle)
     response["agentInfo"] = getAgentInfo(circle)
     response["broadcaster"] = proposedInstructions["broadcaster"]

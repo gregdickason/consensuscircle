@@ -216,7 +216,9 @@ class Agent:
         agentResponse['message'] = {
             'chainLength' : newBlock.getBlockHeight(),
             'lastBlock': newBlock.getBlockHash(),
-            'circleDistance': newBlock.getBlockComment()
+            "circleDistance" : newBlock.getCircleDistance(),
+            'message': newBlock.getBlockComment(),
+            "error": ("No error checking candidate block" + str(list(redisUtilities.getCandidateBlocks())))
         }
         return agentResponse
 
