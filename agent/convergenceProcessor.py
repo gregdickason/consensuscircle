@@ -5,6 +5,7 @@ import redisUtilities
 import blockUtilities
 import agentUtilities
 import logging.config
+from bisect import bisect_left
 
 import redis
 from rq import Queue
@@ -21,47 +22,126 @@ red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_
 # The agent does a full convergence as a single data packet with gossip protocol (see data structure as the reference)
 
 # Test Initial implementation creates next block without convergence - signs off from all agents in circle
+
+def generateNextCircle():
+
+    print("generating the next circle")
+
+    # should always be the latest block that you are generating the next circle from
+    circle = nextCircle(redisUtilities.getOutputMatrix())  # No excluded agents for now
+
+    # Am I in the circle?
+    # TODO - check if in potentially a secondary circle.  If so start the convergence using this one in case primary fails
+    if not (redisUtilities.getMyID() in circle):
+        # what should happen if not in next circle?
+        # nothing - correct?
+        logging.info("I AM NOT IN THE NEXT CIRCLE")
+
+        return
+
+    # gather and check instructions
+    possibleInstructions = redisUtilities.getInstructionHashes()
+    if not possibleInstructions
+        logging.info("No new instructions to place on the block")
+        return
+        
+    validInstructions = []
+    for instructionHash in possibleInstructions:
+        if blockUtilities.tryInstruction(instructionHash):
+            validInstructions.append(redisUtilities.getInstruction(instructionHash))
+
+
+    proposedBlock = {
+        "previousBlock" : redisUtilities.getBlockHash(),
+        "instructionsMerkleRoot" : agentUtilities.returnMerkleRoot(validInstructions),
+        "instructionCount" : len(validInstructions),
+        "blockHeight" : (redisUtilities.getBlockHeight() + 1),
+        "instructions" : json.dumps(validInstructions),
+        "broadcaster" : redisUtilities.getMyID()
+    }
+
+    approval = consensusEmulator.proposeConvergenceHeader(proposedBlock, randomMatrix, circle)
+
+    convergenceHeader = approval['header']
+    signatures = approval['signatures']
+    broadcaster = approval['broadcaster']
+    validInstruction = approval['validInstructions']
+
+    # generate a candidate structure
+    # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process
+    candidate = {}
+    #
+    candidate['blocksize'] = 0 #TODO
+    candidate['blockHeader'] = {
+        "version" : "entityVersionUsed", #TODO
+        "staticHeight" : "height below which a fork is not allowed", #TODO
+        "convergenceHeader" : convergenceHeader,
+        "consensusCircle" : circle,
+        "blockSignatures" : signatures,
+    }
+    candidate["blockHash"] = agentUtilities.getHashofInput(candidate['blockHeader'])
+    candidate["blockOriginatedAgent"] = broadcaster
+    candidate["instructions"] = validInstructions
+
+    logging.debug(f'candidate = {candidate}')
+
+    # writing out a file doesnt work because in the rq worker container
+    distributeBlock(candidate)
+
+    return
+
 def distributeBlock(block):
     #distribute across the network - write to redis for now
 
     red.sadd("candidateBlocks", block["blockHash"])
     red.sadd("candidateBlocks:" + block["blockHash"], json.dumps(block))
 
-    filePath = "candidates/" + block["blockHash"] + ".json"
-    blockFile = open(filePath, 'w')
-    blockFile.write(json.dumps(block))
-    blockFile.close()
+    # filePath = "candidates/" + block["blockHash"] + ".json"
+    # blockFile = open(filePath, 'w')
+    # blockFile.write(json.dumps(block))
+    # blockFile.close()
 
 # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
 # currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
 # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
-def nextCircle(self,lastBlockMatrix, excludedAgents):
-    nextCircle, bIndex = [],0
-    logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}, excludedAgents: {excludedAgents}')
+def nextCircle(lastBlockMatrix):
+    circle, bIndex = [],0
+    logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}')
     # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
-    levels = list(self.red.smembers("levels"))
+    levels = list(red.smembers("levels"))
     logging.debug(f'levels is {levels}')
 
     # find next agent and delete from level so cant be chosen twice:
     for level in levels:
-        possibleAgents = list(self.red.smembers(level))
-        logging.debug(f'possibleAgents is {possibleAgents}')
+        possibleAgents = list(red.smembers(level))
+        logging.debug(f'level: {level}, possibleAgents is {possibleAgents}')
+        if not possibleAgents:
+            logging.debug("possible agents set was empty")
+            continue
         # may want to optimise this sort
         possibleAgents.sort() #taken from the old sorting on initialisation
         while possibleAgents and (bIndex < len(lastBlockMatrix)):
-            nextAgent = self.takeClosest(possibleAgents, lastBlockMatrix[bIndex])
+            nextAgent = takeClosest(possibleAgents, lastBlockMatrix[bIndex])
             logging.debug(f'next agent is: {nextAgent}')
             possibleAgents.remove(nextAgent)
-            nextCircle.append(nextAgent)
+            circle.append(nextAgent)
             bIndex = bIndex + 1
 
-    logging.debug(f'nextCircle is {nextCircle}')
-    return nextCircle
+    logging.debug(f'circle is {circle}')
+
+    # manually adding the current agent if they didnt make the cut
+    if not redisUtilities.getMyID() in circle:
+        logging.info("my id not present removing so I can add")
+        circle.pop()
+        circle.append(redisUtilities.getMyID())
+
+
+    return circle
 
 
 # Utility functions we dont need when using a database / dynamoDB etc:
 # from https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value/12141511#12141511
-def takeClosest(self,myList, myNumber):
+def takeClosest(myList, myNumber):
     """
     Assumes myList is sorted. Returns closest value to myNumber.
     If two numbers are equally close, return the smallest number.
@@ -81,70 +161,3 @@ def takeClosest(self,myList, myNumber):
         return after
     else:
         return before
-
-def generateNextCircle():
-
-    print("generating the next circle")
-
-    # should always be the latest block that you are generating the next circle from
-    nextCircle = nextCircle(redisUtilities.getOutputMatrix(), [])  # No excluded agents for now
-
-    # Am I in the circle?
-    # TODO - check if in potentially a secondary circle.  If so start the convergence using this one in case primary fails
-    if not (redisUtilities.getMyID() in nextCircle):
-        # what should happen if not in next circle?
-        # nothing - correct?
-
-        return
-
-    # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
-    randomMatrix = [g for g in getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
-    seed = getSeed(32)
-
-    # gather and check instructions
-    possibleInstructions = redisUtilities.getInstructionHashes()
-    validInstructions = []
-    for instructionHash in possibleInstructions:
-        if blockUtilities.tryInstruction(instructionHash):
-            validInstructions.append(agentUtilities.getDetailedInstruction(instructionHash))
-
-
-    proposedBlock = {
-        "previousBlock" : redisUtilities.getBlockHash(),
-        "instructionsMerkleRoot" : agentUtilities.returnMerkleRoot(validInstructions),
-        "instructionCount" : len(validInstructions),
-        "blockHeight" : (redisUtilities.getBlockHeight() + 1),
-        "instructions" : json.dumps(validInstructions),
-        "broadcaster" : agentUtilities.getMyID()
-    }
-
-    approval = consensusEmulator.proposeConvergenceHeader(proposedBlock, randomMatrix, nextCircle)
-
-    convergenceHeader = approval['header']
-    signatures = approval['signatures']
-    broadcaster = approval['broadcaster']
-    validInstruction = approval['instructions']
-    randomNumbers = approval["randomNumbers"]
-
-    # generate a candidate structure
-    # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process
-    candidate = {}
-    #
-    candidate['blocksize'] = 0 #TODO
-    candidate['blockHeader'] = {
-        "version" : "entityVersionUsed", #TODO
-        "staticHeight" : "height below which a fork is not allowed", #TODO
-        "convergenceHeader" : convergenceHeader,
-        "consensusCircle" : nextCircle,
-        "blockSignatures" : signatures,
-    }
-    candidate["blockHash"] = agentUtilities.getHashofInput(candidate['blockHeader'])
-    candidate["blockOriginatedAgent"] = broadcaster
-    candidate["instructions"] = validInstructions
-
-    logging.debug(f'candidate = {candidate}')
-
-    # writing out a file doesnt work because in the rq worker container
-    distributeBlock(candidate)
-
-    return

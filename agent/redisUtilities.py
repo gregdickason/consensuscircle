@@ -19,7 +19,7 @@ def getCandidateBlocks():
 def getBlockHash():
     return red.hget("state", "latestBlock")
 
-def getOutputMatrix(id):
+def getOutputMatrix(id=None):
     if id == None:
         return json.loads(red.hget(red.hget("state", "latestBlock"), "outputMatrix"))
     elif red.sismember("blocks", id) == 1:
@@ -63,7 +63,7 @@ def getInstructionHashes():
     return insList
 
 def getInstruction(hash):
-    return json.loads(red.hget("instructionPool:" + hash))
+    return json.loads(red.get("instructionPool:" + hash))
 
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')

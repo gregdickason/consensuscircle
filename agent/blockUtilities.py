@@ -1,6 +1,5 @@
 import json
 import copy
-from bisect import bisect_left
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import redis
@@ -143,7 +142,7 @@ def addInstruction(instruction):
 # Note if using redis on Windows need to run linux subsystem (https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 def generateNextCircle():
 
-    convergenceProcessor.generateNextCircle()
+    # convergenceProcessor.generateNextCircle()
     # you dont need to make a new redis connection you can use the existing one that is defined above (line 26)
     q = Queue(connection=red)  # send to default queue for now
     job = q.enqueue(convergenceProcessor.generateNextCircle)

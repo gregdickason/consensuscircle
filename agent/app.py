@@ -37,6 +37,10 @@ networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
+@app.route("/candidateBlocks")
+def cblocks():
+    return jsonify(str(list(redis.smembers("candidateBlocks"))))
+
 @app.route("/", methods=['GET'])
 def hello():
     try:

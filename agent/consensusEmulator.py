@@ -1,5 +1,6 @@
 
 import agentUtilities
+import redisUtilities
 import json
 import time
 
@@ -22,6 +23,7 @@ agentPriKeys = {
 
 def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
 
+    response = {}
     response["header"] = {
            "previousBlock" : proposedInstructions["previousBlock"],
            "instructionsMerkleRoot" : proposedInstructions["instructionsMerkleRoot"],
@@ -29,7 +31,7 @@ def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
            "blockHeight" : proposedInstructions["blockHeight"],
            "randomNumbers" : getRandomNumbers(circle)
     }
-    response["signatures"] = getSignatures(reponse["header"], circle)
+    response["signatures"] = getSignatures(response["header"], circle)
     response["agentInfo"] = getAgentInfo(circle)
     response["broadcaster"] = proposedInstructions["broadcaster"]
     response["validInstructions"] = proposedInstructions["instructions"]
