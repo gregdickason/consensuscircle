@@ -39,17 +39,20 @@ def generateNextCircle():
 
         return
 
+    # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
+    randomMatrix = [g for g in agentUtilities.getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
+    seed = agentUtilities.getSeed(32)
+
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
-    if not possibleInstructions:
-        logging.info("No new instructions to place on the block")
-        return
-
     validInstructions = []
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
             validInstructions.append(redisUtilities.getInstruction(instructionHash))
 
+    if len(validInstructions) == 0:
+        logging.info("there are no valid instructions and so, no valid block")
+        return
 
     proposedBlock = {
         "previousBlock" : redisUtilities.getBlockHash(),

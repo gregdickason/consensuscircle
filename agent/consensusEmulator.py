@@ -2,7 +2,6 @@
 import agentUtilities
 import redisUtilities
 import json
-import time
 
 
 # Class that emulates a consensus circle.  Loads the 5 private keys from the circle and
