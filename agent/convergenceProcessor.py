@@ -41,10 +41,10 @@ def generateNextCircle():
 
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
-    if not possibleInstructions
+    if not possibleInstructions:
         logging.info("No new instructions to place on the block")
         return
-        
+
     validInstructions = []
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
