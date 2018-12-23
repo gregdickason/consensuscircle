@@ -315,6 +315,13 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
       $scope.message = response.data;
     });
 
+  $http.get(api_url + 'getEntities')
+      .then(function success(response) {
+        $scope.entities = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
    $scope.getInstructionTypeRequirements = function(name) {
      $scope.started = true;
 

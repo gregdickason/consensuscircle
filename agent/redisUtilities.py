@@ -30,7 +30,6 @@ def popCandidateBlock(blockID):
     else:
         return "ERROR"
 
-
 def getBlockHash():
     return red.hget("state", "latestBlock")
 
