@@ -37,7 +37,7 @@ networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
-@app.route("/candidateBlocks")
+@app.route("/getCandidateBlocks")
 def cblocks():
     return jsonify(agent.getCandidateBlocks())
 

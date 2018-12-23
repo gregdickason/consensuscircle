@@ -16,6 +16,21 @@ red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_
 def getCandidateBlocks():
     return list(red.smembers("candidateBlocks"))
 
+def getCandidateBlock(blockID):
+    if red.sismember("candidateBlocks", blockID) == 1:
+        return json.loads(red.get("candidateBlocks:" + blockID))
+    else:
+        return "ERROR"
+
+def popCandidateBlock(blockID):
+    if red.sismember("candidateBlocks", blockID) == 1:
+        block = json.loads(red.get("candidateBlocks:" + blockID))
+        red.srem("candidateBlocks", blockID)
+        return block
+    else:
+        return "ERROR"
+
+
 def getBlockHash():
     return red.hget("state", "latestBlock")
 

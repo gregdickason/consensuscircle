@@ -276,6 +276,13 @@ app.controller('attributeController', function($scope, $http) {
 
 app.controller('publishBlockController', function($scope, $http) {
 
+  $http.get(api_url + 'getCandidateBlocks')
+      .then(function success(response) {
+        $scope.blocks = response.data;
+      }, function error(response) {
+        $scope.message = response.data;
+      });
+
   $scope.blockToPublish = function(chosen) {
     $http.post(api_url + 'publishBlock', chosen)
       .then(function success(response) {

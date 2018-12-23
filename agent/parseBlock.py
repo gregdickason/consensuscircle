@@ -14,10 +14,8 @@ import redisUtilities
 # - Confirm Instructions and InstructionHandlers: number, merkle roots
 class parseBlock:
     def __init__(self,blockID, entityInstructions):
-        with open("candidates/" + blockID) as json_data:
-            # TODO put in exception handling and error checking if file is
-            # malformed and also that this block is valid in the context of previous blocks
-            self.block = json.load(json_data)
+
+        self.block = redisUtilities.popCandidateBlock(blockID)
 
         logging.debug(f'in parseBlock')
         self.blockHash = self.block['blockHash']

@@ -46,8 +46,10 @@ def generateNextCircle():
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
     validInstructions = []
+    validInstructionHashes = []
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
+            validInstructionHashes.append(instructionHash)
             validInstructions.append(redisUtilities.getInstruction(instructionHash))
 
     if len(validInstructions) == 0:
@@ -56,7 +58,7 @@ def generateNextCircle():
 
     proposedBlock = {
         "previousBlock" : redisUtilities.getBlockHash(),
-        "instructionsMerkleRoot" : agentUtilities.returnMerkleRoot(validInstructions),
+        "instructionsMerkleRoot" : agentUtilities.returnMerkleRoot(validInstructionHashes),
         "instructionCount" : len(validInstructions),
         "blockHeight" : (redisUtilities.getBlockHeight() + 1),
         "instructions" : json.dumps(validInstructions),
@@ -69,6 +71,7 @@ def generateNextCircle():
     signatures = approval['signatures']
     broadcaster = approval['broadcaster']
     validInstruction = approval['validInstructions']
+    circleAgents = approval['agentInfo']
 
     # generate a candidate structure
     # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process
@@ -79,7 +82,7 @@ def generateNextCircle():
         "version" : "entityVersionUsed", #TODO
         "staticHeight" : "height below which a fork is not allowed", #TODO
         "convergenceHeader" : convergenceHeader,
-        "consensusCircle" : circle,
+        "consensusCircle" : circleAgents,
         "blockSignatures" : signatures,
     }
     candidate["blockHash"] = agentUtilities.getHashofInput(candidate['blockHeader'])
@@ -97,7 +100,7 @@ def distributeBlock(block):
     #distribute across the network - write to redis for now
 
     red.sadd("candidateBlocks", block["blockHash"])
-    red.sadd("candidateBlocks:" + block["blockHash"], json.dumps(block))
+    red.append("candidateBlocks:" + block["blockHash"], json.dumps(block))
 
     # filePath = "candidates/" + block["blockHash"] + ".json"
     # blockFile = open(filePath, 'w')

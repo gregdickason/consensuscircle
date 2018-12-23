@@ -59,7 +59,9 @@ def getRandomNumbers(circle):
 def getSignatures(message, circle):
     signatures = []
 
+    hashMessage = agentUtilities.getHashofInput(message)
+
     for agent in circle:
-        signatures.append({agent : agentUtilities.signMessage(message, agentPriKeys[agent])})
+        signatures.append({agent : agentUtilities.signMessage(hashMessage, agentPriKeys[agent])})
 
     return signatures
