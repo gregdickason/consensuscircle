@@ -14,7 +14,7 @@ ENCODING = 'utf-8'
 red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
 
 def getCandidateBlocks():
-    return red.smembers("candidateBlocks")
+    return list(red.smembers("candidateBlocks"))
 
 def getBlockHash():
     return red.hget("state", "latestBlock")

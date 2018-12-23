@@ -124,6 +124,9 @@ class Agent:
     def getEntityList(self):
         return redisUtilities.getEntityList()
 
+    def getCandidateBlocks(self):
+        return redisUtilities.getCandidateBlocks()
+
     # returns the list of attributes the entity has.  Hardcoded to test
     def getAttributes(self):
         return ['wallets.default.balance']
@@ -218,7 +221,7 @@ class Agent:
             'lastBlock': newBlock.getBlockHash(),
             "circleDistance" : newBlock.getCircleDistance(),
             'message': newBlock.getBlockComment(),
-            "error": ("No error checking candidate block" + str(list(redisUtilities.getCandidateBlocks())))
+            "error": ("No error checking candidate block" + str(redisUtilities.getCandidateBlocks()))
         }
         return agentResponse
 
