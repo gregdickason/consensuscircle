@@ -28,13 +28,13 @@ def importScripts(filename):
     logging.debug(f'opening {scriptfile}')
     with open('lua/' + scriptfile, 'r') as scriptf:
       script = scriptf.read()
-      logging.debug(f'script is {script}')
+      # logging.debug(f'script is {script}')
       scriptHash = red.script_load(script)
       logging.debug(f'Loaded {scriptfile} script - hash is {scriptHash}')
       shalist[scriptfile] = scriptHash
 
-  with open('instructionScripts.json','w') as fileOut:
-     fileOut.write(json.dumps(shalist))
+  # with open('instructionScripts.json','w') as fileOut:
+  #    fileOut.write(json.dumps(shalist))
 
   return
 

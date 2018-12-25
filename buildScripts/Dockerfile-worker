@@ -1,17 +1,18 @@
-FROM alpine:3.8
-
-RUN apk --no-cache add python3
-RUN apk --no-cache add redis
-RUN python3 -m ensurepip && pip3 install --upgrade pip setuptools==40.6.2 rq==0.12.0
+FROM python:3.6-alpine
 
 WORKDIR /settings
 
-# TO DO work out exactly what code the worker needs
+COPY ./buildScripts/requirements.txt /settings
+
+RUN pip install -r requirements.txt
+
 COPY  ./worker/ /settings
 COPY ./agent/convergenceProcessor.py /settings
 COPY ./agent/consensusEmulator.py /settings
 COPY ./agent/agentUtilities.py /settings
+COPY ./agent/redisUtilities.py /settings
+COPY ./agent/blockUtilities.py /settings
+COPY ./agent/logConfig.json /settings
+COPY ./agent/globalsettings.py /settings
 
-EXPOSE 5000
-
-CMD rq worker -c envsettings
+CMD python worker.py

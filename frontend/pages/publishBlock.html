@@ -10,7 +10,7 @@
     <input class="custom-select" type="text" list="blocks"  ng-model="chosen.blockID" />
     <datalist id="blocks">
       <option value="">Select a block to publish...</option>
-      <option>bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json</option>
+      <option ng-repeat="option in blocks">{{option}}</option>
     </datalist>
     <div class="input-group-append">
       <button class="btn btn-outline-secondary" type="submit">Publish</button>
