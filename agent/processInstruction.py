@@ -4,9 +4,10 @@ import logging.config
 #utility functions for processing instructions - pool is run by the agent
 from agentUtilities import getHashofInput, verifyMessage
 from globalsettings import instructionInfo
+import redisUtilities
 
 # validate Instruction: confirm hash values and signature.  Does not add to pool or update any temp status (done in processInstruction)
-def validateInstruction(instruction, blockState):
+def validateInstruction(instruction):
   returnValue = {
         'message': f'Instruction Accepted',
         'return': True
@@ -30,7 +31,7 @@ def validateInstruction(instruction, blockState):
       returnValue['return'] = False
       return returnValue
 
-  publicKey = blockState.getPublicKey(sender)
+  publicKey = redisUtilities.getPublicKey(sender)
 
   logging.debug(f'publicKey is {publicKey}')
 

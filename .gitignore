@@ -8,3 +8,5 @@ src/beb8c8e32166f1e68cf6e1ef3bbd3ba0a65e6aaa69ed213f263df2fdbec0f736\.json
 src/cf9d12a22f684f5525443e9e72a8652eee5c1bfe2788cc8843defdf7322f1b67\.json
 
 agent/redistest\.py
+
+agent/test\.py

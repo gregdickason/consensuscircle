@@ -4,7 +4,7 @@
     	  "version" : "entityVersionUsed",
     	  "staticHeight" : "height below which a fork is not allowed",
     	  "convergenceHeader" : {
-            "previousBlock" : "695E4A0C4F763FC95DFD6C29F334CC2EAF9C4A2BAFCCE09379B0864EDA001EB4",
+            "previousBlock" : "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4",
     		    "instructionsMerkleRoot" :  "f062548393fc990764650a83731bc2ae2bc6308ec0b8c784b01ea7b8b68b26fc",
     		    "instructionCount" : 1,
     		    "blockHeight" :  1,
@@ -39,13 +39,13 @@
       	                    {"level": "defender","agentID": "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea"},
       	                    {"level": "protector","agentID": "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102"},
       	                    {"level": "protector","agentID": "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b"}],
-        "blockSignatures" :  [{"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675":"3046022100d2db6c6b50e45d35ef61f7ab23423b64faafee5875ae08766eaabe7db9c15d3d022100f8a9c062b2ad1b57b0f469d78d70624bd2247ea7c92f6f11d8660936f9bfb70b"},
-                              {"2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b":"304502205e1aed5f901131dd31751e1c24557921f1bcbeb05651b7ab5a862db7accc88f8022100e3e3ab08f3c197e479464c3792259fdd07f4b089d36ba30044abbfcb4e491872"},
-      			                  {"2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea":"3046022100ce6a49d5eb25ab0cb273eb0a6850cd8d85eb2e1dcb7a742a31acaf800f6202e2022100fa1b985cc01b74baa5e3070d7961e39460713241baddd0ab0372073dcf0141ff"},
-      			                  {"031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102":"304502204b34e301739a03337144edd9082983d9a9b0c37ccc00faf6077157fff87129c9022100d5e99b30fa6b0bc6534e599c7c418772908453a799b0939b985f09fa172f8e64"},
-     			                    {"5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b":"30450221008596db19f7f309014c89710cde90bf870f17b5102b9c615ee6d07c15a435bc82022045a863a55cff29ba6b52c4614484bb438ddbd641528fc338f33139ada0865e59"}]
+        "blockSignatures" :  [{"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675":"3045022100af8090c6fcbe0ae69e4cefa2990d5db677e35122fe20db6f38792855291a03cc02204a3564019f24c67e607e22ee8a13053a320864600906a0f70e9adde81e358c10"},
+                              {"2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b":"304402206b6f020da54137a96b14d4900a8e5c37081561db17646a538d4f7fa0beac9c610220386cc237a582a407b321ca4de70371d31f33a691bb153dba2f995067793b17e6"},
+      			                  {"2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea":"304402204751bc4026accbc44bf6dd8a1485f109e848ab7311e669dcee679619176d8c460220316e544ccd7ea6a883de980c32384c3a53bc9db319b7a3f529a66b4254c3f1d2"},
+      			                  {"031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102":"3046022100cb10a79ee66df19d3deecdbdd65b7efc0a586c1c6b18140f14a537c81345aec602210092a6c089cf6072cd499e2dc5e7cec0c5a09693520a1f488720bc82a7edbd906e"},
+     			                    {"5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b":"304402200d51fc6ea195635714383f361e030bb01c81a5cfc6485ea58f02098d7899060802203ea8d1d4bd9f97dbea982720cfb59503e5822f703927a79d345cecfab6fd9a5c"}]
     },
-    "blockHash" : "b21916c7dc1a349158e6c55be2b455573da9b89a250af46dee3c01f454a6642f",
+    "blockHash" : "70271754d2e3e22b275290b3b4be9ffcced9582ca33506a14ebde11e3f172cb8",
     "blockOriginatedAgent":{"agentID":"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675","blockHashSigned":"TO SIGN"},
     "instructions" : [{"instruction":{"args":[],"keys":[],
                                       "sender":"180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675","name":"hello"},

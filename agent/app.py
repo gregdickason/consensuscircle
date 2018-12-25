@@ -37,6 +37,10 @@ networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
 
+@app.route("/getCandidateBlocks")
+def cblocks():
+    return jsonify(agent.getCandidateBlocks())
+
 @app.route("/", methods=['GET'])
 def hello():
     try:
@@ -164,8 +168,8 @@ def entityList():
         return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
-    
-    
+
+
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
@@ -352,11 +356,7 @@ def retrieveBlock():
     # TODO generic function for returning all the blocks and contents
 
 
-    response = {
-            'lastBlock': agent.getLastBlock(),
-            'blockHeight': agent.getBlockHeight(),
-            'circleDistance': agent.getCircleDistance()
-    }
+    response = agent.getLastBlock()
     return jsonify(response), 200
 
 @app.route('/getPrivateKey',methods=['GET'])
@@ -515,9 +515,6 @@ def addInstruction():
 
     if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
         return jsonify("ERROR: instruction structure is incorrect")
-
-    # eventually move to browser
-    # instructionToSend['signature'] = signMessage(instructionToSend['instructionHash'], privateKey)
 
     logging.info(f"instruction to send is {instructionToSend}")
 
