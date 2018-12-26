@@ -40,9 +40,6 @@ def addNewBlock(newBlock):
         hash = instruction['instructionHash']
         luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
         newBlockPipe.evalsha(luaHash, len(keys), *(keys+args))
-        keyToDelete = 'instructionPool:' + hash
-        newBlockPipe.delete('instructionPool:' + hash)
-        newBlockPipe.srem('instructionHashes',hash)
 
     # write out and add filePath
     filePath = "blocks/" + id + ".json"

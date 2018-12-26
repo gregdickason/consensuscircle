@@ -15,7 +15,6 @@ import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
 from globalsettings import instructionInfo
-from agentUtilities import getHashofInput, signMessage
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -112,28 +111,6 @@ def getConfig():
     return jsonify(agentConfig)
 
 
-@app.route('/updateConfig', methods=['POST'])
-def updateConfig():
-    # Testing parameters - is network on
-    if not networkOn:
-        response = {'network' : f'{networkOn}'}
-        return jsonify(response), 400
-
-    values = request.get_json()
-
-    required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
-    if not all(k in values for k in required):
-        return 'Missing fields', 400
-
-    ownerLevel = values['level']  # TODO should come from the agents owners level
-    agentIdentifier = values['agentIdentifier']
-    ownerID = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-    signId = values['signedIdentifier']
-    agentPrivateKey = values['agentPrivateKey']
-    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey)
-
-    return jsonify(agentResponse['message']),201
-
 # Routine to get the current instruction pool (used as a part of convergence)
 @app.route('/instructionPool', methods=['GET'])
 def instructionPool():
@@ -168,8 +145,6 @@ def entityList():
         return jsonify(response), 400
 
     return  jsonify(agent.getEntityList())
-
-
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():

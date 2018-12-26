@@ -43,12 +43,6 @@ class Agent:
         redisUtilities.setMyID(self.agentID)
         self.agentPrivateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
 
-        # pull in from redis the agent settings
-        self.ownerID = redisUtilities.getOwnerID(self.agentID)
-        self.signedIdentifier = redisUtilities.getSignedIdentifier(self.agentID)
-        self.agentPublicKey = redisUtilities.getPublicKey(self.agentID)
-        self.level = redisUtilities.getLevel(self.agentID)
-
         # # create additional variables
         # self.randomMatrix = [g for g in getRandomNumbers(2,5)]
         # self.seed = getSeed(2)
@@ -60,21 +54,6 @@ class Agent:
         # redisUtilities.setSeed(self.agentID, self.seed)
         # redisUtilities.setRandomMatrixHash(self.agentID, self.randomMatrixHash)
 
-    def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
-        agentResponse = {}
-        self.level = ownerLevel # TODO should come from the agents owner's level
-        self.agentID = agentIdentifier
-        self.ownerID = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-        self.signedIdentifier = signId
-        self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
-
-        agentResponse['message'] = {
-           'message': f'Updated agent config'
-          }
-        agentResponse['success'] = True
-
-        return agentResponse
-
     def getLastBlock(self):
         return {
             'lastBlock': redisUtilities.getBlockHash(),
@@ -83,10 +62,10 @@ class Agent:
         }
 
     def getOwner(self):
-        return self.ownerID
+        return redisUtilities.getOwnerID()
 
     def getLevel(self):
-        return self.level
+        return redisUtilities.getLevel()
 
     def getPrivateKey(self):
         return self.agentPrivateKey
@@ -97,10 +76,10 @@ class Agent:
 
     def getConfig(self):
         agentConfig = {}
-        agentConfig['level'] = self.level
+        agentConfig['level'] = redisUtilities.getLevel()
         agentConfig['agentIdentifier'] = self.agentID
-        agentConfig['owner'] = self.ownerID
-        agentConfig['signedIdentifier'] = self.signedIdentifier
+        agentConfig['owner'] = redisUtilities.getOwnerID()
+        agentConfig['signedIdentifier'] = redisUtilities.getSignedIdentifier()
         agentConfig['agentPrivateKey'] = self.agentPrivateKey
 
         return agentConfig
@@ -136,8 +115,6 @@ class Agent:
         logging.debug(f'In instructionPool')
         agentResponse = {}
 
-        # TODO - get this from the blockstate
-
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = redisUtilities.getInstructionHashes()
         hashMerkle = returnMerkleRoot(instruction_hashes)
@@ -149,7 +126,6 @@ class Agent:
                }
         agentResponse['success'] = True
         return agentResponse
-
 
     def processBlock(self, blockID):
         # Testing parameters - is network on

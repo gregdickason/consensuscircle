@@ -55,11 +55,6 @@ app.config(function($routeProvider) {
     controller  : 'agentConfigController'
   })
 
-  .when('/editAgentConfig', {
-    templateUrl : 'pages/editAgentConfig.html',
-    controller  : 'editAgentConfigController'
-  })
-
   .when('/instructionPool', {
     templateUrl : 'pages/instructionPool.html',
     controller  : 'instructionPoolController'
@@ -194,29 +189,6 @@ app.controller('instructionPoolController', function($scope, $http) {
       });
 
 });
-
-app.controller('editAgentConfigController', function($scope, $http) {
-
-    $http.get(api_url + 'getConfig')
-      .then(function success(response) {
-        $scope.config = response.data;
-      }, function error(response) {
-        $scope.message = response.data;
-      });
-
-  $scope.update = '';
-
-  $scope.setConfig = function(config) {
-    $http.post(api_url + 'updateConfig', config)
-      .then(function success(response) {
-          window.location.href = '#!/agentConfig';
-      }, function error(response) {
-          $scope.update = 'error in updating settings';
-      });
-  };
-
-});
-
 
 app.controller('entityController', function($scope, $http) {
 
