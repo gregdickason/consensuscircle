@@ -476,6 +476,8 @@ def executeTest():
         return jsonify(response), 400
 
     input = request.get_json()
+    
+    # TODO: check has a nonce, not previously sent 
 
     required = ['instruction']
     if not all(k in input for k in required):

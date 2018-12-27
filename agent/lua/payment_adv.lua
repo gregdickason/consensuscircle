@@ -1,5 +1,5 @@
 --[[ simple payment from the originator to the receiver.  This is not setup for sharding yet but does take mining fees (as supplied by the originator).
-     KEYS[1] is originator pubKey, 
+     KEYS[1] is originator pubKey (inserted automatically), 
      KEYS[2] is pubkey of payer (pays the actual payment - can be different to the originator if they have permissions on the wallet for this script) 
      KEYS[3] is receiver pubkey
      
@@ -24,7 +24,7 @@
        TODO: put in sharding.  
        TODO: we store last 6 blocks state in memory and merge states as bocks become permanent?  So have pool, block 0 (top), 1 (2 below)... 5 (6 below), with 5 'permament'.   updates to pool, as
      blocks written we delete 5 and make 4 permanent and cycle.  If a fork occurs we go back to that version and replay all instructions into pool?
-     ARGV[2] is instructionHash to check 
+     ARGV[2] is instructionHash to check and remove from pool if instruction passes
      ARGV[3] is the wallet the payer uses, ARGV[4] is the receivers wallet
      ARGV[5] is the amount to pay in whole numbers
      ARGV[6] is blockHeight to rollback state (python sends this)
