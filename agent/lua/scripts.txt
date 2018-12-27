@@ -1,4 +1,5 @@
 payment.lua
 test.lua
+payment_adv.lua
 setup.lua
 flushAndSet.lua
