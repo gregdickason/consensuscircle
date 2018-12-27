@@ -22,7 +22,13 @@ def addNewBlock(newBlock):
     id = newBlock.getBlockHash()
 
     newBlockPipe = red.pipeline(transaction=True)
-    newBlockPipe.sadd("blocks", id)
+    newBlockPipe.lpush("blocks", id)
+
+    # this could be better - use trim? but then you dont get back the block hash to remove
+    if (red.llen("blocks") >= red.hget("state", "numBlocksStored")):
+        blockToRemove = red.rpop("blocks")
+        red.delete(blockToRemove)
+
     newBlockPipe.hset("state", "latestBlock", id)
     newBlockPipe.hset(id, "previousBlock", newBlock.getPreviousBlock())
     newBlockPipe.hset(newBlock.getPreviousBlock(), "nextBlock", id)

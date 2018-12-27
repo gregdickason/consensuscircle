@@ -120,7 +120,8 @@ redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e540
 --[[ set up genesis block --]]
 redis.call("HSET", "state", "genesisBlock", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
 redis.call("HSET", "state", "latestBlock", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
-redis.call("SADD", "blocks", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
+redis.call("HSET", "state", "numBlocksStored", "100")
+redis.call("LPUSH", "blocks", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4")
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "blockHeight", "0")
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "previousBlock", "None")
 redis.call("HSET", "695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4", "nextBlock", "None")
