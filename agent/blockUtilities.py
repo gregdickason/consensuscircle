@@ -85,9 +85,9 @@ def executeInstruction(hash):
       return 'ERROR: no instruction matches the given instructionName'
 
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
-    if int(output[0]) == 0
+    if int(output[0]) == 0:
       return f'ERROR in executing instruction : {output[1]}'
-    else 
+    else:
       return output[1]
 
 def rollBack(to):
@@ -122,15 +122,11 @@ def tryInstruction(hash):
         return 'ERROR: no instruction matches the given instructionName'
 
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
-    if int(output[0]) == 0
+    if int(output[0]) == 0:
       return false # we have rejected the instruction.  Need to remove from block
-    else 
+    else:
       return true
 
-
-    # check if this is accepted
-    RESPONSE here
-    return output
 
     # Get an instruction - return null if not in pool
 def getInstruction(instructionHash):
@@ -139,7 +135,7 @@ def getInstruction(instructionHash):
     if red.exists('instructionPool:'+ instructionHash):
       instruction = json.loads(red.get('instructionPool:'+ instructionHash))
       return instruction
-    else
+    else:
       logging.info(f'Attempting to get instruction from Pool that is not in pool: {instructionHash}')
       return None  
    
