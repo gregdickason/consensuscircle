@@ -6,6 +6,7 @@ import redis
 from rq import Queue
 import convergenceProcessor
 from globalsettings import instructionInfo, blockSettings
+import ccExceptions
 
 import logging.config
 
@@ -36,13 +37,12 @@ def addNewBlock(newBlock):
 
     for instruction in instructions:
         hash = instruction['instructionHash']
-        executeInstruction(hash)
-        # TODO: delete the instruction in the lua
-        #keyToDelete = 'instructionPool:' + hash
-        #newBlockPipe.delete('instructionPool:' + hash)
-        #newBlockPipe.srem('instructionHashes',hash)
-
+        if(executeInstruction(hash, newBlockPipe)) == False:
+          # Failure in processing the block.  Abort and reject the block
+          raise BlockError(f'Block failed processing instruction {hash}', id, newBlock.getPreviousBlock())
+        
     # write out and add filePath
+    # TODO - do file write outside of pipeline execution
     filePath = "blocks/" + id + ".json"
     blockFile = open(filePath, 'w')
     blockFile.write(json.dumps(vars(newBlock)))
@@ -58,7 +58,7 @@ def addNewBlock(newBlock):
 
     return
 
-def executeInstruction(hash):
+def executeInstruction(hash, pipe):
     # This routine is not used in production.  Only part of mined block
     instruction = getInstruction(hash)
     
@@ -69,6 +69,7 @@ def executeInstruction(hash):
     
     # TODO: confirm instruction has a unique nonce (in LUA) - and extended from previous one
     # TODO - need to check syntax of instruction (number fields).  Fail if not setup properly
+    # TODO create InstructionException and throw this for the different reasons rather than return False.  Can then propogate the LUA reasons for failures
     args = []
     keys = []
     
@@ -84,11 +85,12 @@ def executeInstruction(hash):
     if luaHash == None:
       return 'ERROR: no instruction matches the given instructionName'
 
-    output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
+    output = pipe.evalsha(luaHash, len(keys), *(keys+args))
     if int(output[0]) == 0:
-      return f'ERROR in executing instruction : {output[1]}'
+      logging.error(f'ERROR in executing instruction : {output[1]}')
+      return False
     else:
-      return output[1]
+      return True
 
 def rollBack(to):
     # GREG TO DO
@@ -119,13 +121,14 @@ def tryInstruction(hash):
     instructionSettings = instructionInfo()
     luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
     if luaHash == None:
-        return 'ERROR: no instruction matches the given instructionName'
-
+        logging.error(f'No instruction matches the given instruction hash: {hash}')
+        return False
+        
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
     if int(output[0]) == 0:
-      return false # we have rejected the instruction.  Need to remove from block
+      return False # we have rejected the instruction.  Need to remove from block
     else:
-      return true
+      return True
 
 
     # Get an instruction - return null if not in pool
@@ -137,7 +140,7 @@ def getInstruction(instructionHash):
       return instruction
     else:
       logging.info(f'Attempting to get instruction from Pool that is not in pool: {instructionHash}')
-      return None  
+      return None
    
    
   # Manage the instruction pool

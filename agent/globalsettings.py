@@ -32,21 +32,22 @@ class instructionInfo:
         
         
 
-        self.instructionSet['hello'] = '59f3eb590a68c71483463553f9b2d715550be5ae'
+        self.instructionSet['hello'] = '14a120cc3402a87949863540c35b37fa356687fe'
         self.instructionKeys['hello'] = []
         self.instructionArgs['hello'] = []
 
         self.instructionSet['UIDummy'] = "fakehash"
         self.instructionKeys['UIDummy'] = ['test 1', 'test 2']
         self.instructionArgs['UIDummy'] = ['cameron', 'greg']
-
-        self.instructionSet['Simple Transaction'] = '8292d2c55210392e3bb7c7e9c98c4d5cf4154431'
-        self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
+        
+        # TODO - add ARGS[1] and KEYS[1] to payment
+        self.instructionSet['Simple Transaction'] = '7e143676e29910dda0c063dae24fb76c65e8e6cc'
+        self.instructionKeys['Simple Transaction'] = ['Receiver Key']
         self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
         
-        self.instructionSet['Payment'] = 'cbf23b37ecf8e312fbb5260151705a0b17da5d29'
-        self.instructionKeys['Payment'] = ['Originator Key', 'Payer Key', 'Receiver Key']
-        self.instructionArgs['Payment'] = ['Mining State', 'InstructionHash', 'Wallet Payer', 'Wallet Receiver','Payment Amount','Blockheight','instructionFee']
+        self.instructionSet['Payment'] = '92bafd1a11f7061851657bcd34f3e3f4c23a459f'
+        self.instructionKeys['Payment'] = ['Payer Key', 'Receiver Key']
+        self.instructionArgs['Payment'] = ['Wallet Payer', 'Wallet Receiver','Payment Amount','Blockheight','instructionFee']
         
         self.instructionSet['resetdb'] = "a7d47714f78aff4d339f66ea99d520e66df80f5d"
         self.instructionKeys['resetdb'] = []
