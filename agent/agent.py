@@ -9,7 +9,7 @@ from uuid import uuid4
 import threading
 
 import logging.config
-
+import ccExceptions
 import collections
 import copy
 
@@ -180,8 +180,18 @@ class Agent:
 
         # Normal processing, new block built on our chain.  READ NOTES
         # execute instructions on the block state and update the block state to the latest
-        blockUtilities.addNewBlock(newBlock)
-
+        try:
+          blockUtilities.addNewBlock(newBlock)
+        except BlockError as bError:
+          logging.error(f'Block parsing failed - error {bError.reason} for block id {bError.id}')
+          agentResponse['message'] = {
+                   'chainLength' : redisUtilities.getBlockHeight(),
+                   'lastBlock': redisUtilities.getBlockHash(),
+                   'error': f'block failed to process - {bError.reason}'
+                     }
+          agentResponse['success'] = False
+          return agentResponse
+          
         logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance()}\n')
 
         # TODO: next circle could have race condition for a promoted agent.  Agents need some N number of blocks old before being eligible (to stop race condition)
