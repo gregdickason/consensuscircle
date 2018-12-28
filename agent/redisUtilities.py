@@ -36,7 +36,7 @@ def getBlockHash():
 def getOutputMatrix(id=None):
     if id == None:
         return json.loads(red.hget(red.hget("state", "latestBlock"), "outputMatrix"))
-    elif red.sismember("blocks", id) == 1:
+    elif red.sismember("blockSet", id) == 1:
         return json.loads(red.hget(id, "outputMatrix"))
     else:
         return "ERROR: invalid ID"
@@ -137,7 +137,7 @@ def getWeightedCircleDistance(id):
     return weightedCircleDistance
 
 def blockExists(id):
-    if (red.sismember("blocks", id) == 0):
+    if (red.sismember("blockSet", id) == 0):
         return False
     else:
         return True
@@ -145,7 +145,7 @@ def blockExists(id):
 def getBlockHeight(id=None):
     if id == None:
         return int(red.hget(red.hget("state", "latestBlock"), "blockHeight"))
-    elif red.sismember("blocks", id) == 1:
+    elif red.sismember("blockSet", id) == 1:
         return (int(red.hget(id, "blockHeight")))
     else:
         return "ERROR: invalid ID"
@@ -153,7 +153,7 @@ def getBlockHeight(id=None):
 def getCircleDistance(id=None):
     if id == None:
         return int(red.hget(red.hget("state", "latestBlock"), "circleDistance"),16)
-    elif red.sismember("blocks", id) == 1:
+    elif red.sismember("blockSet", id) == 1:
         return (int(red.hget(id, "circleDistance"),16))
     else:
         return "ERROR: invalid ID"
@@ -161,7 +161,7 @@ def getCircleDistance(id=None):
 def getPreviousBlock(id=None):
     if id == None:
         prevBlock = red.hget(red.hget("state", "latestBlock"), "nextBlock")
-    elif red.sismember("blocks", id) == 1:
+    elif red.sismember("blockSet", id) == 1:
         prevBlock = red.hget(id, "nextBlock")
     else:
         # to do perhaps through an exception here
@@ -175,7 +175,7 @@ def getPreviousBlock(id=None):
 def getNextBlock(id=None):
     if id == None:
         nextBlock = red.hget(red.hget("state", "latestBlock"), "nextBlock")
-    elif red.sismember("blocks", id) == 1:
+    elif red.sismember("blockSet", id) == 1:
         nextBlock = red.hget(id, "nextBlock")
     else:
         # to do perhaps through an exception here

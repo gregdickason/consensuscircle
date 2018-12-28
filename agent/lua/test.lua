@@ -1,2 +1,2 @@
-local val="Hello"  
-return val
+local val="Hello"
+  return {"1", "success: hello world!"}

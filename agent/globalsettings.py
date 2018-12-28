@@ -24,15 +24,15 @@ class instructionInfo:
         self.instructionSet = {}
         self.instructionKeys = {}
         self.instructionArgs = {}
-        
+
         # all instructions have a similar set:
         # args[0] is either 'mining' or 'mined' to show lua how to process it (update state)
         # keys[0] is the entity / owner / agent id of the originator
-        # this is automatically input (not in the instruction itself. 
-        
-        
+        # this is automatically input (not in the instruction itself.
 
-        self.instructionSet['hello'] = '59f3eb590a68c71483463553f9b2d715550be5ae'
+
+
+        self.instructionSet['hello'] = '3b54771cde78c3995cd6620fe0d9b9233c6214ca'
         self.instructionKeys['hello'] = []
         self.instructionArgs['hello'] = []
 
@@ -43,12 +43,12 @@ class instructionInfo:
         self.instructionSet['Simple Transaction'] = '8292d2c55210392e3bb7c7e9c98c4d5cf4154431'
         self.instructionKeys['Simple Transaction'] = ['Payer Key', 'Receiver Key']
         self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
-        
+
         self.instructionSet['Payment'] = 'cbf23b37ecf8e312fbb5260151705a0b17da5d29'
         self.instructionKeys['Payment'] = ['Originator Key', 'Payer Key', 'Receiver Key']
         self.instructionArgs['Payment'] = ['Mining State', 'InstructionHash', 'Wallet Payer', 'Wallet Receiver','Payment Amount','Blockheight','instructionFee']
-        
-        self.instructionSet['resetdb'] = "2a9c88f601dfb19fd6fd0acd46975908c4505fa7"
+
+        self.instructionSet['resetdb'] = "3cda2940c93012378012312947eef82262e5add3"
         self.instructionKeys['resetdb'] = []
         self.instructionArgs['resetdb'] = []
 

@@ -114,24 +114,31 @@ def nextCircle(lastBlockMatrix):
     circle, bIndex = [],0
     logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}')
     # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
-    levels = list(red.smembers("levels"))
+    levels = list(red.zrange("levels", "0", "-1"))
     logging.debug(f'levels is {levels}')
 
     # find next agent and delete from level so cant be chosen twice:
     for level in levels:
-        possibleAgents = list(red.smembers(level))
-        logging.debug(f'level: {level}, possibleAgents is {possibleAgents}')
-        if not possibleAgents:
-            logging.debug("possible agents set was empty")
-            continue
-        # may want to optimise this sort
-        possibleAgents.sort() #taken from the old sorting on initialisation
-        while possibleAgents and (bIndex < len(lastBlockMatrix)):
-            nextAgent = takeClosest(possibleAgents, lastBlockMatrix[bIndex])
-            logging.debug(f'next agent is: {nextAgent}')
-            possibleAgents.remove(nextAgent)
-            circle.append(nextAgent)
-            bIndex = bIndex + 1
+        if not (bIndex < len(lastBlockMatrix)):
+            break
+
+        searchTerm = "[" + lastBlockMatrix[bIndex]
+        logging.debug(f'searching for clostest num to {searchTerm}')
+        logging.debug(f'possible agents are: {red.zrange(level, "0", "-1")}')
+        nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = 1)
+        logging.debug(f'level: {level}, nextAgent is {nextAgent}')
+
+        if not nextAgent:
+            logging.debug(f'no agent lets loop')
+            nextAgent = red.zrange(level, "0", "0")
+            if not nextAgent:
+                logging.debug(f' no agents at level {level}')
+                continue
+
+        logging.debug(f'number was {lastBlockMatrix[bIndex]}')
+        logging.debug(f'next agent is: {nextAgent}')
+        circle.extend(nextAgent)
+        bIndex = bIndex + 1
 
     logging.debug(f'circle is {circle}')
 
@@ -143,27 +150,3 @@ def nextCircle(lastBlockMatrix):
 
 
     return circle
-
-
-# Utility functions we dont need when using a database / dynamoDB etc:
-# from https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value/12141511#12141511
-def takeClosest(myList, myNumber):
-    """
-    Assumes myList is sorted. Returns closest value to myNumber.
-    If two numbers are equally close, return the smallest number.
-    Ignore anything in the excludedList
-    """
-
-    logging.debug(f'takeClosest: {myList} and {myNumber}')
-    # for efficiency could remove before returning (rather than search through twice on the return call)
-    pos = bisect_left(myList, myNumber)
-    if pos == 0:
-        return myList[0]
-    if pos == len(myList):
-        return myList[-1]
-    before = myList[pos - 1]
-    after = myList[pos]
-    if int(after,16) - int(myNumber,16) < int(myNumber,16) - int(before,16):
-        return after
-    else:
-        return before

@@ -23,10 +23,12 @@ def addNewBlock(newBlock):
 
     newBlockPipe = red.pipeline(transaction=True)
     newBlockPipe.lpush("blocks", id)
+    newBlockPipe.sadd("blockSet", id)
 
     # this could be better - use trim? but then you dont get back the block hash to remove
-    if (red.llen("blocks") >= red.hget("state", "numBlocksStored")):
+    if (red.llen("blocks") >= int(red.hget("state", "numBlocksStored"))):
         blockToRemove = red.rpop("blocks")
+        red.srem("blockSet", blockToRemove)
         red.delete(blockToRemove)
 
     newBlockPipe.hset("state", "latestBlock", id)
@@ -67,21 +69,21 @@ def addNewBlock(newBlock):
 def executeInstruction(hash):
     # This routine is not used in production.  Only part of mined block
     instruction = getInstruction(hash)
-    
+
     if instruction == None:
       return 'ERROR: no instruction with {hash} in pool'
-    
+
     logging.debug(f'\n instruction retrieved is {instruction}\n')
-    
+
     # TODO: confirm instruction has a unique nonce (in LUA) - and extended from previous one
     # TODO - need to check syntax of instruction (number fields).  Fail if not setup properly
     args = []
     keys = []
-    
+
     args.append('mined')
-    args.append(instruction['instruction']['instructionHash'])
+    args.append(instruction['instructionHash'])
     args.extend(instruction['instruction']['args'])
-    
+
     keys.append(instruction['instruction']['sender'])
     keys.extend(instruction['instruction']['keys'])
 
@@ -102,26 +104,26 @@ def rollBack(to):
     return "TODO"
 
 def tryInstruction(hash):
-    # Test that this instruction works in a candidate block.  
+    # Test that this instruction works in a candidate block.
     # TODO - clean up the state once finalised list of instructions in the candidate block
-    
+
     instruction = getInstruction(hash)
 
     if instruction == None:
       return 'ERROR: no instruction with {hash} in pool'
-    
+
     args = []
     keys = []
-    
+
     args.append('mining')
-    args.append(instruction['instruction']['instructionHash'])
+    args.append(instruction['instructionHash'])
     args.extend(instruction['instruction']['args'])
-    
+
     keys.append(instruction['instruction']['sender'])
     keys.extend(instruction['instruction']['keys'])
-    
+
     logging.debug(f'Instruction retrieved is {instruction}\n')
-    
+
     instructionSettings = instructionInfo()
     luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
     if luaHash == None:
@@ -137,15 +139,15 @@ def tryInstruction(hash):
     # Get an instruction - return null if not in pool
 def getInstruction(instructionHash):
     logging.debug(f'get instruction {instructionHash}')
-    
+
     if red.exists('instructionPool:'+ instructionHash):
       instruction = json.loads(red.get('instructionPool:'+ instructionHash))
       return instruction
     else:
       logging.info(f'Attempting to get instruction from Pool that is not in pool: {instructionHash}')
-      return None  
-   
-   
+      return None
+
+
   # Manage the instruction pool
 def addInstruction(instruction):
 
