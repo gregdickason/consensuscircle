@@ -48,7 +48,7 @@ def addNewBlock(newBlock):
         if(executeInstruction(hash, newBlockPipe)) == False:
           # Failure in processing the block.  Abort and reject the block
           raise BlockError(f'Block failed processing instruction {hash}', id, newBlock.getPreviousBlock())
-        
+
     # write out and add filePath
     # TODO - do file write outside of pipeline execution
     filePath = "blocks/" + id + ".json"
@@ -66,7 +66,7 @@ def addNewBlock(newBlock):
 
     return
 
-def executeInstruction(hash, pipe):
+def executeInstruction(hash, pipe=None):
     # This routine is not used in production.  Only part of mined block
     instruction = getInstruction(hash)
 
@@ -93,8 +93,12 @@ def executeInstruction(hash, pipe):
     if luaHash == None:
       return 'ERROR: no instruction matches the given instructionName'
 
-    output = pipe.evalsha(luaHash, len(keys), *(keys+args))
-    if int(output[0]) == 0:
+    if pipe == None:
+        output = red.evalsha(luaHash, len(keys), *(keys+args))
+    else:
+        output = pipe.evalsha(luaHash, len(keys), *(keys+args))
+
+    if output[0] == 0:
       logging.error(f'ERROR in executing instruction : {output[1]}')
       return False
     else:
@@ -131,7 +135,7 @@ def tryInstruction(hash):
     if luaHash == None:
         logging.error(f'No instruction matches the given instruction hash: {hash}')
         return False
-        
+
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
     if int(output[0]) == 0:
       return False # we have rejected the instruction.  Need to remove from block
@@ -149,8 +153,8 @@ def getInstruction(instructionHash):
     else:
       logging.info(f'Attempting to get instruction from Pool that is not in pool: {instructionHash}')
       return None
-   
-   
+
+
   # Manage the instruction pool
 def addInstruction(instruction):
 

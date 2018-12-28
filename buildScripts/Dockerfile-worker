@@ -14,5 +14,6 @@ COPY ./agent/redisUtilities.py /settings
 COPY ./agent/blockUtilities.py /settings
 COPY ./agent/logConfig.json /settings
 COPY ./agent/globalsettings.py /settings
+COPY ./agent/ccExceptions.py /settings
 
 CMD python worker.py
