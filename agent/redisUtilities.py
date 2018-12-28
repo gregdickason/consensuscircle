@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 from globalsettings import instructionInfo, blockSettings
+import ccExceptions
 
 import logging.config
 
@@ -20,7 +21,7 @@ def getCandidateBlock(blockID):
     if red.sismember("candidateBlocks", blockID) == 1:
         return json.loads(red.get("candidateBlocks:" + blockID))
     else:
-        return "ERROR"
+        raise RedisError(f'there is no candidate block with id {blockID}')
 
 def popCandidateBlock(blockID):
     if red.sismember("candidateBlocks", blockID) == 1:
@@ -28,7 +29,7 @@ def popCandidateBlock(blockID):
         red.srem("candidateBlocks", blockID)
         return block
     else:
-        return "ERROR"
+        raise RedisError(f'there is no candidate block with id {blockID}')
 
 def getBlockHash():
     return red.hget("state", "latestBlock")
@@ -39,7 +40,7 @@ def getOutputMatrix(id=None):
     elif red.sismember("blockSet", id) == 1:
         return json.loads(red.hget(id, "outputMatrix"))
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no block with id {id}')
 
 def getPublicKey(id):
     # is this an agent or an entity?
@@ -47,8 +48,7 @@ def getPublicKey(id):
     if (red.sismember("entities", id) == 1) or (red.sismember("agents", id) == 1) or (red.sismember("owners", id) == 1):
         return red.hget(id, "publicKey")
     else:
-        #TODO throw errors / error checking
-        return
+        raise RedisError(f'there is no agent, entity or owner with id {id}')
 
 #  get Attribute on an entity.
 def getAttribute(entity, attribute):
@@ -56,7 +56,6 @@ def getAttribute(entity, attribute):
 
     if red.sismember("entities", entity) == 0:
         return "ERROR: invalid entity ID"
-
     try:
         return(red.hget(entity, attribute))
     except:
@@ -77,7 +76,12 @@ def getInstructionHashes():
     return insList
 
 def getInstruction(hash):
-    return json.loads(red.get("instructionPool:" + hash))
+    instruction = json.loads(red.get("instructionPool:" + hash))
+
+    if instruction:
+        raise RedisError(f'there is no instruction with hash {hash}')
+    else:
+        return instruction
 
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')
@@ -86,7 +90,7 @@ def getEntity(entity):
         return red.hgetall(entity)
 
     logging.debug(f'ERROR: no entity with ID {entity} in blockState)')
-    return "ERROR: No entity with that ID"
+    raise RedisError(f'there is no entity with id {entity}')
 
 def getEntityList():
     return list(red.smembers("entities"))
@@ -94,7 +98,7 @@ def getEntityList():
 def getDetailedBlock(id):
     # checking block exists
     if not blockExists(id):
-        return "ERROR"
+        raise RedisError(f'there is no block with id {id}')
         # throw an exception
 
     filePath = red.hget(id, "filePath")
@@ -112,7 +116,11 @@ def getDetailedBlock(id):
 
 def getHeightDiff(id):
     # from the current block to the the input id block
-    prevBlock = getPreviousBlock(red.hget("state", "latestBlock"))
+    try:
+        prevBlock = getPreviousBlock(red.hget("state", "latestBlock"))
+    except RedisError:
+        raise RedisError(f'issues getting height difference because of previous blocks not existing')
+
     height = 1
     while (prevBlock != id):
         height = height + 1
@@ -148,7 +156,7 @@ def getBlockHeight(id=None):
     elif red.sismember("blockSet", id) == 1:
         return (int(red.hget(id, "blockHeight")))
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no block with id {id}')
 
 def getCircleDistance(id=None):
     if id == None:
@@ -156,16 +164,16 @@ def getCircleDistance(id=None):
     elif red.sismember("blockSet", id) == 1:
         return (int(red.hget(id, "circleDistance"),16))
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no block with id {id}')
 
 def getPreviousBlock(id=None):
     if id == None:
-        prevBlock = red.hget(red.hget("state", "latestBlock"), "nextBlock")
+        prevBlock = red.hget(red.hget("state", "latestBlock"), "previousBlock")
     elif red.sismember("blockSet", id) == 1:
         prevBlock = red.hget(id, "nextBlock")
     else:
         # to do perhaps through an exception here
-        prevBlock = "ERROR"
+        raise RedisError(f'there is no block with id {id}')
 
     if prevBlock == "None":
         return None
@@ -179,7 +187,7 @@ def getNextBlock(id=None):
         nextBlock = red.hget(id, "nextBlock")
     else:
         # to do perhaps through an exception here
-        nextBlock = "ERROR"
+        raise RedisError(f'there is no block with id {id}')
 
     if nextBlock == "None":
         return None
@@ -189,7 +197,6 @@ def getNextBlock(id=None):
 def getGenesisHash():
     return red.hget("state", "genesisBlock")
 
-# ADD ERROR MANAGEMENT
 def setMyID(id):
     red.hset("state", "myID", id)
     return
@@ -203,7 +210,7 @@ def getOwnerID(id=None):
     elif red.sismember("agents", id) == 1:
         return red.hget(id, "ownerID")
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no owner with id {id}')
 
 def getSignedIdentifier(id=None):
     if id == None:
@@ -211,7 +218,7 @@ def getSignedIdentifier(id=None):
     elif red.sismember("agents", id) == 1:
         return red.hget(id, "signedID")
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no agent with id {id}')
 
 def getLevel(id=None):
     if id == None:
@@ -219,7 +226,7 @@ def getLevel(id=None):
     elif red.sismember("agents", id) == 1:
         return red.hget(id, "level")
     else:
-        return "ERROR: invalid ID"
+        raise RedisError(f'there is no agent with id {id}')
 
 # def setRandomMatrix(id, randomMatrix):
 #     red.hset(id, "randomMatrix", json.dumps(randomMatrix))

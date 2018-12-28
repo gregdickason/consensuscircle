@@ -6,7 +6,7 @@ class Error(Exception):
 
 
 class BlockError(Error):
-    """Raised when Block processing fails.  Rollback not required  
+    """Raised when Block processing fails.  Rollback not required
 
     Attributes:
         reason -- what caused the block to fail (eg instruction that is invalid)
@@ -18,3 +18,13 @@ class BlockError(Error):
         self.reason = reason
         self.id = id
         self.previous = previous
+
+class RedisError(Error):
+    """Raised when redis encounters an error because it cannot 'get' find a value
+
+    Attributes:
+        reason -- what redis cannot find
+    """
+
+    def __init__(self, reason):
+        self.reason = reason
