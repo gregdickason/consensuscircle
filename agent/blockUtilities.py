@@ -45,29 +45,41 @@ def addNewBlock(newBlock):
 
     for instruction in instructions:
         hash = instruction['instructionHash']
-        if(executeInstruction(hash, newBlockPipe)) == False:
+        executeInstruction(hash, newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
-          raise BlockError(f'Block failed processing instruction {hash}', id, newBlock.getPreviousBlock())
+        
+        
+    newBlockPipe.hset(id, "filePath", filePath)
 
+    # execute the pipe.  This may result in failures (unlikely if the block is properly formed but possible).  
+    # read https://pypi.org/project/redis/ and https://redis.io/topics/transactions  which runs transaction even with failures!
+    # we dont throw error in lua?  (https://redis.io/commands/eval) 
+    output = newBlockPipe.execute()
+    
+    # Any failure?  Will be present as a '0' in the output array.  This list search could be slow so may need optimisation
+    # TODO: test this comprehensively
+    # TODO: check if we need to test for other failures sucah as the hset commands
+    if '0' in output:
+      # Get the index and the error reason after that and throw a block exception
+      errorOutput = output.index('0') + 1
+      logging.error(f'Block failed with 1 or more instructions not valid.  Error {output[errorOutput]}')
+      # Rollback the block
+      # TODO: check if rollback fails.  What do we do then?
+      rollBack(newBlock.getPreviousBlock())     
+      raise BlockError(output[errorOutput], id, newBlock.getPreviousBlock())
+ 
     # write out and add filePath
-    # TODO - do file write outside of pipeline execution
+    # TODO: should be a helper method to hide underlying filesystem (might write to s3).  Also write this first not after redis execution - discard if not in chain in cleanup routine?
     filePath = "blocks/" + id + ".json"
     blockFile = open(filePath, 'w')
     blockFile.write(json.dumps(vars(newBlock)))
     blockFile.close()
-    newBlockPipe.hset(id, "filePath", filePath)
-
-    newBlockPipe.execute()
-
-    # if block id exist in redis
-
-
-    # if cant write file log - agent specific
+ 
 
     return
 
 def executeInstruction(hash, pipe=None):
-    # This routine is not used in production.  Only part of mined block
+    # This routine is not used directly in production but in setup and for testing - Only part of mined block
     instruction = getInstruction(hash)
 
     if instruction == None:
@@ -95,17 +107,17 @@ def executeInstruction(hash, pipe=None):
 
     if pipe == None:
         output = red.evalsha(luaHash, len(keys), *(keys+args))
+        if output[0] == 0:
+          logging.error(f'ERROR in executing instruction : {output[1]}')
+          return False
     else:
-        output = pipe.evalsha(luaHash, len(keys), *(keys+args))
+        # Queue in the pipeline - no response as not executed
+        pipe.evalsha(luaHash, len(keys), *(keys+args))
 
-    if output[0] == 0:
-      logging.error(f'ERROR in executing instruction : {output[1]}')
-      return False
-    else:
-      return True
+    return True
 
 def rollBack(to):
-    # GREG TO DO
+    # TODO: this is a LUA script so is 100% pass / fail
     #roll back the state to the block 'to'
     return "TODO"
 
