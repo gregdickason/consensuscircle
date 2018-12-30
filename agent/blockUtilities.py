@@ -47,15 +47,15 @@ def addNewBlock(newBlock):
         hash = instruction['instructionHash']
         executeInstruction(hash, newBlock.getBlockHeight(), newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
-        
-        
+
+
     newBlockPipe.hset(id, "filePath", filePath)
 
-    # execute the pipe.  This may result in failures (unlikely if the block is properly formed but possible).  
+    # execute the pipe.  This may result in failures (unlikely if the block is properly formed but possible).
     # read https://pypi.org/project/redis/ and https://redis.io/topics/transactions  which runs transaction even with failures!
-    # we dont throw error in lua?  (https://redis.io/commands/eval) 
+    # we dont throw error in lua?  (https://redis.io/commands/eval)
     output = newBlockPipe.execute()
-    
+
     # Any failure?  Will be present as a '0' in the output array.  This list search could be slow so may need optimisation
     # TODO: test this comprehensively
     # TODO: check if we need to test for other failures sucah as the hset commands
@@ -65,16 +65,16 @@ def addNewBlock(newBlock):
       logging.error(f'Block failed with 1 or more instructions not valid.  Error {output[errorOutput]}')
       # Rollback the block
       # TODO: check if rollback fails.  What do we do then?
-      rollBack(newBlock.getPreviousBlock())     
+      rollBack(newBlock.getPreviousBlock())
       raise BlockError(output[errorOutput], id, newBlock.getPreviousBlock())
- 
+
     # write out and add filePath
     # TODO: should be a helper method to hide underlying filesystem (might write to AWS or s3).  Also write this first not after redis execution - discard if not in chain through a cleanup routine?
     filePath = "blocks/" + id + ".json"
     blockFile = open(filePath, 'w')
     blockFile.write(json.dumps(vars(newBlock)))
     blockFile.close()
- 
+
 
     return
 
@@ -92,7 +92,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
     # TODO create InstructionException and throw this for the different reasons rather than return False.  Can then propogate the LUA reasons for failures
     args = []
     keys = []
-    
+
     args.append('mined')
     args.append(instruction['instructionHash'])
     # append blockheight - we dont create a rollback state
@@ -124,22 +124,45 @@ def rollBack(to):
     # setup the block pipe to queue the transaction
     pipe = red.pipeline(transaction=True)
 
-    # First rollback the state 
+    # First rollback the state
     # Currently hardcoded the sha but TODO needs to be in a set of scripts.  (Not an instruction rather a helper script)
     luaHash = 'fd2ae4a1a8c058bd2ff8f09b77c0e186d39e178c'
     keys = []
     args = []
     args.append(to)
-    
+
     # Rollback the state through a LUA script so is 100% pass / fail on state update
     pipe.evalsha(luaHash, len(keys), *(keys+args))
-    
-    # Now rollback the blocks:
-    # CAMERON: TODO can you add the undo code for the block.  
 
-    # execute.  
+    # Now rollback the blocks:
+    currBlock = redisUtilities.getBlockHash()
+    endBlock = red.rpop("blocks")
+    red.rpush("blocks", endBlock)
+
+    while currBlock != to:
+        pipe.lrem("blocks", "0", currBlock)
+        pipe.srem("blockSet", currBlock)
+        if (red.llen("blocks") >= int(red.hget("state", "numBlocksStored"))):
+            # if not full size the block will already be in the block set
+            endBlock = redisUtilities.getPreviousBlock(endBlock)
+            pipe.rpush("blocks", endBlock)
+            pipe.sadd("blockSet", endBlock)
+        currBlock = redisUtilities.getPreviousBlock(currBlock)
+
+    pipe.hset("state", "latestBlock", to)
+    pipe.hset(to, "nextBlock", "None")
+
+    # provided that the block is in the last n blocks stored in redis this will all
+    # be already in redis so it does not need to be readded.
+        # newBlockPipe.hset(id, "previousBlock", newBlock.getPreviousBlock())
+        # newBlockPipe.hset(newBlock.getPreviousBlock(), "nextBlock", id)
+        # newBlockPipe.hset(id, "circleDistance", newBlock.getCircleDistance())
+        # newBlockPipe.hset(id, "blockHeight", newBlock.getBlockHeight())
+        # newBlockPipe.hset(id, "outputMatrix", json.dumps(newBlock.getOutputMatrix()))
+
+    # execute.
     pipe.execute()
-    
+
     return True
 
 def tryInstruction(hash):
