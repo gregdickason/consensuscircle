@@ -45,29 +45,41 @@ def addNewBlock(newBlock):
 
     for instruction in instructions:
         hash = instruction['instructionHash']
-        if(executeInstruction(hash, newBlockPipe)) == False:
+        executeInstruction(hash, newBlock.getBlockHeight(), newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
-          raise BlockError(f'Block failed processing instruction {hash}', id, newBlock.getPreviousBlock())
+        
+        
+    newBlockPipe.hset(id, "filePath", filePath)
 
+    # execute the pipe.  This may result in failures (unlikely if the block is properly formed but possible).  
+    # read https://pypi.org/project/redis/ and https://redis.io/topics/transactions  which runs transaction even with failures!
+    # we dont throw error in lua?  (https://redis.io/commands/eval) 
+    output = newBlockPipe.execute()
+    
+    # Any failure?  Will be present as a '0' in the output array.  This list search could be slow so may need optimisation
+    # TODO: test this comprehensively
+    # TODO: check if we need to test for other failures sucah as the hset commands
+    if '0' in output:
+      # Get the index and the error reason after that and throw a block exception
+      errorOutput = output.index('0') + 1
+      logging.error(f'Block failed with 1 or more instructions not valid.  Error {output[errorOutput]}')
+      # Rollback the block
+      # TODO: check if rollback fails.  What do we do then?
+      rollBack(newBlock.getPreviousBlock())     
+      raise BlockError(output[errorOutput], id, newBlock.getPreviousBlock())
+ 
     # write out and add filePath
-    # TODO - do file write outside of pipeline execution
+    # TODO: should be a helper method to hide underlying filesystem (might write to AWS or s3).  Also write this first not after redis execution - discard if not in chain through a cleanup routine?
     filePath = "blocks/" + id + ".json"
     blockFile = open(filePath, 'w')
     blockFile.write(json.dumps(vars(newBlock)))
     blockFile.close()
-    newBlockPipe.hset(id, "filePath", filePath)
-
-    newBlockPipe.execute()
-
-    # if block id exist in redis
-
-
-    # if cant write file log - agent specific
+ 
 
     return
 
-def executeInstruction(hash, pipe=None):
-    # This routine is not used in production.  Only part of mined block
+def executeInstruction(hash, blockHeight=0, pipe=None):
+    # This routine is not used directly in production but in setup and for testing - Only part of mined block
     instruction = getInstruction(hash)
 
     if instruction == None:
@@ -80,9 +92,12 @@ def executeInstruction(hash, pipe=None):
     # TODO create InstructionException and throw this for the different reasons rather than return False.  Can then propogate the LUA reasons for failures
     args = []
     keys = []
-
+    
     args.append('mined')
     args.append(instruction['instructionHash'])
+    # append blockheight - we dont create a rollback state
+    # TODO update scripts for this
+    args.append(blockHeight - 1)
     args.extend(instruction['instruction']['args'])
 
     keys.append(instruction['instruction']['sender'])
@@ -94,20 +109,38 @@ def executeInstruction(hash, pipe=None):
       return 'ERROR: no instruction matches the given instructionName'
 
     if pipe == None:
+        # this is not in a block so just execute the instruction
         output = red.evalsha(luaHash, len(keys), *(keys+args))
+        if output[0] == 0:
+          logging.error(f'ERROR in executing instruction : {output[1]}')
+          return False
     else:
-        output = pipe.evalsha(luaHash, len(keys), *(keys+args))
+        # Queue in the pipeline - no response as not executed
+        pipe.evalsha(luaHash, len(keys), *(keys+args))
 
-    if output[0] == 0:
-      logging.error(f'ERROR in executing instruction : {output[1]}')
-      return False
-    else:
-      return True
+    return True
 
 def rollBack(to):
-    # GREG TO DO
-    #roll back the state to the block 'to'
-    return "TODO"
+    # setup the block pipe to queue the transaction
+    pipe = red.pipeline(transaction=True)
+
+    # First rollback the state 
+    # Currently hardcoded the sha but TODO needs to be in a set of scripts.  (Not an instruction rather a helper script)
+    luaHash = 'fd2ae4a1a8c058bd2ff8f09b77c0e186d39e178c'
+    keys = []
+    args = []
+    args.append(to)
+    
+    # Rollback the state through a LUA script so is 100% pass / fail on state update
+    pipe.evalsha(luaHash, len(keys), *(keys+args))
+    
+    # Now rollback the blocks:
+    # CAMERON: TODO can you add the undo code for the block.  
+
+    # execute.  
+    pipe.execute()
+    
+    return True
 
 def tryInstruction(hash):
     # Test that this instruction works in a candidate block.
