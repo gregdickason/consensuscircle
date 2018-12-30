@@ -39,7 +39,7 @@ class instructionInfo:
         self.instructionSet['UIDummy'] = "fakehash"
         self.instructionKeys['UIDummy'] = ['test 1', 'test 2']
         self.instructionArgs['UIDummy'] = ['cameron', 'greg']
-        
+
         # TODO - add ARGS[1] and KEYS[1] to payment
         self.instructionSet['Simple Transaction'] = '7e143676e29910dda0c063dae24fb76c65e8e6cc'
         self.instructionKeys['Simple Transaction'] = ['Receiver Key']
@@ -47,10 +47,10 @@ class instructionInfo:
 
         self.instructionSet['Payment'] = 'fd2ae4a1a8c058bd2ff8f09b77c0e186d39e178c'
         self.instructionKeys['Payment'] = ['Originator Key', 'Payer Key', 'Receiver Key']
-        # TODO - put in blockheight in all instructions at argument 3 for rollback.  
+        # TODO - put in blockheight in all instructions at argument 3 for rollback.
         self.instructionArgs['Payment'] = ['Mining State', 'InstructionHash', 'Blockheight', 'Wallet Payer', 'Wallet Receiver','Payment Amount','instructionFee']
 
-        self.instructionSet['resetdb'] = "3cda2940c93012378012312947eef82262e5add3"
+        self.instructionSet['resetdb'] = "24c57e46b57bb710c3f61e0249e3771f40327fe6"
         self.instructionKeys['resetdb'] = []
         self.instructionArgs['resetdb'] = []
 

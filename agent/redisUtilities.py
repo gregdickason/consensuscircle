@@ -79,9 +79,9 @@ def getInstruction(hash):
     instruction = json.loads(red.get("instructionPool:" + hash))
 
     if instruction:
-        raise RedisError(f'there is no instruction with hash {hash}')
-    else:
         return instruction
+    else:
+        raise RedisError(f'there is no instruction with hash {hash}')
 
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')

@@ -275,6 +275,7 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
   $scope.started = false;
   $scope.instruction.instruction.args = [];
   $scope.instruction.instruction.keys = [];
+  $scope.instruction.instruction.luaHash = "";
   $scope.instruction.instructionHash = "";
   $scope.instruction.signature = "";
   $scope.instruction.instruction.sender = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675";
@@ -297,6 +298,13 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
    $scope.getInstructionTypeRequirements = function(name) {
      $scope.started = true;
 
+     $http.post(api_url + 'getLuaHash', name)
+       .then(function success(response) {
+           $scope.instruction.instruction.luaHash = response.data;
+       }, function error(response) {
+           $scope.update = 'error in getting lua has for instruction';
+       });
+
        $http.post(api_url + 'getInstructionArguments', name)
          .then(function success(response) {
              $scope.argumentList = response.data;
@@ -304,7 +312,7 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
              $scope.update = 'error in getting entity';
          });
 
-         $http.post(api_url + 'getInstructionKeys', name)
+        $http.post(api_url + 'getInstructionKeys', name)
            .then(function success(response) {
                $scope.keyList = response.data;
            }, function error(response) {

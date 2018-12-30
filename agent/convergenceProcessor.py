@@ -49,9 +49,11 @@ def generateNextCircle():
     validInstructionHashes = []
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
+            logging.debug('instruction was valid')
             validInstructionHashes.append(instructionHash)
             validInstructions.append(redisUtilities.getInstruction(instructionHash))
 
+    logging.debug(f'valid instructions is: {validInstructions}')
     if len(validInstructions) == 0:
         logging.info("there are no valid instructions and so, no valid block")
         return

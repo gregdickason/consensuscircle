@@ -48,7 +48,7 @@ def addNewBlock(newBlock):
         executeInstruction(hash, newBlock.getBlockHeight(), newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
 
-
+    filePath = "blocks/" + id + ".json"
     newBlockPipe.hset(id, "filePath", filePath)
 
     # execute the pipe.  This may result in failures (unlikely if the block is properly formed but possible).
@@ -70,7 +70,6 @@ def addNewBlock(newBlock):
 
     # write out and add filePath
     # TODO: should be a helper method to hide underlying filesystem (might write to AWS or s3).  Also write this first not after redis execution - discard if not in chain through a cleanup routine?
-    filePath = "blocks/" + id + ".json"
     blockFile = open(filePath, 'w')
     blockFile.write(json.dumps(vars(newBlock)))
     blockFile.close()
@@ -103,10 +102,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
     keys.append(instruction['instruction']['sender'])
     keys.extend(instruction['instruction']['keys'])
 
-    instructionSettings = instructionInfo()
-    luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
-    if luaHash == None:
-      return 'ERROR: no instruction matches the given instructionName'
+    luaHash = instruction['instruction']['luaHash']
 
     if pipe == None:
         # this is not in a block so just execute the instruction
@@ -169,6 +165,7 @@ def tryInstruction(hash):
     # Test that this instruction works in a candidate block.
     # TODO - clean up the state once finalised list of instructions in the candidate block
 
+    logging.debug(f'trying instruction with hash {hash}')
     instruction = getInstruction(hash)
 
     if instruction == None:
@@ -186,14 +183,12 @@ def tryInstruction(hash):
 
     logging.debug(f'Instruction retrieved is {instruction}\n')
 
-    instructionSettings = instructionInfo()
-    luaHash = instructionSettings.getInstructionHash(instruction['instruction']['name'])
-    if luaHash == None:
-        logging.error(f'No instruction matches the given instruction hash: {hash}')
-        return False
+    luaHash = instruction['instruction']['luaHash']
 
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
-    if int(output[0]) == 0:
+
+    logging.debug(f'output is {output}')
+    if output[0] == 0:
       return False # we have rejected the instruction.  Need to remove from block
     else:
       return True
