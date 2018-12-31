@@ -9,7 +9,7 @@ RUN pip install -r requirements.txt
 COPY  ./worker/ /settings
 COPY ./agent/convergenceProcessor.py /settings
 COPY ./agent/consensusEmulator.py /settings
-COPY ./agent/agentUtilities.py /settings
+COPY ./agent/encryptionUtilities.py /settings
 COPY ./agent/redisUtilities.py /settings
 COPY ./agent/blockUtilities.py /settings
 COPY ./agent/logConfig.json /settings

@@ -21,8 +21,7 @@ from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
 
 #utility functions - add to class?
-from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage
-from processInstruction import validateInstruction
+import encryptionUtilities
 
 class Agent:
     # initialise agent by connecting to the data base and claiming the agent id so that
@@ -138,7 +137,7 @@ class Agent:
         agentResponse = {}
 
         # check hash
-        validInstruction = validateInstruction(instruction)
+        validInstruction = blockUtilities.validateInstruction(instruction)
         if not validInstruction['return']:
             logging.debug(f'Instruction not valid: {instruction}')
             agentResponse['success'] = False
@@ -276,8 +275,8 @@ class Agent:
 
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = redisUtilities.getInstructionHashes()
-        hashMerkle = returnMerkleRoot(instruction_hashes)
-        hashSigned = signMessage(hashMerkle,self.agentPrivateKey)
+        hashMerkle = encryptionUtilities.returnMerkleRoot(instruction_hashes)
+        hashSigned = encryptionUtilities.ignMessage(hashMerkle,self.agentPrivateKey)
         agentResponse['message'] = {
                  'merkleRoot': hashMerkle,
                  'signed':hashSigned,

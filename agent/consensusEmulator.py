@@ -1,5 +1,5 @@
 
-import agentUtilities
+import encryptionUtilities
 import redisUtilities
 import json
 
@@ -51,7 +51,7 @@ def getRandomNumbers(circle):
     randomNumbers = []
 
     for agent in circle:
-        randomMatrix = [g for g in agentUtilities.getRandomNumbers(32,len(circle))]  # TODO - based on number in circle so need to use this parameter
+        randomMatrix = [g for g in encryptionUtilities.getRandomNumbers(32,len(circle))]  # TODO - based on number in circle so need to use this parameter
         randomNumbers.append({agent : randomMatrix})
 
     return randomNumbers
@@ -59,9 +59,9 @@ def getRandomNumbers(circle):
 def getSignatures(message, circle):
     signatures = []
 
-    hashMessage = agentUtilities.getHashofInput(message)
+    hashMessage = encryptionUtilities.getHashofInput(message)
 
     for agent in circle:
-        signatures.append({agent : agentUtilities.signMessage(hashMessage, agentPriKeys[agent])})
+        signatures.append({agent : encryptionUtilities.signMessage(hashMessage, agentPriKeys[agent])})
 
     return signatures

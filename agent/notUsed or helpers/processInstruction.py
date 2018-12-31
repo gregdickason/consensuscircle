@@ -2,7 +2,7 @@ import json
 import logging.config
 
 #utility functions for processing instructions - pool is run by the agent
-from agentUtilities import getHashofInput, verifyMessage
+from encryptionUtilities import getHashofInput, verifyMessage
 from globalsettings import instructionInfo
 import redisUtilities
 
@@ -25,8 +25,8 @@ def validateInstruction(instruction):
       returnValue['return'] = False
       return returnValue
 
-  if getHashofInput(body) != hash:
-      logging.info(f'hash of instruction does not match: {getHashofInput(body)}')
+  if encryptionUtilities.getHashofInput(body) != hash:
+      logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
       returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
       returnValue['return'] = False
       return returnValue
@@ -43,7 +43,7 @@ def validateInstruction(instruction):
       return returnValue
 
   # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
-  if verifyMessage(hash, sign, publicKey) != True:
+  if encryptionUtilities.verifyMessage(hash, sign, publicKey) != True:
       logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
       returnValue['message'] = f'Signature does not match'
       returnValue['return'] = False

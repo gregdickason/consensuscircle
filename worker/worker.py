@@ -17,7 +17,7 @@ import requests
 import consensusEmulator
 import redisUtilities
 import blockUtilities
-import agentUtilities
+import encryptionUtilities
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker

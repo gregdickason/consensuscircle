@@ -3,7 +3,7 @@ import json
 import consensusEmulator
 import redisUtilities
 import blockUtilities
-import agentUtilities
+import encryptionUtilities
 import logging.config
 from bisect import bisect_left
 
@@ -40,8 +40,8 @@ def generateNextCircle():
         return
 
     # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
-    randomMatrix = [g for g in agentUtilities.getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
-    seed = agentUtilities.getSeed(32)
+    randomMatrix = [g for g in encryptionUtilities.getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
+    seed = encryptionUtilities.getSeed(32)
 
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
@@ -60,7 +60,7 @@ def generateNextCircle():
 
     proposedBlock = {
         "previousBlock" : redisUtilities.getBlockHash(),
-        "instructionsMerkleRoot" : agentUtilities.returnMerkleRoot(validInstructionHashes),
+        "instructionsMerkleRoot" : encryptionUtilities.returnMerkleRoot(validInstructionHashes),
         "instructionCount" : len(validInstructions),
         "blockHeight" : (redisUtilities.getBlockHeight() + 1),
         "instructions" : json.dumps(validInstructions),
@@ -87,7 +87,7 @@ def generateNextCircle():
         "consensusCircle" : circleAgents,
         "blockSignatures" : signatures,
     }
-    candidate["blockHash"] = agentUtilities.getHashofInput(candidate['blockHeader'])
+    candidate["blockHash"] = encryptionUtilities.getHashofInput(candidate['blockHeader'])
     candidate["blockOriginatedAgent"] = broadcaster
     candidate["instructions"] = validInstructions
 

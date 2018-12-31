@@ -1,4 +1,4 @@
-from agentUtilities import returnMerkleRoot, signMessage, getHashofInput, verifyMessage
+from encryptionUtilities import returnMerkleRoot, signMessage, getHashofInput, verifyMessage
 import json
 
 instructions = ["eb679ed07fe234df63113f9ac4a7360954abf591629f0dadc3706ed81584a31f"]
