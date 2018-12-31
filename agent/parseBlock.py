@@ -133,7 +133,7 @@ class parseBlock:
         self.outputMatrix = [g for g in converge(self.randomMatrix ,2**256)]
         logging.info(f'Converged Matrix is {self.outputMatrix}')
 
-        self.circleDistance = returnCircleDistance(self.ccKeys, redisUtilities.getOutputMatrix(self.previousBlock), self.instructionCount, entityInstructions)
+        self.circleDistance = returnCircleDistance(redisUtilities.getOutputMatrix(self.previousBlock), self.ccKeys, self.instructionCount, entityInstructions)
 
         # remove anything that there is duplicates of for printing
         del self.block

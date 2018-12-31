@@ -127,12 +127,13 @@ def nextCircle(lastBlockMatrix):
         searchTerm = "[" + lastBlockMatrix[bIndex]
         logging.debug(f'searching for clostest num to {searchTerm}')
         logging.debug(f'possible agents are: {red.zrange(level, "0", "-1")}')
-        nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = 1)
+        nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = (len(lastBlockMatrix)-bIndex))
         logging.debug(f'level: {level}, nextAgent is {nextAgent}')
 
         if not nextAgent:
             logging.debug(f'no agent lets loop')
-            nextAgent = red.zrange(level, "0", "0")
+            # zrange works on index taking the 0th to the nth so you need to take 1 off
+            nextAgent = red.zrange(level, "0", (len(lastBlockMatrix) - bIndex - 1))
             if not nextAgent:
                 logging.debug(f' no agents at level {level}')
                 continue
@@ -140,7 +141,7 @@ def nextCircle(lastBlockMatrix):
         logging.debug(f'number was {lastBlockMatrix[bIndex]}')
         logging.debug(f'next agent is: {nextAgent}')
         circle.extend(nextAgent)
-        bIndex = bIndex + 1
+        bIndex = bIndex + len(nextAgent)
 
     logging.debug(f'circle is {circle}')
 

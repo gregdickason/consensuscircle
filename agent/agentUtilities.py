@@ -81,6 +81,12 @@ def returnCircleDistance(lastBlockRandomMatrix, consensusCircle, numInstructions
   # First check consensusCircle length is less than or equal to lastBlockRandomMatrix length (can be less if some agents not present)
   lbLen, ccLen, i, sum = len(lastBlockRandomMatrix), len(consensusCircle), 0, 0
 
+  logging.debug(f'len of lastBlockRandomMatrix us {lbLen}')
+  logging.debug(f'len of lastBlockRandomMatrix us {ccLen}')
+  logging.debug(f'lastBlockRandomMatrix us {lastBlockRandomMatrix}')
+  logging.debug(f'len of lastBlockRandomMatrix us {consensusCircle}')
+
+
   # TODO if there is a missing cc it might not be the end, so need to remove the lastBlock element that did not have a claimed CC member BEFORE this routine
   assert ccLen == lbLen  # need to handle assert in the calling code as exception
 
