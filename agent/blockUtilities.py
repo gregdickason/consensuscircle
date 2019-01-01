@@ -7,6 +7,8 @@ from rq import Queue
 import convergenceProcessor
 from globalsettings import instructionInfo, blockSettings
 import ccExceptions
+import encryptionUtilities
+import redisUtilities
 
 import logging.config
 

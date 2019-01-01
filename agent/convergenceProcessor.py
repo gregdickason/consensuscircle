@@ -120,28 +120,39 @@ def nextCircle(lastBlockMatrix):
     logging.debug(f'levels is {levels}')
 
     # find next agent and delete from level so cant be chosen twice:
+
     for level in levels:
-        if not (bIndex < len(lastBlockMatrix)):
-            break
+        # TODO is there a better way to store the number of agents at a level
+        numAtLevel = int(red.hget("levelCount", level))
+        levelCount = 0
+        searchTerms = lastBlockMatrix
 
-        searchTerm = "[" + lastBlockMatrix[bIndex]
-        logging.debug(f'searching for clostest num to {searchTerm}')
-        logging.debug(f'possible agents are: {red.zrange(level, "0", "-1")}')
-        nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = (len(lastBlockMatrix)-bIndex))
-        logging.debug(f'level: {level}, nextAgent is {nextAgent}')
+        while (bIndex < len(lastBlockMatrix)) and levelCount < numAtLevel:
+            logging.debug(f'level count is {levelCount}, numAtLevel is {numAtLevel}')
+            searchTerm = "(" + searchTerms[bIndex]
+            logging.debug(f'searching for clostest num to {searchTerm}')
+            logging.debug(f'possible agents are: {red.zrange(level, "0", "-1")}')
+            nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = 1)
+            logging.debug(f'level: {level}, nextAgent is {nextAgent}')
 
-        if not nextAgent:
-            logging.debug(f'no agent lets loop')
-            # zrange works on index taking the 0th to the nth so you need to take 1 off
-            nextAgent = red.zrange(level, "0", (len(lastBlockMatrix) - bIndex - 1))
             if not nextAgent:
-                logging.debug(f' no agents at level {level}')
-                continue
+                logging.debug(f'no agent lets loop')
+                nextAgent = red.zrange(level, "0", "0")
+                if not nextAgent:
+                    logging.debug(f' no agents at level {level}')
+                    break
 
-        logging.debug(f'number was {lastBlockMatrix[bIndex]}')
-        logging.debug(f'next agent is: {nextAgent}')
-        circle.extend(nextAgent)
-        bIndex = bIndex + len(nextAgent)
+            nextAgent = ''.join(nextAgent)
+
+            logging.debug(f'next agent is: {nextAgent}')
+            logging.debug(f'number was {lastBlockMatrix[bIndex]}')
+            if nextAgent in circle:
+                logging.debug(f"agent {nextAgent} was already in circle {circle}")
+                searchTerms[bIndex] = nextAgent
+            else:
+                circle.append(nextAgent)
+                bIndex = bIndex + 1
+                levelCount += 1
 
     logging.debug(f'circle is {circle}')
 

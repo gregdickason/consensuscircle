@@ -39,7 +39,7 @@ class instructionInfo:
         # TODO - put in blockheight in all instructions at argument 3 for rollback.
         self.instructionArgs['Payment'] = ['Mining State', 'InstructionHash', 'Blockheight', 'Wallet Payer', 'Wallet Receiver','Payment Amount','instructionFee']
 
-        self.instructionSet['resetdb'] = "24c57e46b57bb710c3f61e0249e3771f40327fe6"
+        self.instructionSet['resetdb'] = "877c80406d0f6fb9dac3d4b74b26969fe3ad9a22"
         self.instructionKeys['resetdb'] = []
         self.instructionArgs['resetdb'] = []
 

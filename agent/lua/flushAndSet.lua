@@ -7,6 +7,11 @@ redis.call("ZADD", "levels", "2", 'defenders')
 redis.call("ZADD", "levels", "3", 'protectors')
 redis.call("ZADD", "levels", "4", "contributors")
 redis.call("ZADD", "levels", "5", "members")
+redis.call("HSET", "levelCount", "founders", "0")
+redis.call("HSET", "levelCount", "defenders", "0")
+redis.call("HSET", "levelCount", "protectors", "0")
+redis.call("HSET", "levelCount", "contributors", "0")
+redis.call("HSET", "levelCount", "members", "0")
 
 redis.call("SADD", "agents", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675")
 redis.call("SADD", "agents", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b")
@@ -24,6 +29,7 @@ redis.call("HSET", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d0
 redis.call("HSET", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675", "agentURL", "http, //localhost, 5000")
 redis.call("HSET", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675", "level", "founder")
 redis.call("ZADD", "founders", "0", "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675")
+redis.call("HINCRBY", "levelCount", "founders", "1")
 
 redis.call("HSET", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b", "ownerID", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507")
 redis.call("HSET", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b", "signedID", "304502206a7c377bbf7e693c904ff12cb418b7366cadd888a5ceb6e13ef411fa9a57cd02022100ca3c793a360f88da4b997dbe702743ad6d81f181af7530c19485c5ac1737950c")
@@ -31,6 +37,7 @@ redis.call("HSET", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb
 redis.call("HSET", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b", "agentURL", "http, //localhost, 5001")
 redis.call("HSET", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b", "level", "defender")
 redis.call("ZADD", "defenders", "0", "2efb6ec38d1f9ccfa4b1b88bd98ab9b09c4a484496a5713af177b971ccfb922b")
+redis.call("HINCRBY", "levelCount", "defenders", "1")
 
 redis.call("HSET", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea", "ownerID", "36cbecda6927749d20bd7fed94d7c4228be1e3f65c7fbca6f1aec776f6037249")
 redis.call("HSET", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea", "signedID", "304402202e40bf53e140a5da813a351893e134f3e058241c7e90ed018f86c85b4374bca502206f90fedccb105719db22932ab5d341ee2a6f76f18b41d62142bdb7de58fccd23")
@@ -38,6 +45,7 @@ redis.call("HSET", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa10782
 redis.call("HSET", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea", "agentURL", "http, //localhost, 5002")
 redis.call("HSET", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea", "level", "protector")
 redis.call("ZADD", "protectors", "0", "2c24af4bd0889b10e325733c9b468779db7b2a82e9052df3b46a8aa1078262ea")
+redis.call("HINCRBY", "levelCount", "protectors", "1")
 
 redis.call("HSET", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102", "ownerID", "de92db7c4623db3acb5f8b36ff3e2e6d0bd73dd1490e4e03abf55b7bdaad6657")
 redis.call("HSET", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102", "signedID", "30460221008d4ed32760ed5fed26d587cbf74b3aee5d5e54d922cadf818ec22e5086622905022100d5298c526de481f25e301899f9453b04c86a829d92551c4248aa33f49e879ebc")
@@ -45,6 +53,7 @@ redis.call("HSET", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf8
 redis.call("HSET", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102", "agentURL", "http, //localhost, 5003")
 redis.call("HSET", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102", "level", "contributor")
 redis.call("ZADD", "contributors", "0", "031a3a259e059ec67971841a267528af2fc42bfcc1271259164b822fedf86102")
+redis.call("HINCRBY", "levelCount", "contributors", "1")
 
 redis.call("HSET", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b", "ownerID", "73756a58aa5751c33d6b30ec1c429b00a962646d063ab1c31c26e542bd1b3d69")
 redis.call("HSET", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b", "signedID", "3044022026b534b078b772efd2efce799f01584d3ffc6e4f4076df52e73beecb280a52fe02204da560781079891c1761e4c22c90b8f15df1b33608c79ec446ee057a33a3aaf4")
@@ -52,6 +61,7 @@ redis.call("HSET", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8
 redis.call("HSET", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b", "agentURL", "http, //localhost, 5004")
 redis.call("HSET", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b", "level", "contributor")
 redis.call("ZADD", "contributors", "0", "5aebce47cab0ff962b7bfde34949f557e5826ccf0a8a572e2f8c8769deb8e58b")
+redis.call("HINCRBY", "levelCount", "contributors", "1")
 
 redis.call("HSET", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df4ef9", "ownerID", "c1f6bc67f27992a197d429603113a01fc79b3018f98b9fbf5d09aefc2b49c3b1")
 redis.call("HSET", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df4ef9", "signedID", "30440220793490d4a18fed4169c9827154ebc3c959c8860397e2c2745b9549b755014c960220491aef4e750d49e367744a84e6a4ee78f44ce791cf5408140340ff3fb0a8414c")
@@ -59,6 +69,7 @@ redis.call("HSET", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df
 redis.call("HSET", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df4ef9", "agentURL", "http, //localhost, 5005")
 redis.call("HSET", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df4ef9", "level", "contributor")
 redis.call("ZADD", "contributors", "0", "6c2add4237bd9ae4917edbbfc51277816196101affc79b46dc574c7b86df4ef9")
+redis.call("HINCRBY", "levelCount", "contributors", "1")
 
 redis.call("HSET", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464f620", "ownerID", "483da90cba7e9f6e693a1f4b67e925662a08ffc565300842a2c84498c77d12f1")
 redis.call("HSET", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464f620", "signedID", "304502200c68b0028eb710dd60e441b7c4eded6f8f1362f66ff3abd945a0177ff3caed910221008f076c378d423e7fb0bc48600b1b8e5a368c15dd3e679ecaaaae0c1cf2b79f42")
@@ -66,6 +77,7 @@ redis.call("HSET", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464
 redis.call("HSET", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464f620", "agentURL", "http, //localhost, 5006")
 redis.call("HSET", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464f620", "level", "contributor")
 redis.call("ZADD", "contributors", "0", "97c4d1d971056016b841dfdfb759aa606d47d6b1d01af5d6b2552505c464f620")
+redis.call("HINCRBY", "levelCount", "contributors", "1")
 
 redis.call("HSET", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676ca4f", "ownerID", "2f82ada9116bfee825d28168fb356ad257f3d430cceee0851dcb935c39a003fc")
 redis.call("HSET", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676ca4f", "signedID", "3045022100b69853124f4147e87b66a35c23248f96ffd14fd160ffb9ef1ac764ac3693085a02204c29e7477ff21c2863c6027edf40175329d488e5f1d532fed5351a4e0a24c83d")
@@ -73,6 +85,7 @@ redis.call("HSET", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676
 redis.call("HSET", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676ca4f", "agentURL", "http, //localhost, 5007")
 redis.call("HSET", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676ca4f", "level", "defender")
 redis.call("ZADD", "defenders", "0", "7a319d90121a0113df0333fdf8f4633167f23c398987391a0bbea55b1676ca4f")
+redis.call("HINCRBY", "levelCount", "defenders", "1")
 
 redis.call("HSET", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0", "ownerID", "e8f84726a97b390067e47f9087fe7e845131ac463689aeaf5f28f02a731d6b8e")
 redis.call("HSET", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0", "signedID", "304502202a31d0634fa0eadd7c328a22095ceb0b7ecc14a633f5b018a66c216027acc9860221009d8e5e067c2aff9b19e26cdde99445d05a300f42c524fe1fe7c842c826677748")
@@ -80,6 +93,7 @@ redis.call("HSET", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696
 redis.call("HSET", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0", "agentURL", "http, //localhost, 5008")
 redis.call("HSET", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0", "level", "protector")
 redis.call("ZADD", "protectors", "0", "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0")
+redis.call("HINCRBY", "levelCount", "protectors", "1")
 
 --[[ set up owners --]]
 redis.call("SADD", "owners", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f")
