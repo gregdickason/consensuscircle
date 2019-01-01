@@ -119,15 +119,24 @@ def nextCircle(lastBlockMatrix):
     levels = list(red.zrange("levels", "0", "-1"))
     logging.debug(f'levels is {levels}')
 
-    # find next agent and delete from level so cant be chosen twice:
 
+    # for each level (in priority order search for agents)
     for level in levels:
         # TODO is there a better way to store the number of agents at a level
+        # numAtLevel could eventually be adjusted to rather than bring in every agent
+        # at that level before bringing going to the next level (what happens now)
+        # to bring in x agents from that level
         numAtLevel = int(red.hget("levelCount", level))
         levelCount = 0
+        # copy the matrix into a search terms array this allows adjustment of the
+        # matrix for when the search term should be a previously found agent instead of
+        # the random number
         searchTerms = lastBlockMatrix
 
         while (bIndex < len(lastBlockMatrix)) and levelCount < numAtLevel:
+            # while you do not have too many agents and there are less agents then the
+            # max number of agents wanted from this level (currently all the agents at the level)
+            # then search for the next appropriate agent
             logging.debug(f'level count is {levelCount}, numAtLevel is {numAtLevel}')
             searchTerm = "(" + searchTerms[bIndex]
             logging.debug(f'searching for clostest num to {searchTerm}')
@@ -135,6 +144,8 @@ def nextCircle(lastBlockMatrix):
             nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = 1)
             logging.debug(f'level: {level}, nextAgent is {nextAgent}')
 
+            # if next agent is [] then there is no agent after the search term in the
+            # set and so we must loop around and grab the agent at the front
             if not nextAgent:
                 logging.debug(f'no agent lets loop')
                 nextAgent = red.zrange(level, "0", "0")
@@ -147,6 +158,11 @@ def nextCircle(lastBlockMatrix):
             logging.debug(f'next agent is: {nextAgent}')
             logging.debug(f'number was {lastBlockMatrix[bIndex]}')
             if nextAgent in circle:
+                # if the next agent after the random number is already in the circle
+                # then we should find the next agent after this one this is achieved
+                # by adjusting the search term from the random number to the agent already
+                # in the circle, hence finding the next available agent after the random
+                # number
                 logging.debug(f"agent {nextAgent} was already in circle {circle}")
                 searchTerms[bIndex] = nextAgent
             else:
