@@ -138,8 +138,15 @@ def rollBack(to):
     red.rpush("blocks", endBlock)
 
     while currBlock != to:
+        # should be able to use LPOP here because we are removing in order from
+        # the latest until the 'to' block. lrem will ensure the right one is removed
+        # though but if it is logically impossible to remove the wrong one. lpop would
+        # be more efficient
         pipe.lrem("blocks", "0", currBlock)
         pipe.srem("blockSet", currBlock)
+        # if we have removed blocks from our recent block queue to add the block(s)
+        # we are nor rolling back we should re-add these old blocks onto the the end
+        # of the recent block strucure
         if (red.llen("blocks") >= int(red.hget("state", "numBlocksStored"))):
             # if not full size the block will already be in the block set
             endBlock = redisUtilities.getPreviousBlock(endBlock)

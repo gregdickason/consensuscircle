@@ -124,7 +124,7 @@ def nextCircle(lastBlockMatrix):
     for level in levels:
         # TODO is there a better way to store the number of agents at a level
         # numAtLevel could eventually be adjusted to rather than bring in every agent
-        # at that level before bringing going to the next level (what happens now)
+        # at that level before going to the next level (what happens now)
         # to bring in x agents from that level
         numAtLevel = int(red.hget("levelCount", level))
         levelCount = 0
