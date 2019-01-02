@@ -34,7 +34,7 @@ class instructionInfo:
         self.instructionKeys['Simple Transaction'] = ['Receiver Key']
         self.instructionArgs['Simple Transaction'] = ['Payer Wallet', 'Receiver Wallet', 'Amount']
 
-        self.instructionSet['Payment'] = 'fd2ae4a1a8c058bd2ff8f09b77c0e186d39e178c'
+        self.instructionSet['Payment'] = 'dff9573863a715b71013092edf59a18f9abae685'
         self.instructionKeys['Payment'] = ['Originator Key', 'Payer Key', 'Receiver Key']
         # TODO - put in blockheight in all instructions at argument 3 for rollback.
         self.instructionArgs['Payment'] = ['Mining State', 'InstructionHash', 'Blockheight', 'Wallet Payer', 'Wallet Receiver','Payment Amount','instructionFee']

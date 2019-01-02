@@ -1,5 +1,6 @@
 payment.lua
 test.lua
 payment_adv.lua
-setup.lua
-flushAndSet.lua
+setupTestAccounts.lua
+rollbackBlock.lua
+clearMining.lua
