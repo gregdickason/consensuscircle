@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 import redis
 from rq import Queue
-from globalsettings import instructionInfo, blockSettings
+from globalsettings import blockSettings
 import ccExceptions
 
 import logging.config
@@ -82,6 +82,27 @@ def getInstruction(hash):
         return instruction
     else:
         raise RedisError(f'there is no instruction with hash {hash}')
+
+def getInstructionLuaHash(name):
+    if red.sismember("instructions", name) == 1:
+        return red.hget("instruction:" + name, "luaHash")
+    else:
+        return RedisError(f"no instruction by name {name}")
+
+def getInstructionKeys(name):
+    if red.sismember("instructions", name) == 1:
+        return json.loads(red.hget("instruction:" + name, "keys"))
+    else:
+        return RedisError(f"no instruction by name {name}")
+
+def getInstructionArgs(name):
+    if red.sismember("instructions", name) == 1:
+        return json.loads(red.hget("instruction:" + name, "args"))
+    else:
+        return RedisError(f"no instruction by name {name}")
+
+def getInstructionNames():
+    return list(red.smembers("instructions"))
 
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')

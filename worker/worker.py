@@ -9,7 +9,7 @@ import copy
 from bisect import bisect_left
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
-from globalsettings import instructionInfo, blockSettings
+from globalsettings import blockSettings
 import logging.config
 import convergenceProcessor
 import logging.config

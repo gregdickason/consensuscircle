@@ -5,7 +5,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 import convergenceProcessor
-from globalsettings import instructionInfo, blockSettings
+from globalsettings import blockSettings
 import ccExceptions
 import encryptionUtilities
 import redisUtilities
@@ -43,7 +43,6 @@ def addNewBlock(newBlock):
     newBlockPipe.hset(id, "outputMatrix", json.dumps(newBlock.getOutputMatrix()))
 
     instructions = newBlock.getInstructions()
-    instructionSettings = instructionInfo()
 
     for instruction in instructions:
         hash = instruction['instructionHash']
@@ -283,12 +282,12 @@ def validateInstruction(instruction):
   sign = instruction['signature']
   sender = body['sender']
 
-  instructionConfig = instructionInfo()
-
-  if instructionConfig.getInstructionHash(body['name']) == None:
+  if redisUtilities.getInstructionHash(body['name']) == None:
       returnValue['message'] = f"Instruction name: {body['name']} in invalid"
       returnValue['return'] = False
       return returnValue
+
+  #TODO add check for lua hash matching, args list matching and keys list matching
 
   if encryptionUtilities.getHashofInput(body) != hash:
       logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')

@@ -1,5 +1,5 @@
-payment.lua
-test.lua
-payment_adv.lua
-setup.lua
-flushAndSet.lua
+payment
+hello
+payment_adv
+setup
+flushAndSet
