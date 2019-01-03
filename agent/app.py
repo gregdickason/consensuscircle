@@ -15,6 +15,7 @@ import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
 from globalsettings import instructionInfo
+import blockUtilities
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -35,6 +36,12 @@ agent = Agent()
 networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
+
+@app.route("/generateCandidate")
+def generateCandidate():
+    blockUtilities.generateNextCircle()
+
+    return jsonify("attempted to generate candidate")
 
 @app.route("/getCandidateBlocks")
 def cblocks():
@@ -451,8 +458,8 @@ def executeTest():
         return jsonify(response), 400
 
     input = request.get_json()
-    
-    # TODO: check has a nonce, not previously sent 
+
+    # TODO: check has a nonce, not previously sent
 
     required = ['instruction']
     if not all(k in input for k in required):

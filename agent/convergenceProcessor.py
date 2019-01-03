@@ -39,10 +39,6 @@ def generateNextCircle():
 
         return
 
-    # Re-randomise the random hash we will use to converge (for each initiation of a block we are in):
-    randomMatrix = [g for g in encryptionUtilities.getRandomNumbers(32,5)]  # TODO - based on number in circle so need to use this parameter
-    seed = encryptionUtilities.getSeed(32)
-
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
     validInstructions = []
@@ -67,7 +63,8 @@ def generateNextCircle():
         "broadcaster" : redisUtilities.getMyID()
     }
 
-    approval = consensusEmulator.proposeConvergenceHeader(proposedBlock, randomMatrix, circle)
+    approval = consensusEmulator.proposeConvergenceHeader(proposedBlock, circle)
+    # (proposedBlock, broadcaster, signature, circle, randomHashes)
 
     convergenceHeader = approval['header']
     signatures = approval['signatures']
@@ -127,6 +124,7 @@ def nextCircle(lastBlockMatrix):
         # at that level before going to the next level (what happens now)
         # to bring in x agents from that level
         numAtLevel = int(red.hget("levelCount", level))
+        # levelCount is the number of agents in the circle at that level
         levelCount = 0
         # copy the matrix into a search terms array this allows adjustment of the
         # matrix for when the search term should be a previously found agent instead of
