@@ -23,7 +23,7 @@ def getCandidateBlock(blockID):
     else:
         raise RedisError(f'there is no candidate block with id {blockID}')
 
-def popCandidateBlock(blockID):
+def remCandidateBlock(blockID):
     # TODO: put in a lua to execute atomically?
     if red.sismember("candidateBlocks", blockID) == 1:
         block = json.loads(red.get("candidateBlocks:" + blockID))
@@ -62,7 +62,7 @@ def getAttribute(entity, attribute):
     except:
         return ''
 
-# Check if an instruction is already in the pool.  We dont care if already processed into a block 
+# Check if an instruction is already in the pool.  We dont care if already processed into a block
 def hasInstruction(hash):
     logging.debug(f'Checking if {hash} is in pool')
     if red.hget('instructionPool', hash):
@@ -72,11 +72,11 @@ def hasInstruction(hash):
 # gets the instructionHashes stored in redis that are not deleted. These are valid for a block
 def getInstructionHashes():
     # return the list of hashes in the instructionUnprocessedPool
-    insList = list(red.zrange('instructionUnprocessedPool', 0, -1)) 
+    insList = list(red.zrange('instructionUnprocessedPool', 0, -1))
     logging.debug(f'list of instructions returned is {insList}')
     return insList
 
-# gets the instruction.  Again dont care if in a block 
+# gets the instruction.  Again dont care if in a block
 def getInstruction(hash):
     instruction = json.loads(red.hget("instructionPool", hash))
 
