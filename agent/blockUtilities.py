@@ -237,8 +237,8 @@ def addInstruction(instruction):
     # Store to redis
     # TODO: remove instructions we expire after n blocks - we do this in a sorted set, sorted by blockheight from when instruction was received.
     addInstructionPipe.hset('instructionPool', hash, json.dumps(insOut))
-    addInstructionPipe.zadd('instructionSortedPool',  hash, currentblockHeight)
-    addInstructionPipe.sadd('instructionUnprocessedPool',  hash)
+    addInstructionPipe.zadd('instructionSortedPool',  currentblockHeight, hash)
+    addInstructionPipe.sadd('instructionUnprocessedPool', hash)
     addInstructionPipe.execute()
 
     return
@@ -293,7 +293,7 @@ def validateInstruction(instruction):
   sign = instruction['signature']
   sender = body['sender']
 
-  if redisUtilities.getInstructionHash(body['name']) == None:
+  if redisUtilities.getInstructionLuaHash(body['name']) == None:
       returnValue['message'] = f"Instruction name: {body['name']} in invalid"
       returnValue['return'] = False
       return returnValue

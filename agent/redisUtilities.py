@@ -72,7 +72,7 @@ def hasInstruction(hash):
 # gets the instructionHashes stored in redis that are not deleted. These are valid for a block
 def getInstructionHashes():
     # return the list of hashes in the instructionUnprocessedPool
-    insList = list(red.zrange('instructionUnprocessedPool', 0, -1))
+    insList = list(red.smembers('instructionUnprocessedPool'))
     logging.debug(f'list of instructions returned is {insList}')
     return insList
 
@@ -89,19 +89,19 @@ def getInstructionLuaHash(name):
     if red.sismember("instructions", name) == 1:
         return red.hget("instruction:" + name, "luaHash")
     else:
-        return RedisError(f"no instruction by name {name}")
+        raise RedisError(f"no instruction by name {name}")
 
 def getInstructionKeys(name):
     if red.sismember("instructions", name) == 1:
         return json.loads(red.hget("instruction:" + name, "keys"))
     else:
-        return RedisError(f"no instruction by name {name}")
+        raise RedisError(f"no instruction by name {name}")
 
 def getInstructionArgs(name):
     if red.sismember("instructions", name) == 1:
         return json.loads(red.hget("instruction:" + name, "args"))
     else:
-        return RedisError(f"no instruction by name {name}")
+        raise RedisError(f"no instruction by name {name}")
 
 def getInstructionNames():
     return list(red.smembers("instructions"))
