@@ -45,6 +45,8 @@ def addNewBlock(newBlock):
     instructions = newBlock.getInstructions()
 
     for instruction in instructions:
+        # TODO: check that the instruction is in our pool.  If not we need to add it so that it is available if the block rolls back?  
+        # TODO: check validity of instruction if with block? 
         hash = instruction['instructionHash']
         executeInstruction(hash, newBlock.getBlockHeight(), newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
@@ -102,7 +104,8 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
 
     keys.append(instruction['instruction']['sender'])
     keys.extend(instruction['instruction']['keys'])
-
+    
+    # TODO: as part of instruction validation is this a valid hash we accept as an instructionType?
     luaHash = instruction['instruction']['luaHash']
 
     if pipe == None:
@@ -123,13 +126,7 @@ def rollBack(to):
 
     # First rollback the state
     # Currently hardcoded the sha but TODO needs to be in a set of scripts.  (Not an instruction rather a helper script)
-    luaHash = 'fd2ae4a1a8c058bd2ff8f09b77c0e186d39e178c'
-    keys = []
-    args = []
-    args.append(to)
-
-    # Rollback the state through a LUA script so is 100% pass / fail on state update
-    pipe.evalsha(luaHash, len(keys), *(keys+args))
+    luaHash = '6826d23d0d3b10dc89f76f80869eb111e4841bc9'
 
     # Now rollback the blocks:
     currBlock = redisUtilities.getBlockHash()
@@ -137,6 +134,12 @@ def rollBack(to):
     red.rpush("blocks", endBlock)
 
     while currBlock != to:
+        keys = []
+        args = []
+        args.append(currBlock)
+        # Rollback the state through a LUA script so is 100% pass / fail on state update
+        pipe.evalsha(luaHash, len(keys), *(keys+args))
+        # TODO: put all the below into LUA and even the rollback multiple blocks 
         # should be able to use LPOP here because we are removing in order from
         # the latest until the 'to' block. lrem will ensure the right one is removed
         # though but if it is logically impossible to remove the wrong one. lpop would
@@ -202,12 +205,13 @@ def tryInstruction(hash):
       return True
 
 
-    # Get an instruction - return null if not in pool
+    # Get an instruction - return null if not in pool.
+    # TODO: is this not a duplicate of redisUtilities?
 def getInstruction(instructionHash):
     logging.debug(f'get instruction {instructionHash}')
 
-    if red.exists('instructionPool:'+ instructionHash):
-      instruction = json.loads(red.get('instructionPool:'+ instructionHash))
+    if red.hexists('instructionPool', instructionHash):
+      instruction = json.loads(red.hget('instructionPool', instructionHash))
       return instruction
     else:
       logging.info(f'Attempting to get instruction from Pool that is not in pool: {instructionHash}')
@@ -217,17 +221,21 @@ def getInstruction(instructionHash):
   # Manage the instruction pool
 def addInstruction(instruction):
 
-    # TODO remove insOut and current_instructions - only store in redis?
     insOut = instruction
     hash = instruction['instructionHash']
+    # TODO - use redisUtilities directly not below call.  Maybe move redis into redisUtilities.
+    # Get blockheight so we can key instructions against when we got them.  This is to clear them out if they are still in the pool and unprocessed after 'n' blocks deep 
+    currentblockHeight = int(red.hget(red.hget("state", "latestBlock"), "blockHeight"))
 
     addInstructionPipe = red.pipeline(transaction=True)
 
     logging.debug(f'\nwriting {hash} to redis\n')
 
-    # Store to redis - batch as we are writing to both the keys store and the instructionPool
-    addInstructionPipe.set('instructionPool:' + hash, json.dumps(insOut))
-    addInstructionPipe.sadd('instructionHashes',hash)
+    # Store to redis
+    # TODO: remove instructions we expire after n blocks - we do this in a sorted set, sorted by blockheight from when instruction was received.
+    addInstructionPipe.hset('instructionPool', hash, json.dumps(insOut))
+    addInstructionPipe.zadd('instructionSortedPool',  hash, currentblockHeight) 
+    addInstructionPipe.sadd('instructionUnprocessedPool',  hash) 
     addInstructionPipe.execute()
 
     return

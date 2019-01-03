@@ -144,10 +144,10 @@ class Agent:
             agentResponse['message'] = validInstruction['message']
             return agentResponse
 
-        #check if the instruction is already in the pool
+        #check if the instruction is already in the pool.  If so still return True as not error 
         if redisUtilities.hasInstruction(instruction['instructionHash']):
             logging.info(f'Received instruction already have')
-            agentResponse['success'] = False
+            agentResponse['success'] = True
             agentResponse['message'] = 'Instruction already in pool'
             return agentResponse
 
