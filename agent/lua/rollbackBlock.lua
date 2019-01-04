@@ -32,5 +32,5 @@ local name = "rollbackBlock"
   end
   
   -- now move the processed instructions back to unprocessed pool and delete the processed pool
-    redis.call("SUNIONSTORE", "instructionUnprocessedPool", "instructionProcessedPool." .. ARGV[1])
+    redis.call("SUNIONSTORE", "instructionUnprocessedPool", "instructionUnprocessedPool", "instructionProcessedPool." .. ARGV[1])
     redis.call("DEL", "instructionProcessedPool." .. ARGV[1])
