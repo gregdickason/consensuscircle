@@ -16,6 +16,7 @@ from flask_cors import CORS
 from flask_restful import Resource, Api
 import blockUtilities
 import redisUtilities
+import encryptionUtilities
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -45,7 +46,11 @@ def generateCandidate():
 
 @app.route("/getCandidateBlocks")
 def cblocks():
-    return jsonify(agent.getCandidateBlocks())
+
+    try:
+        return jsonify(redisUtilities.getCandidateBlocks())
+    except RedisError as error:
+        return jsonify(f"error returning candidate blocks: {error}"),400
 
 @app.route("/", methods=['GET'])
 def hello():
@@ -126,7 +131,15 @@ def instructionPool():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    agentResponse = agent.instructionPool()
+    logging.debug(f'In instructionPool')
+    agentResponse = {}
+
+    agentResponse['message'] = {
+             'merkleRoot': encryptionUtilities.returnMerkleRoot(instruction_hashes),
+             'signed':encryptionUtilities.signMessage(hashMerkle,agent.getPrivateKey()),
+             'hashes': redisUtilities.getInstructionHashes()
+           }
+    agentResponse['success'] = True
 
     if agentResponse['success'] == False:
         return jsonify(agentResponse['message']), 400
@@ -151,7 +164,11 @@ def entityList():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    return  jsonify(agent.getEntityList())
+    try:
+        return jsonify(redisUtilities.getEntityList())
+    except RedisError as error:
+        return jsonify(f"error returning entity list: {error}"), 400
+
 
 @app.route('/entity', methods=['POST'])
 def returnEntity():
@@ -172,7 +189,15 @@ def returnEntity():
 
     logging.info(f'returning entity {entity}')
 
-    agentResponse = agent.getEntity(entity)
+    # gets entity as a JSON object referenced by the public key.
+    # TODO Error handling or return 'Entity not found JSON object'
+    agentResponse = {}
+    agentResponse['success'] = True
+    try:
+        agentResponse['message'] = redisUtilities.getEntity(entity)
+    except RedisError as error:
+        agentResponse['message'] = 'ERROR no entity with given id'
+        agentResponse['success'] = False
 
     # need to do a get on the entities we are tracking that we already know about
     if agentResponse['success'] == False:
@@ -180,14 +205,28 @@ def returnEntity():
     else:
         return jsonify(agentResponse['message']), 200
 
-@app.route('/getAttributes', methods=['GET'])
+@app.route('/getAttributes', methods=['POST'])
+# TODO add some kind of permissions system/check to this call
 def attributeList():
     global networkOn
     if not networkOn:
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    return  jsonify(agent.getAttributes())
+    values = request.get_json()
+
+    required = ['entity']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    id = values['entity']
+
+    try:
+        response = redisUtilities.getAttributes(id)
+    except RedisError as error:
+        response = error
+
+    return  jsonify(response)
 
 
 @app.route('/attribute', methods=['POST'])
@@ -210,7 +249,13 @@ def returnAttribute():
 
     logging.info(f'returning attribute {attribute} for entity {entity}')
 
-    agentResponse = agent.getAttribute(entity, attribute)
+    # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.
+    # if the attribute does not exist returns null
+    agentResponse = {}
+    agentResponse['success'] = True
+    agentResponse['message'] = redisUtilities.getAttribute(entity, attribute)
+    if agentResponse['message'] == '':
+        agentResponse['success'] = False
 
     # need to do a get on the entities we are tracking that we already know about
     if agentResponse['success'] == False:
@@ -292,7 +337,7 @@ def genesisBlock():
     logging.info("genesisBlock retrieved")
     # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
     response = {
-            'blockHash': agent.getGenesisHash()
+            'blockHash': redisUtilities.getGenesisHash()
         }
     return jsonify(response), 200
 
@@ -337,8 +382,16 @@ def retrieveBlock():
     logging.info("return the Hash of the block at the top of our chain and the block height")
     # TODO generic function for returning all the blocks and contents
 
+    try:
+        response = {
+            'lastBlock': redisUtilities.getBlockHash(),
+            'blockHeight': redisUtilities.getBlockHeight(),
+            'circleDistance': redisUtilities.getCircleDistance()
+            }
 
-    response = agent.getLastBlock()
+    except RedisError as error:
+        response =  f"Redis error: {error}"
+
     return jsonify(response), 200
 
 @app.route('/getPrivateKey',methods=['GET'])

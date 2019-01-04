@@ -242,9 +242,9 @@ app.controller('attributeController', function($scope, $http) {
   $scope.update = '';
   $scope.started = false;
 
-  $scope.getAttributes = function(entity) {
+  $scope.getAttributes = function(chosen) {
     $scope.started = true;
-    $http.get(api_url + 'getAttributes')
+    $http.post(api_url + 'getAttributes', chosen)
         .then(function success(response) {
           $scope.attributes = response.data;
         }, function error(response) {

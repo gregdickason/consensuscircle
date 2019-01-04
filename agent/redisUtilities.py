@@ -106,6 +106,12 @@ def getInstructionArgs(name):
 def getInstructionNames():
     return list(red.smembers("instructions"))
 
+def getAttributes(id):
+    if red.sismember("entities", id) == 1:
+        return list(red.hkeys(id))
+    else:
+        return RedisError(f"no entity with id {id}")
+
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')
 
