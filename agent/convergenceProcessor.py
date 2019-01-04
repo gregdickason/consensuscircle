@@ -47,6 +47,7 @@ def generateNextCircle():
     possibleInstructions = redisUtilities.getInstructionHashes()
     validInstructions = []
     validInstructionHashes = []
+    # TODO here: clear any mining pool from previous iterations.  (clearMining.lua script)
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
             logging.debug('instruction was valid')
