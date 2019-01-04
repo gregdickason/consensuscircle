@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-# local node eventuallty taken over by the cloud. Runs the local server.
-
+# Runs the local server, exposed on port 5000 (the agent address)
 # Class for local HTTP connections for the blockchain.  This only accepts inbound communicationss
 # Message class does outbound
 
@@ -37,20 +36,6 @@ agent = Agent()
 networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
-
-@app.route("/generateCandidate")
-def generateCandidate():
-    blockUtilities.generateNextCircle()
-
-    return jsonify("attempted to generate candidate")
-
-@app.route("/getCandidateBlocks")
-def cblocks():
-
-    try:
-        return jsonify(redisUtilities.getCandidateBlocks())
-    except RedisError as error:
-        return jsonify(f"error returning candidate blocks: {error}"),400
 
 @app.route("/", methods=['GET'])
 def hello():
@@ -153,9 +138,9 @@ def getPendingInstructions():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    agentResponse = agent.instructionPool()
+    agentResponse = redisUtilities.getInstructionHashes()
 
-    return jsonify(agentResponse['message']['hashes'])
+    return jsonify(agentResponse)
 
 @app.route('/getEntities', methods=['GET'])
 def entityList():
@@ -559,28 +544,41 @@ def addInstruction():
 
 # TODO remove this routine.  It is being used as to accept agents we want to follow for instruction updates
 # build routine into instruction parsing (when we will choose to randomly follow agents?)
-@app.route('/agents/register', methods=['POST'])
-def register_agents():
-    global networkOn
+# @app.route('/agents/register', methods=['POST'])
+# def register_agents():
+#     global networkOn
+#
+#     # Testing parameters - is network on
+#     if not networkOn:
+#         response = {'network' : f'{networkOn}'}
+#         return jsonify(response), 400
+#
+#     # Register other agents with this agent - add them to the set it maintains
+#     logging.info('register agent')
+#     values = request.get_json()
+#
+#     agents = values.get('agents')
+#
+#     agentResponse = agent.registerAgents(agents)
+#
+#     if agentResponse.success == False:
+#         return jsonify(agentResponse.message), 400
+#     else:
+#         return jsonify(agentResponse.message), 201
 
-    # Testing parameters - is network on
-    if not networkOn:
-        response = {'network' : f'{networkOn}'}
-        return jsonify(response), 400
+@app.route("/generateCandidate")
+def generateCandidate():
+    blockUtilities.generateNextCircle()
 
-    # Register other agents with this agent - add them to the set it maintains
-    logging.info('register agent')
-    values = request.get_json()
+    return jsonify("attempted to generate candidate")
 
-    agents = values.get('agents')
+@app.route("/getCandidateBlocks")
+def cblocks():
 
-    agentResponse = agent.registerAgents(agents)
-
-    if agentResponse.success == False:
-        return jsonify(agentResponse.message), 400
-    else:
-        return jsonify(agentResponse.message), 201
-
+    try:
+        return jsonify(redisUtilities.getCandidateBlocks())
+    except RedisError as error:
+        return jsonify(f"error returning candidate blocks: {error}"),400
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
