@@ -20,7 +20,7 @@ agentPriKeys = {
     "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0" : "8d25f09d66ef3cb3336355944e8015c6544b6b7fc4b7fa9ed5289718f91c9448"
 }
 
-def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
+def proposeConvergenceHeader(proposedInstructions, circle):
 
     response = {}
     response["header"] = {

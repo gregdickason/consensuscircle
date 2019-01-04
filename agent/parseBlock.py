@@ -15,7 +15,7 @@ import redisUtilities
 class parseBlock:
     def __init__(self,blockID, entityInstructions):
 
-        self.block = redisUtilities.popCandidateBlock(blockID)
+        self.block = redisUtilities.getCandidateBlock(blockID)
 
         logging.debug(f'in parseBlock')
         self.blockHash = self.block['blockHash']
@@ -79,8 +79,6 @@ class parseBlock:
             return
 
         # Are the instructions hashed and signed?
-        # TODO in agent code: these can already be verified so maybe here we simply check that we have already processed transaction rather than reprocess?
-        # TODO in agent code - remove them from the pool IF THE BLOCK PASSES
         for e in self.instructions:
           validInstruction = blockUtilities.validateInstruction(e)
           if not validInstruction['return']:

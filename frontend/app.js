@@ -96,6 +96,12 @@ app.config(function($routeProvider) {
     controller  : 'executeInstructionController'
   })
 
+  .when('/generateCandidate', {
+    templateUrl : 'pages/generateCandidate.html',
+    controller  : 'generateCandidateController'
+  })
+
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -107,6 +113,18 @@ app.controller('HomeController', function($scope, $http) {
       $scope.hostname = self.location.hostname;
       $scope.name = response.data.name;
       $scope.visits = response.data.visits;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+
+app.controller('generateCandidateController', function($scope, $http) {
+
+  $http.get(api_url + "generateCandidate")
+    .then(function success(response) {
+      $scope.message = response.data;
     }, function error(response) {
       $scope.message = response.data;
     });

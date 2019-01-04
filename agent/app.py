@@ -14,7 +14,8 @@ import os
 import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
-from globalsettings import instructionInfo
+import blockUtilities
+import redisUtilities
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -35,6 +36,12 @@ agent = Agent()
 networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
+
+@app.route("/generateCandidate")
+def generateCandidate():
+    blockUtilities.generateNextCircle()
+
+    return jsonify("attempted to generate candidate")
 
 @app.route("/getCandidateBlocks")
 def cblocks():
@@ -360,9 +367,7 @@ def getInstructionNames():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    instructionSet = instructionInfo()
-
-    return jsonify(instructionSet.getInstructionNames())
+    return jsonify(redisUtilities.getInstructionNames())
 
 
 #getting a list of the luaHash's matching to the instruction names
@@ -383,8 +388,7 @@ def getLuaHash():
 
     logging.info("retrieving a lua hash")
 
-    instructionSet = instructionInfo()
-    luaHash = instructionSet.getInstructionHash(values['name'])
+    luaHash = redisUtilities.getInstructionLuaHash(values['name'])
 
     if luaHash == None:
         return jsonify('ERROR: No hash found for that instruction name', 400)
@@ -408,8 +412,7 @@ def getInstructionArguments():
 
     logging.info("retrieving instruction arguments")
 
-    instructionSet = instructionInfo()
-    argumentList = instructionSet.getInstructionArgs(values['name'])
+    argumentList = redisUtilities.getInstructionArgs(values['name'])
 
     if argumentList == None:
         return jsonify('ERROR: No instruction with this name', 400)
@@ -433,8 +436,7 @@ def getInstructionKeys():
 
     logging.info("retrieving instruction keys")
 
-    instructionSet = instructionInfo()
-    keyList = instructionSet.getInstructionKeys(values['name'])
+    keyList = redisUtilities.getInstructionKeys(values['name'])
 
     if keyList == None:
         return jsonify('ERROR: No instruction with this name', 400)
@@ -451,8 +453,8 @@ def executeTest():
         return jsonify(response), 400
 
     input = request.get_json()
-    
-    # TODO: check has a nonce, not previously sent 
+
+    # TODO: check has a nonce, not previously sent
 
     required = ['instruction']
     if not all(k in input for k in required):
@@ -486,9 +488,8 @@ def addInstruction():
     if not all (j in instructionToSend['instruction'] for j in requiredInstructionParams):
         return 'Missing fields', 400
 
-    instructionSet = instructionInfo()
-    requiredKeys = instructionSet.getInstructionKeys(instructionToSend['instruction']['name'])
-    requiredArgs = instructionSet.getInstructionArgs(instructionToSend['instruction']['name'])
+    requiredKeys = redisUtilities.getInstructionKeys(instructionToSend['instruction']['name'])
+    requiredArgs = redisUtilities.getInstructionArgs(instructionToSend['instruction']['name'])
 
     if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
         return jsonify("ERROR: instruction structure is incorrect")

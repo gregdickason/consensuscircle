@@ -276,7 +276,7 @@ class Agent:
         # Need to get the merkle root from the instruction pool. - I
         instruction_hashes = redisUtilities.getInstructionHashes()
         hashMerkle = encryptionUtilities.returnMerkleRoot(instruction_hashes)
-        hashSigned = encryptionUtilities.ignMessage(hashMerkle,self.agentPrivateKey)
+        hashSigned = encryptionUtilities.signMessage(hashMerkle,self.agentPrivateKey)
         agentResponse['message'] = {
                  'merkleRoot': hashMerkle,
                  'signed':hashSigned,

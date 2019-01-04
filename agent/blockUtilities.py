@@ -5,8 +5,10 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 import convergenceProcessor
-from globalsettings import instructionInfo, blockSettings
+from globalsettings import blockSettings
 import ccExceptions
+import encryptionUtilities
+import redisUtilities
 
 import logging.config
 
@@ -41,11 +43,10 @@ def addNewBlock(newBlock):
     newBlockPipe.hset(id, "outputMatrix", json.dumps(newBlock.getOutputMatrix()))
 
     instructions = newBlock.getInstructions()
-    instructionSettings = instructionInfo()
 
     for instruction in instructions:
-        # TODO: check that the instruction is in our pool.  If not we need to add it so that it is available if the block rolls back?  
-        # TODO: check validity of instruction if with block? 
+        # TODO: check that the instruction is in our pool.  If not we need to add it so that it is available if the block rolls back?
+        # TODO: check validity of instruction if with block?
         hash = instruction['instructionHash']
         executeInstruction(hash, newBlock.getBlockHeight(), newBlockPipe)
           # Failure in processing the block.  Abort and reject the block
@@ -76,6 +77,9 @@ def addNewBlock(newBlock):
     blockFile.write(json.dumps(vars(newBlock)))
     blockFile.close()
 
+    #if they all pass remove the candidate block from the candidateBlockSet
+    redisUtilities.remCandidateBlock(id)
+
 
     return
 
@@ -103,7 +107,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
 
     keys.append(instruction['instruction']['sender'])
     keys.extend(instruction['instruction']['keys'])
-    
+
     # TODO: as part of instruction validation is this a valid hash we accept as an instructionType?
     luaHash = instruction['instruction']['luaHash']
 
@@ -138,9 +142,16 @@ def rollBack(to):
         args.append(currBlock)
         # Rollback the state through a LUA script so is 100% pass / fail on state update
         pipe.evalsha(luaHash, len(keys), *(keys+args))
-        # TODO: put all the below into LUA and even the rollback multiple blocks 
+        # TODO: put all the below into LUA and even the rollback multiple blocks
+        # should be able to use LPOP here because we are removing in order from
+        # the latest until the 'to' block. lrem will ensure the right one is removed
+        # though but if it is logically impossible to remove the wrong one. lpop would
+        # be more efficient
         pipe.lrem("blocks", "0", currBlock)
         pipe.srem("blockSet", currBlock)
+        # if we have removed blocks from our recent block queue to add the block(s)
+        # we are nor rolling back we should re-add these old blocks onto the the end
+        # of the recent block strucure
         if (red.llen("blocks") >= int(red.hget("state", "numBlocksStored"))):
             # if not full size the block will already be in the block set
             endBlock = redisUtilities.getPreviousBlock(endBlock)
@@ -216,7 +227,7 @@ def addInstruction(instruction):
     insOut = instruction
     hash = instruction['instructionHash']
     # TODO - use redisUtilities directly not below call.  Maybe move redis into redisUtilities.
-    # Get blockheight so we can key instructions against when we got them.  This is to clear them out if they are still in the pool and unprocessed after 'n' blocks deep 
+    # Get blockheight so we can key instructions against when we got them.  This is to clear them out if they are still in the pool and unprocessed after 'n' blocks deep
     currentblockHeight = int(red.hget(red.hget("state", "latestBlock"), "blockHeight"))
 
     addInstructionPipe = red.pipeline(transaction=True)
@@ -226,8 +237,8 @@ def addInstruction(instruction):
     # Store to redis
     # TODO: remove instructions we expire after n blocks - we do this in a sorted set, sorted by blockheight from when instruction was received.
     addInstructionPipe.hset('instructionPool', hash, json.dumps(insOut))
-    addInstructionPipe.zadd('instructionSortedPool',  hash, currentblockHeight) 
-    addInstructionPipe.sadd('instructionUnprocessedPool',  hash) 
+    addInstructionPipe.zadd('instructionSortedPool',  currentblockHeight, hash)
+    addInstructionPipe.sadd('instructionUnprocessedPool', hash)
     addInstructionPipe.execute()
 
     return
@@ -282,12 +293,12 @@ def validateInstruction(instruction):
   sign = instruction['signature']
   sender = body['sender']
 
-  instructionConfig = instructionInfo()
-
-  if instructionConfig.getInstructionHash(body['name']) == None:
+  if redisUtilities.getInstructionLuaHash(body['name']) == None:
       returnValue['message'] = f"Instruction name: {body['name']} in invalid"
       returnValue['return'] = False
       return returnValue
+
+  #TODO add check for lua hash matching, args list matching and keys list matching
 
   if encryptionUtilities.getHashofInput(body) != hash:
       logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
