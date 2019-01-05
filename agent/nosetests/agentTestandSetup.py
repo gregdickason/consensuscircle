@@ -107,21 +107,22 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
              self.assertEqual(body, {'lastBlock': '695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4', 'circleDistance' : 0, 'blockHeight' : 0})
 
-    # def test_publish_block_then_latest_block(self):
-    #          url = "http://localhost:5000/publishBlock"
-    #          request = urllib.request.Request(url, data='{"blockID" : "bcbb067aa59ce5ff1a56f33f229617db1bd3860488a02b8fd26b92d1b8d95fbe.json"}'.encode('utf-8'))
-    #          request.add_header("Content-Type","application/json")
-    #          response = urllib.request.urlopen(request)
-    #          body = json.loads(response.read().decode('utf-8'))
-    #          self.assertEqual(response.code, 200)
-    #          self.assertEqual(body, {'chainLength': 1, 'circleDistance' : 'dc1ccc6bb8169fe29a332b54247ea2a0ca621039518ea994ff14a418d2daf5a8e3', 'lastBlock' : '72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd'})
-    #
-    #          url = "http://localhost:5000/block"
-    #          request = urllib.request.Request(url)
-    #          response = urllib.request.urlopen(request)
-    #          body = json.loads(response.read().decode('utf-8'))
-    #          self.assertEqual(response.code, 200)
-    #          self.assertEqual(body, {'lastBlock': '72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd', 'circleDistance' : 'dc1ccc6bb8169fe29a332b54247ea2a0ca621039518ea994ff14a418d2daf5a8e3', 'blockHeight' : 1})
+    def test_108_publish_block_then_latest_block(self):
+             url = "http://localhost:5000/publishBlock"
+             request = urllib.request.Request(url, data='{"blockID" : "34a3d75bdf70e43dc343bf28334736a66dc36283a292ebcf13d72e43b9a75c63"}'.encode('utf-8'))
+             request.add_header("Content-Type","application/json")
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(response.code, 200)
+             self.assertEqual(body, {"chainLength":1,"circleDistance":"561b3ab1b654de94aaa2d9d84335d74e3159968d29a47ff473788428be16210b028","error":"No error checking candidate block[]","lastBlock":"34a3d75bdf70e43dc343bf28334736a66dc36283a292ebcf13d72e43b9a75c63","message":"Block Conforms"})
+
+             url = "http://localhost:5000/block"
+             request = urllib.request.Request(url)
+             response = urllib.request.urlopen(request)
+             body = json.loads(response.read().decode('utf-8'))
+             self.assertEqual(response.code, 200)
+             self.assertEqual(body, {"blockHeight":1,"circleDistance":159526973199607193879304450923182459432912886055691720196950684421348839369257000,"lastBlock":"34a3d75bdf70e43dc343bf28334736a66dc36283a292ebcf13d72e43b9a75c63"})     
+
 
     def test_107_initialConfig(self):
         url = "http://localhost:5000/getConfig"

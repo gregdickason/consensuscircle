@@ -159,9 +159,9 @@ redis.call("HSET", "instruction:hello", "args", "[]")
 redis.call("HSET", "instruction:hello", "keys", "[]")
 
 redis.call("SADD", "instructions", "payment_adv")
-redis.call("HSET", "instruction:hello", "luaHash", "dff9573863a715b71013092edf59a18f9abae685")
-redis.call("HSET", "instruction:hello", "args", '["Wallet Payer", "Wallet Receiver","Payment Amount","instructionFee"]')
-redis.call("HSET", "instruction:hello", "keys", '["Payer Key", "Receiver Key"]')
+redis.call("HSET", "instruction:payment_adv", "luaHash", "dff9573863a715b71013092edf59a18f9abae685")
+redis.call("HSET", "instruction:payment_adv", "args", '["Wallet Payer", "Wallet Receiver","Payment Amount","instructionFee"]')
+redis.call("HSET", "instruction:payment_adv", "keys", '["Payer Key", "Receiver Key"]')
 
 redis.call("SADD", "instructions", "flushAndSet")
 redis.call("HSET", "instruction:flushAndSet", "args", "[]")

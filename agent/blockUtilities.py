@@ -120,7 +120,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
         if instruction['instruction']['name'] == "flushAndSet":
             #NOTE NOTE NOTE: IF YOU CHANGE LUA HASH MUST CHANGE THIS
             logging.debug("I have flushed and set adding hash back")
-            red.hset("instruction:flushAndSet", "luaHash", "d9b787f64c627d17fef0bc8d21dd1f49ac61c0a8")
+            red.hset("instruction:flushAndSet", "luaHash", "e3055b9f732ebf5eb71f6aa314a1cfa94b30fb95")
 
     else:
         # Queue in the pipeline - no response as not executed
@@ -301,17 +301,26 @@ def validateInstruction(instruction):
         sender = body['sender']
 
         if redisUtilities.getInstructionLuaHash(body['name']) == None:
-          returnValue['message'] = f"Instruction name: {body['name']} in invalid"
-          returnValue['return'] = False
-          return returnValue
+            returnValue['message'] = f"Instruction name: {body['name']} in invalid"
+            returnValue['return'] = False
+            return returnValue
 
-        #TODO add check for lua hash matching, args list matching and keys list matching
+        #TODO check keys returns in the same order every time or sort the lists
+        if redisUtilities.getInstructionArgs(body['name']) != body["args"]:
+            returnValue['message'] = f"Instruction args: {body['name']}'s args in invalid. args are {body['args']} should be {redisUtilities.getInstructionArgs(body['name'])}"
+            returnValue['return'] = False
+            return returnValue
+
+        if redisUtilities.getInstructionKeys(body['name']) != body["keys"]:
+            returnValue['message'] = f"Instruction args: {body['name']}'s keys in invalid"
+            returnValue['return'] = False
+            return returnValue
 
         if encryptionUtilities.getHashofInput(body) != hash:
-          logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
-          returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
-          returnValue['return'] = False
-          return returnValue
+            logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
+            returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
+            returnValue['return'] = False
+            return returnValue
 
         publicKey = redisUtilities.getPublicKey(sender)
 
@@ -319,16 +328,16 @@ def validateInstruction(instruction):
 
         # if getPubKey of sender is None, we dont know the sender (not on chain).  We deny them
         if publicKey == None:
-          logging.info(f'Sender not known, reject')
-          returnValue['message'] = f'Public Key of sender not registered on chain'
-          returnValue['return'] = False
-          return returnValue
+            logging.info(f'Sender not known, reject')
+            returnValue['message'] = f'Public Key of sender not registered on chain'
+            returnValue['return'] = False
+            return returnValue
 
         # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
         if encryptionUtilities.verifyMessage(hash, sign, publicKey) != True:
-          logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
-          returnValue['message'] = f'Signature does not match'
-          returnValue['return'] = False
+            logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
+            returnValue['message'] = f'Signature does not match'
+            returnValue['return'] = False
 
     except RedisError:
         returnValue['message'] = f"Redis error on instruction with name {instruction['instruction']['name']}"

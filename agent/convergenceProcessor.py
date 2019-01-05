@@ -45,7 +45,7 @@ def generateNextCircle():
     validInstructionHashes = []
     # TODO here: clear any mining pool from previous iterations.  (clearMining.lua script).  Hardcoded for now but put in redisUtilities
     luaHash = 'b5ef661e48d6306417d1f645c358f3d98a6148a1'
-    red.evalsha(luaHash, len(keys), *(keys+args))
+    red.evalsha(luaHash, 0)
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
             logging.debug('instruction was valid')
@@ -114,7 +114,7 @@ def distributeBlock(block):
 # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
 def nextCircle(searchTerms):
     circle, bIndex = [],0
-    logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}')
+    logging.debug(f'in next circle with lastBlockMatrix: {searchTerms}')
     # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
     levels = list(red.zrange("levels", "0", "-1"))
     logging.debug(f'levels is {levels}')
