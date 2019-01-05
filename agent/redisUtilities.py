@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 import redis
 from rq import Queue
 from globalsettings import blockSettings
-import ccExceptions
+from ccExceptions import RedisError
 
 import logging.config
 

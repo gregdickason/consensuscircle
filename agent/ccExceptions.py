@@ -19,12 +19,11 @@ class BlockError(Error):
         self.id = id
         self.previous = previous
 
-class RedisError(Error):
+class RedisError(Exception):
     """Raised when redis encounters an error because it cannot 'get' find a value
 
     Attributes:
         reason -- what redis cannot find
     """
 
-    def __init__(self, reason):
-        self.reason = reason
+    pass

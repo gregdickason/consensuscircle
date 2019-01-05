@@ -53,7 +53,7 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
              self.assertEqual(body, {'ownerLevel' : 'founder'})
 
-    def test_110_process_genesisBlock_returns200(self):
+    def test_105_process_genesisBlock_returns200(self):
              url = "http://localhost:5000/genesisBlock"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
@@ -61,7 +61,7 @@ class TddAgent(TestCase):
              self.assertEqual(response.code, 200)
              self.assertEqual(body, {'blockHash': '695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4'})
 
-    def test_network_status_changes(self):
+    def test_104_network_status_changes(self):
              url = "http://localhost:5000/getNetworkStatus"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
@@ -99,7 +99,7 @@ class TddAgent(TestCase):
              self.assertEqual(body, {'network': 'on'})
              self.assertEqual(response.code, 200)
 
-    def test_latest_block_initial(self):
+    def test_106_latest_block_initial(self):
              url = "http://localhost:5000/block"
              request = urllib.request.Request(url)
              response = urllib.request.urlopen(request)
@@ -123,7 +123,7 @@ class TddAgent(TestCase):
     #          self.assertEqual(response.code, 200)
     #          self.assertEqual(body, {'lastBlock': '72e055253cf8c78d8fc582b4f2e43ec001c564cbdfb3c361c5d0e2adfbebbffd', 'circleDistance' : 'dc1ccc6bb8169fe29a332b54247ea2a0ca621039518ea994ff14a418d2daf5a8e3', 'blockHeight' : 1})
 
-    def test_a_initialConfig(self):
+    def test_107_initialConfig(self):
         url = "http://localhost:5000/getConfig"
         request = urllib.request.Request(url)
         response = urllib.request.urlopen(request)

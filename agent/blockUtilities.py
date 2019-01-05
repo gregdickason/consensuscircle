@@ -6,7 +6,7 @@ import redis
 from rq import Queue
 import convergenceProcessor
 from globalsettings import blockSettings
-import ccExceptions
+from ccExceptions import BlockError, RedisError
 import encryptionUtilities
 import redisUtilities
 
@@ -283,44 +283,50 @@ def generateNextCircle():
 
 # validate Instruction: confirm hash values and signature.  Does not add to pool or update any temp status (done in processInstruction)
 def validateInstruction(instruction):
-  returnValue = {
-        'message': f'Instruction Accepted',
-        'return': True
-    }
 
-  body = instruction['instruction']
-  hash = instruction['instructionHash']
-  sign = instruction['signature']
-  sender = body['sender']
+    try:
+        returnValue = {
+            'message': f'Instruction Accepted',
+            'return': True
+        }
 
-  if redisUtilities.getInstructionLuaHash(body['name']) == None:
-      returnValue['message'] = f"Instruction name: {body['name']} in invalid"
-      returnValue['return'] = False
-      return returnValue
+        body = instruction['instruction']
+        hash = instruction['instructionHash']
+        sign = instruction['signature']
+        sender = body['sender']
 
-  #TODO add check for lua hash matching, args list matching and keys list matching
+        if redisUtilities.getInstructionLuaHash(body['name']) == None:
+          returnValue['message'] = f"Instruction name: {body['name']} in invalid"
+          returnValue['return'] = False
+          return returnValue
 
-  if encryptionUtilities.getHashofInput(body) != hash:
-      logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
-      returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
-      returnValue['return'] = False
-      return returnValue
+        #TODO add check for lua hash matching, args list matching and keys list matching
 
-  publicKey = redisUtilities.getPublicKey(sender)
+        if encryptionUtilities.getHashofInput(body) != hash:
+          logging.info(f'hash of instruction does not match: {encryptionUtilities.getHashofInput(body)}')
+          returnValue['message'] = f'Incorrect hash for Instruction at {hash}'
+          returnValue['return'] = False
+          return returnValue
 
-  logging.debug(f'publicKey is {publicKey}')
+        publicKey = redisUtilities.getPublicKey(sender)
 
-  # if getPubKey of sender is None, we dont know the sender (not on chain).  We deny them
-  if publicKey == None:
-      logging.info(f'Sender not known, reject')
-      returnValue['message'] = f'Public Key of sender not registered on chain'
-      returnValue['return'] = False
-      return returnValue
+        logging.debug(f'publicKey is {publicKey}')
 
-  # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
-  if encryptionUtilities.verifyMessage(hash, sign, publicKey) != True:
-      logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
-      returnValue['message'] = f'Signature does not match'
-      returnValue['return'] = False
+        # if getPubKey of sender is None, we dont know the sender (not on chain).  We deny them
+        if publicKey == None:
+          logging.info(f'Sender not known, reject')
+          returnValue['message'] = f'Public Key of sender not registered on chain'
+          returnValue['return'] = False
+          return returnValue
 
-  return returnValue
+        # TODO confirm signature - if this is false then reject (sohuld we untrust sender?)
+        if encryptionUtilities.verifyMessage(hash, sign, publicKey) != True:
+          logging.info(f'Instruction for {hash} not verified - signature {sign} for {publicKey} pkey incorrect')
+          returnValue['message'] = f'Signature does not match'
+          returnValue['return'] = False
+
+    except RedisError:
+        returnValue['message'] = f"Redis error on instruction with name {instruction['instruction']['name']}"
+        returnValue['return'] = False
+
+    return returnValue
