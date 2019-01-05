@@ -209,7 +209,7 @@ def tryInstruction(hash):
 
 
     # Get an instruction - return null if not in pool.
-    # TODO: is this not a duplicate of redisUtilities?
+    # TODO: is this not a duplicate of redisUtilities? - YES
 def getInstruction(instructionHash):
     logging.debug(f'get instruction {instructionHash}')
 

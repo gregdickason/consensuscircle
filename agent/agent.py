@@ -17,7 +17,6 @@ import copy
 from parseBlock import parseBlock
 import blockUtilities
 import redisUtilities
-from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
 
 #utility functions - add to class?
@@ -199,17 +198,17 @@ class Agent:
     # version 1 possible redundant or undated code. TODO: Review this section
 
     # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
-    def register_agent(self, address):
-        """
-        Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
-        :param address: Address of node. Eg. 'http://192.168.0.5:5000'
-        """
-        parsed_url = urlparse(address)
-
-        if parsed_url.netloc:
-            self.followedAgents.add(parsed_url.netloc)
-        elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'.
-            self.followedAgents.add(parsed_url.path)
-        else:
-            raise ValueError('Invalid URL')
+    # def register_agent(self, address):
+    #     """
+    #     Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
+    #     :param address: Address of node. Eg. 'http://192.168.0.5:5000'
+    #     """
+    #     parsed_url = urlparse(address)
+    #
+    #     if parsed_url.netloc:
+    #         self.followedAgents.add(parsed_url.netloc)
+    #     elif parsed_url.path:
+    #         # Accepts an URL without scheme like '192.168.0.5:5000'.
+    #         self.followedAgents.add(parsed_url.path)
+    #     else:
+    #         raise ValueError('Invalid URL')
