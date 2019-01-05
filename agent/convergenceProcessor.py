@@ -112,7 +112,7 @@ def distributeBlock(block):
 # Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
 # currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
 # Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
-def nextCircle(lastBlockMatrix):
+def nextCircle(searchTerms):
     circle, bIndex = [],0
     logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}')
     # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
@@ -132,9 +132,8 @@ def nextCircle(lastBlockMatrix):
         # copy the matrix into a search terms array this allows adjustment of the
         # matrix for when the search term should be a previously found agent instead of
         # the random number
-        searchTerms = lastBlockMatrix
 
-        while (bIndex < len(lastBlockMatrix)) and levelCount < numAtLevel:
+        while (bIndex < len(searchTerms)) and levelCount < numAtLevel:
             # while you do not have too many agents and there are less agents then the
             # max number of agents wanted from this level (currently all the agents at the level)
             # then search for the next appropriate agent
@@ -157,7 +156,7 @@ def nextCircle(lastBlockMatrix):
             nextAgent = ''.join(nextAgent)
 
             logging.debug(f'next agent is: {nextAgent}')
-            logging.debug(f'number was {lastBlockMatrix[bIndex]}')
+            logging.debug(f'number was {searchTerms[bIndex]}')
             if nextAgent in circle:
                 # if the next agent after the random number is already in the circle
                 # then we should find the next agent after this one this is achieved

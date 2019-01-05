@@ -19,6 +19,7 @@ import redisUtilities
 import blockUtilities
 import encryptionUtilities
 
+
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker
 with Connection(Redis('redis', 6379)):

@@ -17,7 +17,6 @@ import copy
 from parseBlock import parseBlock
 import blockUtilities
 import redisUtilities
-from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
 
 #utility functions - add to class?
@@ -144,7 +143,7 @@ class Agent:
             agentResponse['message'] = validInstruction['message']
             return agentResponse
 
-        #check if the instruction is already in the pool.  If so still return True as not error 
+        #check if the instruction is already in the pool.  If so still return True as not error
         if redisUtilities.hasInstruction(instruction['instructionHash']):
             logging.info(f'Received instruction already have')
             agentResponse['success'] = True
@@ -161,18 +160,6 @@ class Agent:
 
 
     # part 2 : gets and sets
-
-    def getLastBlock(self):
-
-        try:
-            return {
-                'lastBlock': redisUtilities.getBlockHash(),
-                'blockHeight': redisUtilities.getBlockHeight(),
-                'circleDistance': redisUtilities.getCircleDistance()
-                }
-
-        except RedisError as error:
-            return f"Redis error: {error}"
 
     # returns the owner of the agent with the id claimed
     def getOwner(self):
@@ -208,79 +195,20 @@ class Agent:
         except RedisError as error:
             return f"Redis Error getting agent's configuration: {error}"
 
-    def getEntityList(self):
-        try:
-            return redisUtilities.getEntityList()
-        except RedisError as error:
-            return f"error returning entity list: {error}"
-
-    def getCandidateBlocks(self):
-        try:
-            return redisUtilities.getCandidateBlocks()
-        except RedisError as error:
-            return f"error returning candidate blocks: {error}"
-
-    # returns the list of attributes the entity has.  Hardcoded to test
-    # TODO: work out the get and set attribute sections
-    def getAttributes(self):
-        return ['wallets.default.balance']
-
-    def getEntity(self, entity):
-        # gets entity as a JSON object referenced by the public key.
-        # TODO Error handling or return 'Entity not found JSON object'
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = redisUtilities.getEntity(entity)
-        if agentResponse['message'] == '':
-          agentResponse['success'] = False
-
-        return agentResponse
-
-    def getAttribute(self, entity, attribute):
-        # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.
-        # if the attribute does not exist returns null
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = redisUtilities.getAttribute(entity, attribute)
-        if agentResponse['message'] == '':
-          agentResponse['success'] = False
-
-        return agentResponse
-
-    def getGenesisHash(self):
-        return redisUtilities.getGenesisHash()
-
     # version 1 possible redundant or undated code. TODO: Review this section
 
     # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
-    def register_agent(self, address):
-        """
-        Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
-        :param address: Address of node. Eg. 'http://192.168.0.5:5000'
-        """
-        parsed_url = urlparse(address)
-
-        if parsed_url.netloc:
-            self.followedAgents.add(parsed_url.netloc)
-        elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'.
-            self.followedAgents.add(parsed_url.path)
-        else:
-            raise ValueError('Invalid URL')
-
-    # Routine to get the current instruction pool we dont test convergence, any following agent can get this to populate their pool
-    def instructionPool(self):
-        logging.debug(f'In instructionPool')
-        agentResponse = {}
-
-        # Need to get the merkle root from the instruction pool. - I
-        instruction_hashes = redisUtilities.getInstructionHashes()
-        hashMerkle = encryptionUtilities.returnMerkleRoot(instruction_hashes)
-        hashSigned = encryptionUtilities.signMessage(hashMerkle,self.agentPrivateKey)
-        agentResponse['message'] = {
-                 'merkleRoot': hashMerkle,
-                 'signed':hashSigned,
-                 'hashes':list(instruction_hashes)
-               }
-        agentResponse['success'] = True
-        return agentResponse
+    # def register_agent(self, address):
+    #     """
+    #     Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
+    #     :param address: Address of node. Eg. 'http://192.168.0.5:5000'
+    #     """
+    #     parsed_url = urlparse(address)
+    #
+    #     if parsed_url.netloc:
+    #         self.followedAgents.add(parsed_url.netloc)
+    #     elif parsed_url.path:
+    #         # Accepts an URL without scheme like '192.168.0.5:5000'.
+    #         self.followedAgents.add(parsed_url.path)
+    #     else:
+    #         raise ValueError('Invalid URL')

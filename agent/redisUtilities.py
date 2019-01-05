@@ -106,6 +106,12 @@ def getInstructionArgs(name):
 def getInstructionNames():
     return list(red.smembers("instructions"))
 
+def getAttributes(id):
+    if red.sismember("entities", id) == 1:
+        return list(red.hkeys(id))
+    else:
+        return RedisError(f"no entity with id {id}")
+
 def getEntity(entity):
     logging.debug(f'Getting entity {entity} in blockState)')
 
@@ -250,39 +256,3 @@ def getLevel(id=None):
         return red.hget(id, "level")
     else:
         raise RedisError(f'there is no agent with id {id}')
-
-# def setRandomMatrix(id, randomMatrix):
-#     red.hset(id, "randomMatrix", json.dumps(randomMatrix))
-#     return
-#
-# def getRandomMatrix(id=None):
-#     if id == None:
-#         return red.hget(red.hget("state", "myID"), "randomMatrix")
-#     elif red.sismember("agents", id) == 1:
-#         return red.hget(id, "randomMatrix")
-#     else:
-#         return "ERROR: invalid ID"
-#
-# def setSeed(id, seed):
-#     red.hset(id, "randomMatrix", json.dumps(seed))
-#     return
-#
-# def getSeed(id=None):
-#     if id == None:
-#         return red.hget(red.hget("state", "myID"), "seed")
-#     elif red.sismember("agents", id) == 1:
-#         return red.hget(id, "seed")
-#     else:
-#         return "ERROR: invalid ID"
-#
-# def setRandomMatrixHash(id, hash):
-#     red.hset(id, "randomMatrixHash", json.dumps(hash))
-#     return
-#
-# def getRandomMatrix(id=None):
-#     if id == None:
-#         return red.hget(red.hget("state", "myID"), "randomMatrixHash")
-#     elif red.sismember("agents", id) == 1:
-#         return red.hget(id, "randomMatrixHash")
-#     else:
-#         return "ERROR: invalid ID"
