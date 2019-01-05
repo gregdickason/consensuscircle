@@ -152,4 +152,29 @@ redis.call("HSET", "instructionPool", "eb679ed07fe234df63113f9ac4a7360954abf5916
 redis.call("SADD", "instructionUnprocessedPool", "eb679ed07fe234df63113f9ac4a7360954abf591629f0dadc3706ed81584a31f")
 redis.call("ZADD", "instructionSortedPool", 0, "eb679ed07fe234df63113f9ac4a7360954abf591629f0dadc3706ed81584a31f")
 
+-- [[instructions - not needed in setup.lua]]
+redis.call("SADD", "instructions", "hello")
+redis.call("HSET", "instruction:hello", "luaHash", "3b54771cde78c3995cd6620fe0d9b9233c6214ca")
+redis.call("HSET", "instruction:hello", "args", "[]")
+redis.call("HSET", "instruction:hello", "keys", "[]")
+
+redis.call("SADD", "instructions", "payment_adv")
+redis.call("HSET", "instruction:hello", "luaHash", "dff9573863a715b71013092edf59a18f9abae685")
+redis.call("HSET", "instruction:hello", "args", '["Wallet Payer", "Wallet Receiver","Payment Amount","instructionFee"]')
+redis.call("HSET", "instruction:hello", "keys", '["Payer Key", "Receiver Key"]')
+
+redis.call("SADD", "instructions", "flushAndSet")
+redis.call("HSET", "instruction:flushAndSet", "args", "[]")
+redis.call("HSET", "instruction:flushAndSet", "keys", "[]")
+
+redis.call("SADD", "instructions", "rollbackBlock")
+redis.call("HSET", "instruction:rollbackBlock", "luaHash", "2e689fbc37f3b7327e095df7cf1fd81f7b9f331e")
+redis.call("HSET", "instruction:rollbackBlock", "args", '["blockHash"]')
+redis.call("HSET", "instruction:rollbackBlock", "keys", "[]")
+
+redis.call("SADD", "instructions", "clearMining")
+redis.call("HSET", "instruction:clearMining", "luaHash", "b5ef661e48d6306417d1f645c358f3d98a6148a1")
+redis.call("HSET", "instruction:clearMining", "args", "[]")
+redis.call("HSET", "instruction:clearMining", "keys", "[]")
+
 return {"1", "success"}

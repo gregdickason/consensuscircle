@@ -88,7 +88,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
     instruction = getInstruction(hash)
 
     if instruction == None:
-      return 'ERROR: no instruction with {hash} in pool'
+        return 'ERROR: no instruction with {hash} in pool'
 
     logging.debug(f'\n instruction retrieved is {instruction}\n')
 
@@ -115,8 +115,13 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
         # this is not in a block so just execute the instruction
         output = red.evalsha(luaHash, len(keys), *(keys+args))
         if output[0] == 0:
-          logging.error(f'ERROR in executing instruction : {output[1]}')
-          return False
+            logging.error(f'ERROR in executing instruction : {output[1]}')
+            return False
+        if instruction['instruction']['name'] == "flushAndSet":
+            #NOTE NOTE NOTE: IF YOU CHANGE LUA HASH MUST CHANGE THIS
+            logging.debug("I have flushed and set adding hash back")
+            red.hset("instruction:flushAndSet", "luaHash", "d9b787f64c627d17fef0bc8d21dd1f49ac61c0a8")
+
     else:
         # Queue in the pipeline - no response as not executed
         pipe.evalsha(luaHash, len(keys), *(keys+args))
