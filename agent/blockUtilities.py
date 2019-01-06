@@ -306,12 +306,12 @@ def validateInstruction(instruction):
             return returnValue
 
         #TODO check keys returns in the same order every time or sort the lists
-        if redisUtilities.getInstructionArgs(body['name']) != body["args"]:
+        if len(redisUtilities.getInstructionArgs(body['name'])) != len(body["args"]):
             returnValue['message'] = f"Instruction args: {body['name']}'s args in invalid. args are {body['args']} should be {redisUtilities.getInstructionArgs(body['name'])}"
             returnValue['return'] = False
             return returnValue
 
-        if redisUtilities.getInstructionKeys(body['name']) != body["keys"]:
+        if len(redisUtilities.getInstructionKeys(body['name'])) != len(body["keys"]):
             returnValue['message'] = f"Instruction args: {body['name']}'s keys in invalid"
             returnValue['return'] = False
             return returnValue

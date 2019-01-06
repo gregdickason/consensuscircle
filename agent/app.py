@@ -120,7 +120,7 @@ def instructionPool():
     agentResponse = {}
 
     agentResponse['message'] = {
-             'merkleRoot': encryptionUtilities.returnMerkleRoot(instruction_hashes),
+             'merkleRoot': encryptionUtilities.returnMerkleRoot(redisUtilities.getInstructionHashes()),
              'signed':encryptionUtilities.signMessage(hashMerkle,agent.getPrivateKey()),
              'hashes': redisUtilities.getInstructionHashes()
            }
