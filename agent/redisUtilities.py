@@ -229,9 +229,16 @@ def getGenesisHash():
 def setMyID(id):
     red.hset("state", "myID", id)
     return
+    
+def setMyPrivKey(agentPrivateKey)    
+    red.hset("state", "myPrivKey", agentPrivateKey)
+    return
 
 def getMyID():
     return red.hget("state", "myID")
+
+def getMyPrivKey():
+    return red.hget("state", "myPrivKey")
 
 def getOwnerID(id=None):
     if id == None:

@@ -37,7 +37,7 @@ def proposeConvergenceHeader(proposedInstructions, circle):
 
     return response
 
-# inefficient loops circle 3x
+# inefficient loops circle 3x (i.e. returns 3 times to converge?)
 def getAgentInfo(circle):
 
     agentInfo = []

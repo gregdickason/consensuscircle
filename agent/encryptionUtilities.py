@@ -46,16 +46,21 @@ def hashvector(v,s):
     yield getHashofInput(v[i] + s)
     i += 1
 
+def getHashWithSeed(input,seed):
+  logging.debug(f'getHashWithSeed called with inut {input}, seed {seed}')
+  input = json.dumps(input)
+  pattern = re.compile(r'\s+')
+  inputNoWhitespace = re.sub(pattern, '', input)
+  return hashlib.sha256(inputNoWhitespace.encode(ENCODING) + seed.encode(ENCODING)).hexdigest()
+
+
 # Get the hash for a json string (cast to str if not).
 def getHashofInput(input):
 
     input = json.dumps(input)
-
     pattern = re.compile(r'\s+')
     inputNoWhitespace = re.sub(pattern, '', input)
     logging.debug(f'getHashofInput called with input {inputNoWhitespace}')
-    # print(inputNoWhitespace)
-
     return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
 
 def getRandomNumbers(byteLen, numberEntries):

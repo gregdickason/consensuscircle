@@ -177,12 +177,13 @@ def rollBack(to):
 
 def tryInstruction(hash):
     # Test that this instruction works in a candidate block.
-    # TODO - clean up the state once finalised list of instructions in the candidate block
+    # TODO - clean up the state once finalised list of instructions in the candidate block (done when processing next block)
 
     logging.debug(f'trying instruction with hash {hash}')
     instruction = getInstruction(hash)
 
     if instruction == None:
+      logging.error(f'Tried an instruction for candidate block that was not in the pool {hash}')
       return 'ERROR: no instruction with {hash} in pool'
 
     args = []

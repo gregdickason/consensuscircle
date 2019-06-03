@@ -9,6 +9,7 @@
      nonce prevents replay attacks but is short lived (last 20 nonces)
      
      TODO: data associated with payment (eg description) to be stored with instruction but not in redis
+     TODO: check data types on inbound, tonumber all number comparisons (test script on different number types)
        
      ARGV 1,2,3 are all standard for instructions: 1: mining/mined (if testing mining or processing mined block, instruction hash, blockHash if in a block or 'None' if in mining mode
      
@@ -73,7 +74,7 @@ if redis.call("SISMEMBER", "entities", KEYS[1]) == 1 and redis.call("SISMEMBER",
         redis.call("HSET", "mining." .. KEYS[2], ARGV[4], balance)
     end
 
-    if redis.call("HGET", "mining." .. KEYS[2], ARGV[4]) >= (ARGV[6] + ARGV[7]) then
+    if tonumber(redis.call("HGET", "mining." .. KEYS[2], ARGV[4])) >= tonumber(ARGV[6] + ARGV[7]) then
       -- sufficient balance: decrement for this mining round
       redis.call("HINCRBY", "mining." .. KEYS[2], ARGV[4], -ARGV[6] - ARGV[7])
       return {"1", "success"}
@@ -84,7 +85,7 @@ if redis.call("SISMEMBER", "entities", KEYS[1]) == 1 and redis.call("SISMEMBER",
   else 
     -- we are processing mined block so add to balances / decrement etc. Include transaction fees.
     --  Fail if insufficient funds (which will fail the whole block and require a rollback)
-    if tonumber(redis.call("HGET", KEYS[2], ARGV[4])) < tonumber((ARGV[6] + ARGV[7])) then
+    if tonumber(redis.call("HGET", KEYS[2], ARGV[4])) < tonumber(ARGV[6] + ARGV[7]) then
       return {"0", "insufficient balance"}
     end
   end

@@ -121,15 +121,18 @@ redis.call("SADD", "entities", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2c
 
 redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "wallets.default.balance", "0")
 redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "PublicKey", "0498d11e643f62e4899b400e344c607b60bba3bf7ebe5fbf4942a68859d944673dea3f2cd46ed7ef6429f51e7a4f6e752626cc4f917d627ed98060ef938408f4cd")
-redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "permissions.all", "[d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f]")
-redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "permissions.identity.citizenship.british.status", "[e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507]")
+redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "permissions.d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f.all", 1)
+redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "permissions.e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507.identity.citizenship.british.status", 1)
 redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "identity.name", "Gregory Dickason")
 redis.call("HSET", "d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f", "identity.citizenship.british.status", "claimed")
 
 redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "wallets.default.balance", "1000000")
 redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "PublicKey", "04894dbcc86a7b8e5001867298c3a0bc1a002c6aa96c371c40f9a59dfaec48ca6330f521116d15a7b5cbd5adff58e1b4d3973a753778e20d6197d6f39b653ed60e")
-redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "permissions.all", "[e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507]")
+redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "permissions.e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507.all", 1)
 redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.name", "Cameron McEwan")
+redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.name.evidenceHash", "A23BC9")
+redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.name.evidenceLink", "http://linkedin.com/CameronMcEwan.pdf")
+redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.name.attributeEncrypted", "No")
 redis.call("HSET", "e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507", "identity.citizenship.australian.status", "verified")
 
 --[[ set up genesis block --]]

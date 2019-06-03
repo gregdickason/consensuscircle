@@ -31,12 +31,10 @@ def generateNextCircle():
     circle = nextCircle(redisUtilities.getOutputMatrix())  # No excluded agents for now
 
     # Am I in the circle?
-    # TODO - check if in potentially a secondary circle.  If so start the convergence using this one in case primary fails
+    
     if not (redisUtilities.getMyID() in circle):
         # what should happen if not in next circle?
-        # nothing - correct?
-        logging.info("I AM NOT IN THE NEXT CIRCLE")
-
+        logging.info("I AM NOT IN THE NEXT CIRCLE.")
         return
 
     # gather and check instructions
@@ -55,17 +53,49 @@ def generateNextCircle():
     logging.debug(f'valid instructions is: {validInstructions}')
     if len(validInstructions) == 0:
         logging.info("there are no valid instructions and so, no valid block")
+        # TODO - do we broadcast no valid block?  Or do we pause and retry in 10s?
         return
 
-    proposedBlock = {
-        "previousBlock" : redisUtilities.getBlockHash(),
-        "instructionsMerkleRoot" : encryptionUtilities.returnMerkleRoot(validInstructionHashes),
-        "instructionCount" : len(validInstructions),
-        "blockHeight" : (redisUtilities.getBlockHeight() + 1),
-        "instructions" : json.dumps(validInstructions),
-        "broadcaster" : redisUtilities.getMyID()
+    # TODO Setup candidate block structure and store in redis (as will reference this as the block is iterated)
+    # TODO: global static (in Redis?) for random number size
+    myRandoms = [g for g in getRandomNumbers()]
+    mySeed = getRandomNumber(32)
+    mySeededRandomHash = getHashWithSeed(myRandoms,mySeed)
+    
+    convergenceHeader = {
+              "previousBlock" : redisUtilities.getBlockHash(),
+              "instructionsMerkleRoot" : encryptionUtilities.returnMerkleRoot(validInstructionHashes),
+              "instructionCount" : len(validInstructions),
+              "blockHeight" : (redisUtilities.getBlockHeight() + 1),
+              "randomNumberHash": mySeededRandomHash
     }
+    
+    signature = signMessage(getHashofInput(convergenceHeader),redisUtilities.getMyPrivKey())
+    
+    
+    
+    proposedBlock = {
+        "convergenceHeader" : json.dumps(convergenceHeader),
+        "blockSignatures" :  [{redisUtilities.getMyID():signature}],
+        "instructions" : json.dumps(validInstructions),
+        "broadcaster" : redisUtilities.getMyID()   
+    }
+    
+    logging.info(f'Proposed Block for initial convergence is {proposedBlock}')
 
+    # Write these to blockchain?  (or after all done?) 
+        
+        
+    # TODO setup signature for convergence header
+    
+    
+    # TODO create proposedBlock and convergence header.  Broadcast proposed block. Need to lookup addresses of the 
+       
+    # TODO also update consensus emulator to emit new block type structure.  
+       
+    # TODO update NODE to accumulate latest block (same convergence header) with all the random numbers
+
+    # GREG: I think this is where we emulate the full block creation?
     approval = consensusEmulator.proposeConvergenceHeader(proposedBlock, circle)
     # (proposedBlock, broadcaster, signature, circle, randomHashes)
 
@@ -75,7 +105,7 @@ def generateNextCircle():
     validInstruction = approval['validInstructions']
     circleAgents = approval['agentInfo']
 
-    # generate a candidate structure
+    # GREG: Do in a Lucid Chart on how the circle converges
     # Setup the candidate structure and post to our convergenceProcessor to kick off the convergence process
     candidate = {}
     #

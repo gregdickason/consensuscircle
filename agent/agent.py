@@ -34,13 +34,15 @@ class Agent:
         self.seed = 0
 
         # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain.
+        # TODO make these settings stored in redis and setup from a script the user updates
         self.agentID = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"
         redisUtilities.setMyID(self.agentID)
         self.agentPrivateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
+        redisUtilities.setMyPrivKey(self.agentPrivateKey)
 
     # Part 1: actions unique to the agent (the majority of its work)
 
-    # process block, veirfy and then add the block with block ID to the chain
+    # process block, verify and then add the block with block ID to the chain
     # start the process of creating a new candidate block for the next circle
     # to vote on
     def processBlock(self, blockID):
@@ -49,7 +51,7 @@ class Agent:
         agentResponse['success'] = True
 
         logging.debug("new block published, retrieve validate and process it")
-        # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
+        # TODO - optimise rejection if not latest block
         newBlock = parseBlock(blockID, self.entityInstructions)
 
         # is the block Valid?
@@ -62,10 +64,10 @@ class Agent:
             agentResponse['success'] = False
             return agentResponse
 
-        # forking - if forks can be of depth > 1 before agent seeing a block in the fork
+        # TODO: forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
         if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) != None): #there is some kind of fork
-            logging.debug('A FORK HAS BEEN DISCOVERED!')
+            logging.info('A FORK HAS BEEN DISCOVERED!')
             if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) == redisUtilities.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value

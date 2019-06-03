@@ -14,6 +14,7 @@ def importScripts(filename):
     red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
     # the filename for the scripts holds all the script names.  We iterate through all of these and create scripts in
     # redis for each one.  We output the script SHA and corresponding instruction name in json structure that can be referenced by the client.
+    # TODO: Only load scripts whose hashes are already allowed in the blockchain (already accepted) and not deprecated.  
     logging.debug(f'loaded file {filename}, iterating through and loading scripts')
 
     alist = []
