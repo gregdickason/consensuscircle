@@ -46,16 +46,21 @@ def hashvector(v,s):
     yield getHashofInput(v[i] + s)
     i += 1
 
+def getHashWithSeed(input,seed):
+  logging.debug(f'getHashWithSeed called with inut {input}, seed {seed}')
+  input = json.dumps(input)
+  pattern = re.compile(r'\s+')
+  inputNoWhitespace = re.sub(pattern, '', input)
+  return hashlib.sha256(inputNoWhitespace.encode(ENCODING) + seed.encode(ENCODING)).hexdigest()
+
+
 # Get the hash for a json string (cast to str if not).
 def getHashofInput(input):
 
     input = json.dumps(input)
-
     pattern = re.compile(r'\s+')
     inputNoWhitespace = re.sub(pattern, '', input)
     logging.debug(f'getHashofInput called with input {inputNoWhitespace}')
-    # print(inputNoWhitespace)
-
     return hashlib.sha256(inputNoWhitespace.encode(ENCODING)).hexdigest()
 
 def getRandomNumbers(byteLen, numberEntries):
@@ -80,6 +85,12 @@ def returnCircleDistance(lastBlockRandomMatrix, consensusCircle, numInstructions
   # TODO check if better to have less nodes (lower circle distance).  --> only likely if agent is further away than 1/17 of the size of sha256
   # First check consensusCircle length is less than or equal to lastBlockRandomMatrix length (can be less if some agents not present)
   lbLen, ccLen, i, sum = len(lastBlockRandomMatrix), len(consensusCircle), 0, 0
+
+  logging.debug(f'len of lastBlockRandomMatrix us {lbLen}')
+  logging.debug(f'len of lastBlockRandomMatrix us {ccLen}')
+  logging.debug(f'lastBlockRandomMatrix us {lastBlockRandomMatrix}')
+  logging.debug(f'len of lastBlockRandomMatrix us {consensusCircle}')
+
 
   # TODO if there is a missing cc it might not be the end, so need to remove the lastBlock element that did not have a claimed CC member BEFORE this routine
   assert ccLen == lbLen  # need to handle assert in the calling code as exception

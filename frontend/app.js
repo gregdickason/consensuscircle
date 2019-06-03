@@ -55,11 +55,6 @@ app.config(function($routeProvider) {
     controller  : 'agentConfigController'
   })
 
-  .when('/editAgentConfig', {
-    templateUrl : 'pages/editAgentConfig.html',
-    controller  : 'editAgentConfigController'
-  })
-
   .when('/instructionPool', {
     templateUrl : 'pages/instructionPool.html',
     controller  : 'instructionPoolController'
@@ -101,6 +96,12 @@ app.config(function($routeProvider) {
     controller  : 'executeInstructionController'
   })
 
+  .when('/generateCandidate', {
+    templateUrl : 'pages/generateCandidate.html',
+    controller  : 'generateCandidateController'
+  })
+
+
   .otherwise({redirectTo: '/'});
 });
 
@@ -112,6 +113,18 @@ app.controller('HomeController', function($scope, $http) {
       $scope.hostname = self.location.hostname;
       $scope.name = response.data.name;
       $scope.visits = response.data.visits;
+    }, function error(response) {
+      $scope.message = response.data;
+    });
+
+});
+
+
+app.controller('generateCandidateController', function($scope, $http) {
+
+  $http.get(api_url + "generateCandidate")
+    .then(function success(response) {
+      $scope.message = response.data;
     }, function error(response) {
       $scope.message = response.data;
     });
@@ -195,29 +208,6 @@ app.controller('instructionPoolController', function($scope, $http) {
 
 });
 
-app.controller('editAgentConfigController', function($scope, $http) {
-
-    $http.get(api_url + 'getConfig')
-      .then(function success(response) {
-        $scope.config = response.data;
-      }, function error(response) {
-        $scope.message = response.data;
-      });
-
-  $scope.update = '';
-
-  $scope.setConfig = function(config) {
-    $http.post(api_url + 'updateConfig', config)
-      .then(function success(response) {
-          window.location.href = '#!/agentConfig';
-      }, function error(response) {
-          $scope.update = 'error in updating settings';
-      });
-  };
-
-});
-
-
 app.controller('entityController', function($scope, $http) {
 
     $http.get(api_url + 'getEntities')
@@ -252,9 +242,9 @@ app.controller('attributeController', function($scope, $http) {
   $scope.update = '';
   $scope.started = false;
 
-  $scope.getAttributes = function(entity) {
+  $scope.getAttributes = function(chosen) {
     $scope.started = true;
-    $http.get(api_url + 'getAttributes')
+    $http.post(api_url + 'getAttributes', chosen)
         .then(function success(response) {
           $scope.attributes = response.data;
         }, function error(response) {
@@ -303,6 +293,7 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
   $scope.started = false;
   $scope.instruction.instruction.args = [];
   $scope.instruction.instruction.keys = [];
+  $scope.instruction.instruction.luaHash = "";
   $scope.instruction.instructionHash = "";
   $scope.instruction.signature = "";
   $scope.instruction.instruction.sender = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675";
@@ -325,6 +316,13 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
    $scope.getInstructionTypeRequirements = function(name) {
      $scope.started = true;
 
+     $http.post(api_url + 'getLuaHash', name)
+       .then(function success(response) {
+           $scope.instruction.instruction.luaHash = response.data;
+       }, function error(response) {
+           $scope.update = 'error in getting lua has for instruction';
+       });
+
        $http.post(api_url + 'getInstructionArguments', name)
          .then(function success(response) {
              $scope.argumentList = response.data;
@@ -332,7 +330,7 @@ app.controller('newInstructionController', function($scope, $http, encryption) {
              $scope.update = 'error in getting entity';
          });
 
-         $http.post(api_url + 'getInstructionKeys', name)
+        $http.post(api_url + 'getInstructionKeys', name)
            .then(function success(response) {
                $scope.keyList = response.data;
            }, function error(response) {

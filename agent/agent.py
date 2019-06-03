@@ -9,7 +9,7 @@ from uuid import uuid4
 import threading
 
 import logging.config
-
+import ccExceptions
 import collections
 import copy
 
@@ -17,17 +17,15 @@ import copy
 from parseBlock import parseBlock
 import blockUtilities
 import redisUtilities
-from trackedAgent import trackedAgent  #TODO do we need this?
 from globalsettings import AgentSettings
 
 #utility functions - add to class?
-from agentUtilities import getHashofInput, converge, hashvector, returnMerkleRoot,getRandomNumbers, getRandomNumber, getSeed, returnHashDistance, returnCircleDistance, verifyMessage, signMessage
-from processInstruction import validateInstruction
+import encryptionUtilities
 
 class Agent:
+    # initialise agent by connecting to the data base and claiming the agent id so that
+    # the agent knows the rests of its settings
     def __init__(self):
-        # TODO load from blockstate?  (handles long term state)
-        #self.current_instructions = [] # Pool of unprocessed instructions we are aware of, sent from other agents (do through non http protocol?)
         settings = AgentSettings()
 
         self.maxAgentsInCircle = settings.maxAgentsInCircle  # set to 1 below number as we are a member of the circle when this is tested
@@ -35,129 +33,25 @@ class Agent:
         self.followedAgents = set()   #  set of agents we follow for updates when operating in the circle.
         self.seed = 0
 
-        # this is the level of the agent.  Starts at 5 which is ineligible for circle membership
-
-        # TODO make this a claim id process
         # setup my randomNumbers, my hashed random numbers, and seed for my vote for the next chain.
+        # TODO make these settings stored in redis and setup from a script the user updates
         self.agentID = "180cedac0f95b45ec18cdcd473d14d44b512ef16fc065e6c75c769b544d06675"
         redisUtilities.setMyID(self.agentID)
         self.agentPrivateKey = "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"
+        redisUtilities.setMyPrivKey(self.agentPrivateKey)
 
-        # pull in from redis the agent settings
-        self.ownerID = redisUtilities.getOwnerID(self.agentID)
-        self.signedIdentifier = redisUtilities.getSignedIdentifier(self.agentID)
-        self.agentPublicKey = redisUtilities.getPublicKey(self.agentID)
-        self.level = redisUtilities.getLevel(self.agentID)
+    # Part 1: actions unique to the agent (the majority of its work)
 
-        # # create additional variables
-        # self.randomMatrix = [g for g in getRandomNumbers(2,5)]
-        # self.seed = getSeed(2)
-        # self.randomMatrixHash = [g for g in hashvector(self.randomMatrix, self.seed)]
-        # # only logged in debug mode to avoid outside chance of leaking secrets
-        # logging.debug(f'Agents random matrix, seed and hash is {self.randomMatrix}, {self.seed}, {self.randomMatrixHash}')
-        #
-        # redisUtilities.setRandomMatrix(self.agentID, self.randomMatrix)
-        # redisUtilities.setSeed(self.agentID, self.seed)
-        # redisUtilities.setRandomMatrixHash(self.agentID, self.randomMatrixHash)
-
-    def changeConfig(self,ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey):
-        agentResponse = {}
-        self.level = ownerLevel # TODO should come from the agents owner's level
-        self.agentID = agentIdentifier
-        self.ownerID = ownerID      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-        self.signedIdentifier = signId
-        self.agentPrivateKey = agentPrivateKey  #TODO - do we want to accept private key updates?  (will be over SSL)
-
-        agentResponse['message'] = {
-           'message': f'Updated agent config'
-          }
-        agentResponse['success'] = True
-
-        return agentResponse
-
-    def getLastBlock(self):
-        return {
-            'lastBlock': redisUtilities.getBlockHash(),
-            'blockHeight': redisUtilities.getBlockHeight(),
-            'circleDistance': redisUtilities.getCircleDistance()
-        }
-
-    def getOwner(self):
-        return self.ownerID
-
-    def getLevel(self):
-        return self.level
-
-    def getPrivateKey(self):
-        return self.agentPrivateKey
-
-    def setPrivateKey(self, privateKey):
-        self.agentPrivateKey = privateKey
-        return
-
-    def getConfig(self):
-        agentConfig = {}
-        agentConfig['level'] = self.level
-        agentConfig['agentIdentifier'] = self.agentID
-        agentConfig['owner'] = self.ownerID
-        agentConfig['signedIdentifier'] = self.signedIdentifier
-        agentConfig['agentPrivateKey'] = self.agentPrivateKey
-
-        return agentConfig
-
-        # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
-    def register_agent(self, address):
-        """
-        Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
-        :param address: Address of node. Eg. 'http://192.168.0.5:5000'
-        """
-        parsed_url = urlparse(address)
-
-        if parsed_url.netloc:
-            self.followedAgents.add(parsed_url.netloc)
-        elif parsed_url.path:
-            # Accepts an URL without scheme like '192.168.0.5:5000'.
-            self.followedAgents.add(parsed_url.path)
-        else:
-            raise ValueError('Invalid URL')
-
-    def getEntityList(self):
-        return redisUtilities.getEntityList()
-
-    def getCandidateBlocks(self):
-        return redisUtilities.getCandidateBlocks()
-
-    # returns the list of attributes the entity has.  Hardcoded to test
-    def getAttributes(self):
-        return ['wallets.default.balance']
-
-    # Routine to get the current instruction pool we dont test convergence, any following agent can get this to populate their pool
-    def instructionPool(self):
-        logging.debug(f'In instructionPool')
-        agentResponse = {}
-
-        # TODO - get this from the blockstate
-
-        # Need to get the merkle root from the instruction pool. - I
-        instruction_hashes = redisUtilities.getInstructionHashes()
-        hashMerkle = returnMerkleRoot(instruction_hashes)
-        hashSigned = signMessage(hashMerkle,self.agentPrivateKey)
-        agentResponse['message'] = {
-                 'merkleRoot': hashMerkle,
-                 'signed':hashSigned,
-                 'hashes':list(instruction_hashes)
-               }
-        agentResponse['success'] = True
-        return agentResponse
-
-
+    # process block, verify and then add the block with block ID to the chain
+    # start the process of creating a new candidate block for the next circle
+    # to vote on
     def processBlock(self, blockID):
         # Testing parameters - is network on
         agentResponse = {}
         agentResponse['success'] = True
 
         logging.debug("new block published, retrieve validate and process it")
-        # TODO - make parseBlock take the argument of the hash on top of the chain.  If same return immediately to reduce time spent in parseBlock
+        # TODO - optimise rejection if not latest block
         newBlock = parseBlock(blockID, self.entityInstructions)
 
         # is the block Valid?
@@ -170,10 +64,10 @@ class Agent:
             agentResponse['success'] = False
             return agentResponse
 
-        # forking - if forks can be of depth > 1 before agent seeing a block in the fork
+        # TODO: forking - if forks can be of depth > 1 before agent seeing a block in the fork
         # then parse block will need to be updated
         if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) != None): #there is some kind of fork
-            logging.debug('A FORK HAS BEEN DISCOVERED!')
+            logging.info('A FORK HAS BEEN DISCOVERED!')
             if (redisUtilities.getNextBlock(newBlock.getPreviousBlock()) == redisUtilities.getBlockHash()):
                 # circle distance is calculated in parseBlock relative to the named previous block
                 # so all you need to do is retrieve and compare the circle distance value
@@ -204,7 +98,17 @@ class Agent:
 
         # Normal processing, new block built on our chain.  READ NOTES
         # execute instructions on the block state and update the block state to the latest
-        blockUtilities.addNewBlock(newBlock)
+        try:
+          blockUtilities.addNewBlock(newBlock)
+        except BlockError as bError:
+          logging.error(f'Block parsing failed - error {bError.reason} for block id {bError.id}')
+          agentResponse['message'] = {
+                   'chainLength' : redisUtilities.getBlockHeight(),
+                   'lastBlock': redisUtilities.getBlockHash(),
+                   'error': f'block failed to process - {bError.reason}'
+                     }
+          agentResponse['success'] = False
+          return agentResponse
 
         logging.info(f'\n ** NEW BLOCK PUBLISHED. ** Block distance = {newBlock.getCircleDistance()}\n')
 
@@ -213,8 +117,6 @@ class Agent:
 
         # move to RQ Worker
         blockUtilities.generateNextCircle()
-
-        # logging.info(f'\nNext circle is {self.nextCircle}\n')
 
         agentResponse['message'] = {
             'chainLength' : newBlock.getBlockHeight(),
@@ -228,25 +130,25 @@ class Agent:
     #execute instruction
     def executeInstruction(self, instruction):
         #call blockstate to execute instruction
-
         return blockUtilities.executeInstruction(instruction)
 
-
+    # add an instruction to this sets pool. checks structure in agent
+    # then moves to block utilities to add the instruction to redis
     def processInstruction(self, instruction):
         agentResponse = {}
 
         # check hash
-        validInstruction = validateInstruction(instruction)
+        validInstruction = blockUtilities.validateInstruction(instruction)
         if not validInstruction['return']:
             logging.debug(f'Instruction not valid: {instruction}')
             agentResponse['success'] = False
             agentResponse['message'] = validInstruction['message']
             return agentResponse
 
-        #check if the instruction is already in the pool
+        #check if the instruction is already in the pool.  If so still return True as not error
         if redisUtilities.hasInstruction(instruction['instructionHash']):
             logging.info(f'Received instruction already have')
-            agentResponse['success'] = False
+            agentResponse['success'] = True
             agentResponse['message'] = 'Instruction already in pool'
             return agentResponse
 
@@ -258,27 +160,57 @@ class Agent:
 
         return agentResponse
 
-    def getEntity(self, entity):
-        # gets entity as a JSON object referenced by the public key.
-        # TODO Error handling or return 'Entity not found JSON object'
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = redisUtilities.getEntity(entity)
-        if agentResponse['message'] == '':
-          agentResponse['success'] = False
 
-        return agentResponse
+    # part 2 : gets and sets
 
-    def getAttribute(self, entity, attribute):
-        # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.
-        # if the attribute does not exist returns null
-        agentResponse = {}
-        agentResponse['success'] = True
-        agentResponse['message'] = redisUtilities.getAttribute(entity, attribute)
-        if agentResponse['message'] == '':
-          agentResponse['success'] = False
+    # returns the owner of the agent with the id claimed
+    def getOwner(self):
+        try:
+            return redisUtilities.getOwnerID()
+        except RedisError as error:
+            return f"Redis Error getting owner ID: {error}"
 
-        return agentResponse
+    # returns the level of the agent
+    def getLevel(self):
+        try:
+            return redisUtilities.getLevel()
+        except RedisError as error:
+            return f"Redis Error getting agent's level: {error}"
 
-    def getGenesisHash(self):
-        return redisUtilities.getGenesisHash()
+    def getPrivateKey(self):
+        return self.agentPrivateKey
+
+    def setPrivateKey(self, privateKey):
+        self.agentPrivateKey = privateKey
+        return
+
+    def getConfig(self):
+        try:
+            agentConfig = {}
+            agentConfig['level'] = redisUtilities.getLevel()
+            agentConfig['agentIdentifier'] = self.agentID
+            agentConfig['owner'] = redisUtilities.getOwnerID()
+            agentConfig['signedIdentifier'] = redisUtilities.getSignedIdentifier()
+            agentConfig['agentPrivateKey'] = self.agentPrivateKey
+
+            return agentConfig
+        except RedisError as error:
+            return f"Redis Error getting agent's configuration: {error}"
+
+    # version 1 possible redundant or undated code. TODO: Review this section
+
+    # Register an agent to follow.  This is our direct connections to other agents in the circle.  #TODO should be from the knownAgents.json config and using helper classes as this will be not always HTTP
+    # def register_agent(self, address):
+    #     """
+    #     Add a new agent to the list of agents we are following for instructions.  For now we dont check if they are valid
+    #     :param address: Address of node. Eg. 'http://192.168.0.5:5000'
+    #     """
+    #     parsed_url = urlparse(address)
+    #
+    #     if parsed_url.netloc:
+    #         self.followedAgents.add(parsed_url.netloc)
+    #     elif parsed_url.path:
+    #         # Accepts an URL without scheme like '192.168.0.5:5000'.
+    #         self.followedAgents.add(parsed_url.path)
+    #     else:
+    #         raise ValueError('Invalid URL')

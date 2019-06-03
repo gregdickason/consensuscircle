@@ -1,5 +1,5 @@
 
-import agentUtilities
+import encryptionUtilities
 import redisUtilities
 import json
 
@@ -20,7 +20,7 @@ agentPriKeys = {
     "359c45d4cb0606f903249bea19da3c178940e2633f34f55c9dca4e425696c1a0" : "8d25f09d66ef3cb3336355944e8015c6544b6b7fc4b7fa9ed5289718f91c9448"
 }
 
-def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
+def proposeConvergenceHeader(proposedInstructions, circle):
 
     response = {}
     response["header"] = {
@@ -37,7 +37,7 @@ def proposeConvergenceHeader(proposedInstructions, randomMatrix, circle):
 
     return response
 
-# inefficient loops circle 3x
+# inefficient loops circle 3x (i.e. returns 3 times to converge?)
 def getAgentInfo(circle):
 
     agentInfo = []
@@ -51,7 +51,7 @@ def getRandomNumbers(circle):
     randomNumbers = []
 
     for agent in circle:
-        randomMatrix = [g for g in agentUtilities.getRandomNumbers(32,len(circle))]  # TODO - based on number in circle so need to use this parameter
+        randomMatrix = [g for g in encryptionUtilities.getRandomNumbers(32,len(circle))]  # TODO - based on number in circle so need to use this parameter
         randomNumbers.append({agent : randomMatrix})
 
     return randomNumbers
@@ -59,9 +59,9 @@ def getRandomNumbers(circle):
 def getSignatures(message, circle):
     signatures = []
 
-    hashMessage = agentUtilities.getHashofInput(message)
+    hashMessage = encryptionUtilities.getHashofInput(message)
 
     for agent in circle:
-        signatures.append({agent : agentUtilities.signMessage(hashMessage, agentPriKeys[agent])})
+        signatures.append({agent : encryptionUtilities.signMessage(hashMessage, agentPriKeys[agent])})
 
     return signatures

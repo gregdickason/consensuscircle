@@ -6,7 +6,7 @@
 if redis.call("EXISTS", KEYS[1]) == 1 and redis.call("EXISTS", KEYS[2]) == 1 then
   redis.call("HINCRBY", KEYS[1], ARGV[1], -ARGV[3])
   redis.call("HINCRBY", KEYS[2], ARGV[2], ARGV[3])
-  return ARGV[1]
+  return {"1", "success"}
 else
-  return nil
+  return {"0", "does not exist"}
 end

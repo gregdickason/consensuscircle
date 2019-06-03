@@ -10,3 +10,5 @@ src/cf9d12a22f684f5525443e9e72a8652eee5c1bfe2788cc8843defdf7322f1b67\.json
 agent/redistest\.py
 
 agent/test\.py
+
+agent/notUsed or helpers/test\.py

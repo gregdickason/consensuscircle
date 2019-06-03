@@ -11,32 +11,43 @@ with open('logConfig.json') as json_data:
   logging.config.dictConfig(logDict)
 
 def importScripts(filename):
-  red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
-  # the filename for the scripts holds all the script names.  We iterate through all of these and create scripts in
-  # redis for each one.  We output the script SHA and corresponding instruction name in json structure that can be referenced by the client.
-  logging.debug(f'loaded file {filename}, iterating through and loading scripts')
+    red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_responses=True)
+    # the filename for the scripts holds all the script names.  We iterate through all of these and create scripts in
+    # redis for each one.  We output the script SHA and corresponding instruction name in json structure that can be referenced by the client.
+    # TODO: Only load scripts whose hashes are already allowed in the blockchain (already accepted) and not deprecated.  
+    logging.debug(f'loaded file {filename}, iterating through and loading scripts')
 
-  alist = []
-  shalist = {}
+    alist = []
+    shalist = {}
 
-  with open(filename) as f:
-    alist = [line.rstrip() for line in f]
+    with open(filename) as f:
+      alist = [line.rstrip() for line in f]
 
-  logging.debug(f'loaded scripts {alist}')
+    logging.debug(f'loaded scripts {alist}')
 
-  for scriptfile in alist:
-    logging.debug(f'opening {scriptfile}')
-    with open('lua/' + scriptfile, 'r') as scriptf:
-      script = scriptf.read()
-      # logging.debug(f'script is {script}')
-      scriptHash = red.script_load(script)
-      logging.debug(f'Loaded {scriptfile} script - hash is {scriptHash}')
-      shalist[scriptfile] = scriptHash
+    for scriptfile in alist:
+        logging.debug(f'opening {scriptfile}')
+        with open('lua/' + scriptfile + '.lua', 'r') as scriptf:
+            script = scriptf.read()
+            # logging.debug(f'script is {script}')
+            scriptHash = red.script_load(script)
+            logging.debug(f'Loaded {scriptfile} script - hash is {scriptHash}')
+            shalist[scriptfile] = scriptHash
+            red.sadd("instructions", scriptfile)
+            red.hset("instruction:" + scriptfile, "luaHash", scriptHash)
 
-  # with open('instructionScripts.json','w') as fileOut:
-  #    fileOut.write(json.dumps(shalist))
+        # running the json loads/dumps ensures that the args and keys
+        # files are appropriately formatted
+        with open('lua/' + scriptfile + '_args.json', 'r') as argsf:
+            # logging.debug(f'{argsf.read()}')
+            args = json.loads(argsf.read())
+            red.hset("instruction:" + scriptfile, "args", json.dumps(args))
 
-  return
+        with open('lua/' + scriptfile + '_keys.json', 'r') as keysf:
+            keys = json.loads(keysf.read())
+            red.hset("instruction:" + scriptfile, "keys", json.dumps(keys))
+
+    return
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

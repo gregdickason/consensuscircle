@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-# local node eventuallty taken over by the cloud. Runs the local server.
-
+# Runs the local server, exposed on port 5000 (the agent address)
 # Class for local HTTP connections for the blockchain.  This only accepts inbound communicationss
 # Message class does outbound
 
@@ -14,8 +13,9 @@ import os
 import socket
 from flask_cors import CORS
 from flask_restful import Resource, Api
-from globalsettings import instructionInfo
-from agentUtilities import getHashofInput, signMessage
+import blockUtilities
+import redisUtilities
+import encryptionUtilities
 
 # Instantiate the Flask App that drives the agent (local instantiation)
 app = Flask(__name__)
@@ -36,10 +36,6 @@ agent = Agent()
 networkOn = True
 
 redis = Redis(host="redis", db=0, socket_connect_timeout=2, socket_timeout=2)
-
-@app.route("/getCandidateBlocks")
-def cblocks():
-    return jsonify(agent.getCandidateBlocks())
 
 @app.route("/", methods=['GET'])
 def hello():
@@ -112,28 +108,6 @@ def getConfig():
     return jsonify(agentConfig)
 
 
-@app.route('/updateConfig', methods=['POST'])
-def updateConfig():
-    # Testing parameters - is network on
-    if not networkOn:
-        response = {'network' : f'{networkOn}'}
-        return jsonify(response), 400
-
-    values = request.get_json()
-
-    required = ['level','agentIdentifier','owner','signedIdentifier', 'agentPrivateKey']
-    if not all(k in values for k in required):
-        return 'Missing fields', 400
-
-    ownerLevel = values['level']  # TODO should come from the agents owners level
-    agentIdentifier = values['agentIdentifier']
-    ownerID = values['owner']      # TODO confirm that the owner has signed the public key of the agent - have to lookup the key
-    signId = values['signedIdentifier']
-    agentPrivateKey = values['agentPrivateKey']
-    agentResponse = agent.changeConfig(ownerLevel, agentIdentifier, ownerID, signId, agentPrivateKey)
-
-    return jsonify(agentResponse['message']),201
-
 # Routine to get the current instruction pool (used as a part of convergence)
 @app.route('/instructionPool', methods=['GET'])
 def instructionPool():
@@ -142,7 +116,15 @@ def instructionPool():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    agentResponse = agent.instructionPool()
+    logging.debug(f'In instructionPool')
+    agentResponse = {}
+
+    agentResponse['message'] = {
+             'merkleRoot': encryptionUtilities.returnMerkleRoot(instruction_hashes),
+             'signed':encryptionUtilities.signMessage(hashMerkle,agent.getPrivateKey()),
+             'hashes': redisUtilities.getInstructionHashes()
+           }
+    agentResponse['success'] = True
 
     if agentResponse['success'] == False:
         return jsonify(agentResponse['message']), 400
@@ -156,9 +138,9 @@ def getPendingInstructions():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    agentResponse = agent.instructionPool()
+    agentResponse = redisUtilities.getInstructionHashes()
 
-    return jsonify(agentResponse['message']['hashes'])
+    return jsonify(agentResponse)
 
 @app.route('/getEntities', methods=['GET'])
 def entityList():
@@ -167,8 +149,10 @@ def entityList():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    return  jsonify(agent.getEntityList())
-
+    try:
+        return jsonify(redisUtilities.getEntityList())
+    except RedisError as error:
+        return jsonify(f"error returning entity list: {error}"), 400
 
 
 @app.route('/entity', methods=['POST'])
@@ -190,7 +174,15 @@ def returnEntity():
 
     logging.info(f'returning entity {entity}')
 
-    agentResponse = agent.getEntity(entity)
+    # gets entity as a JSON object referenced by the public key.
+    # TODO Error handling or return 'Entity not found JSON object'
+    agentResponse = {}
+    agentResponse['success'] = True
+    try:
+        agentResponse['message'] = redisUtilities.getEntity(entity)
+    except RedisError as error:
+        agentResponse['message'] = 'ERROR no entity with given id'
+        agentResponse['success'] = False
 
     # need to do a get on the entities we are tracking that we already know about
     if agentResponse['success'] == False:
@@ -198,14 +190,28 @@ def returnEntity():
     else:
         return jsonify(agentResponse['message']), 200
 
-@app.route('/getAttributes', methods=['GET'])
+@app.route('/getAttributes', methods=['POST'])
+# TODO add some kind of permissions system/check to this call
 def attributeList():
     global networkOn
     if not networkOn:
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    return  jsonify(agent.getAttributes())
+    values = request.get_json()
+
+    required = ['entity']
+    if not all(k in values for k in required):
+        return 'Missing fields', 400
+
+    id = values['entity']
+
+    try:
+        response = redisUtilities.getAttributes(id)
+    except RedisError as error:
+        response = error
+
+    return  jsonify(response)
 
 
 @app.route('/attribute', methods=['POST'])
@@ -228,7 +234,13 @@ def returnAttribute():
 
     logging.info(f'returning attribute {attribute} for entity {entity}')
 
-    agentResponse = agent.getAttribute(entity, attribute)
+    # gets an attribute.  This can include the balance of a wallet, or the setting for a particular attribute.
+    # if the attribute does not exist returns null
+    agentResponse = {}
+    agentResponse['success'] = True
+    agentResponse['message'] = redisUtilities.getAttribute(entity, attribute)
+    if agentResponse['message'] == '':
+        agentResponse['success'] = False
 
     # need to do a get on the entities we are tracking that we already know about
     if agentResponse['success'] == False:
@@ -310,7 +322,7 @@ def genesisBlock():
     logging.info("genesisBlock retrieved")
     # returns the genesisBlock (which is hardcoded).  This should be used to determine if the calling agent is on the same network as this agent (different networks have different genesisblocks if they are not hard forks of each other)
     response = {
-            'blockHash': agent.getGenesisHash()
+            'blockHash': redisUtilities.getGenesisHash()
         }
     return jsonify(response), 200
 
@@ -355,8 +367,16 @@ def retrieveBlock():
     logging.info("return the Hash of the block at the top of our chain and the block height")
     # TODO generic function for returning all the blocks and contents
 
+    try:
+        response = {
+            'lastBlock': redisUtilities.getBlockHash(),
+            'blockHeight': redisUtilities.getBlockHeight(),
+            'circleDistance': redisUtilities.getCircleDistance()
+            }
 
-    response = agent.getLastBlock()
+    except RedisError as error:
+        response =  f"Redis error: {error}"
+
     return jsonify(response), 200
 
 @app.route('/getPrivateKey',methods=['GET'])
@@ -385,9 +405,7 @@ def getInstructionNames():
         response = {'network' : f'{networkOn}'}
         return jsonify(response), 400
 
-    instructionSet = instructionInfo()
-
-    return jsonify(instructionSet.getInstructionNames())
+    return jsonify(redisUtilities.getInstructionNames())
 
 
 #getting a list of the luaHash's matching to the instruction names
@@ -408,8 +426,7 @@ def getLuaHash():
 
     logging.info("retrieving a lua hash")
 
-    instructionSet = instructionInfo()
-    luaHash = instructionSet.getInstructionHash(values['name'])
+    luaHash = redisUtilities.getInstructionLuaHash(values['name'])
 
     if luaHash == None:
         return jsonify('ERROR: No hash found for that instruction name', 400)
@@ -433,8 +450,7 @@ def getInstructionArguments():
 
     logging.info("retrieving instruction arguments")
 
-    instructionSet = instructionInfo()
-    argumentList = instructionSet.getInstructionArgs(values['name'])
+    argumentList = redisUtilities.getInstructionArgs(values['name'])
 
     if argumentList == None:
         return jsonify('ERROR: No instruction with this name', 400)
@@ -458,8 +474,7 @@ def getInstructionKeys():
 
     logging.info("retrieving instruction keys")
 
-    instructionSet = instructionInfo()
-    keyList = instructionSet.getInstructionKeys(values['name'])
+    keyList = redisUtilities.getInstructionKeys(values['name'])
 
     if keyList == None:
         return jsonify('ERROR: No instruction with this name', 400)
@@ -476,6 +491,8 @@ def executeTest():
         return jsonify(response), 400
 
     input = request.get_json()
+
+    # TODO: check has a nonce, not previously sent
 
     required = ['instruction']
     if not all(k in input for k in required):
@@ -509,9 +526,8 @@ def addInstruction():
     if not all (j in instructionToSend['instruction'] for j in requiredInstructionParams):
         return 'Missing fields', 400
 
-    instructionSet = instructionInfo()
-    requiredKeys = instructionSet.getInstructionKeys(instructionToSend['instruction']['name'])
-    requiredArgs = instructionSet.getInstructionArgs(instructionToSend['instruction']['name'])
+    requiredKeys = redisUtilities.getInstructionKeys(instructionToSend['instruction']['name'])
+    requiredArgs = redisUtilities.getInstructionArgs(instructionToSend['instruction']['name'])
 
     if len(requiredKeys) != len(instructionToSend['instruction']['keys']) or len(instructionToSend['instruction']['args']) != len(requiredArgs):
         return jsonify("ERROR: instruction structure is incorrect")
@@ -528,28 +544,41 @@ def addInstruction():
 
 # TODO remove this routine.  It is being used as to accept agents we want to follow for instruction updates
 # build routine into instruction parsing (when we will choose to randomly follow agents?)
-@app.route('/agents/register', methods=['POST'])
-def register_agents():
-    global networkOn
+# @app.route('/agents/register', methods=['POST'])
+# def register_agents():
+#     global networkOn
+#
+#     # Testing parameters - is network on
+#     if not networkOn:
+#         response = {'network' : f'{networkOn}'}
+#         return jsonify(response), 400
+#
+#     # Register other agents with this agent - add them to the set it maintains
+#     logging.info('register agent')
+#     values = request.get_json()
+#
+#     agents = values.get('agents')
+#
+#     agentResponse = agent.registerAgents(agents)
+#
+#     if agentResponse.success == False:
+#         return jsonify(agentResponse.message), 400
+#     else:
+#         return jsonify(agentResponse.message), 201
 
-    # Testing parameters - is network on
-    if not networkOn:
-        response = {'network' : f'{networkOn}'}
-        return jsonify(response), 400
+@app.route("/generateCandidate")
+def generateCandidate():
+    blockUtilities.generateNextCircle()
 
-    # Register other agents with this agent - add them to the set it maintains
-    logging.info('register agent')
-    values = request.get_json()
+    return jsonify("attempted to generate candidate")
 
-    agents = values.get('agents')
+@app.route("/getCandidateBlocks")
+def cblocks():
 
-    agentResponse = agent.registerAgents(agents)
-
-    if agentResponse.success == False:
-        return jsonify(agentResponse.message), 400
-    else:
-        return jsonify(agentResponse.message), 201
-
+    try:
+        return jsonify(redisUtilities.getCandidateBlocks())
+    except RedisError as error:
+        return jsonify(f"error returning candidate blocks: {error}"),400
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

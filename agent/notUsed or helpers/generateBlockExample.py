@@ -1,16 +1,16 @@
-from agentUtilities import returnMerkleRoot, signMessage, getHashofInput, verifyMessage
+from encryptionUtilities import returnMerkleRoot, signMessage, getHashofInput, verifyMessage
 import json
 
-instructions = ["df6f0faf5b21deaaf68097206ce4dc119b493de058dd6a7ce1a21676bfa360c8"]
+instructions = ["eb679ed07fe234df63113f9ac4a7360954abf591629f0dadc3706ed81584a31f"]
 
 merkleRoot = returnMerkleRoot(instructions)
 
 print('merkle root is:')
 print(merkleRoot)
 
-convergenceHeader = {"previousBlock":"695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4","instructionsMerkleRoot":"f062548393fc990764650a83731bc2ae2bc6308ec0b8c784b01ea7b8b68b26fc","instructionCount":1,"blockHeight":1}
+convergenceHeader = {"previousBlock":"695e4a0c4f763fc95dfd6c29f334cc2eaf9c4a2bafcce09379b0864eda001eb4","instructionsMerkleRoot":"c9ae7f62e2957993459dc1a673a314d01f0927d3bdb63f1caea163db8088a848","instructionCount":1,"blockHeight":1}
 
-hashConvergenceHeader = getHashofInput(convergenceHeader)
+hashConvergenceHeader = "e090173ecde407752e7d328488834a5d98b796eb6379a2282ac139fd9ddba97a"
 print(hashConvergenceHeader)
 print("agent 5000:")
 print(signMessage(hashConvergenceHeader, "f97dcf17b6d0e9f105b6466b377024a9557a7745a9d7ba7dc359aeeeb4530a9e"))

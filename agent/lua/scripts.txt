@@ -1,4 +1,7 @@
-payment.lua
-test.lua
-setup.lua
-flushAndSet.lua
+payment
+hello
+payment_adv
+setup
+flushAndSet
+rollbackBlock
+clearMining

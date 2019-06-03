@@ -9,7 +9,7 @@ import copy
 from bisect import bisect_left
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
-from globalsettings import instructionInfo, blockSettings
+from globalsettings import blockSettings
 import logging.config
 import convergenceProcessor
 import logging.config
@@ -17,7 +17,8 @@ import requests
 import consensusEmulator
 import redisUtilities
 import blockUtilities
-import agentUtilities
+import encryptionUtilities
+
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker
