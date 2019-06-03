@@ -229,8 +229,8 @@ def getGenesisHash():
 def setMyID(id):
     red.hset("state", "myID", id)
     return
-    
-def setMyPrivKey(agentPrivateKey)    
+
+def setMyPrivKey(agentPrivateKey):
     red.hset("state", "myPrivKey", agentPrivateKey)
     return
 
