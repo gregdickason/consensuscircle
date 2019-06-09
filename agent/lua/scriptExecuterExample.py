@@ -17,6 +17,6 @@ if __name__ == '__main__':
 
     # fw hardcoded examples of calling LUA
     scriptCall('3b54771cde78c3995cd6620fe0d9b9233c6214ca', [], [])  # outputs HEllo - from 'test.lua'
-    scriptCall('37aaf802a34603f087806d72cbf4350183b1f64e', [], [])  # initialises the data base
+    scriptCall('10a6cab94b3dfa98b75c4101c53c196ec0d2f002', [], [])  # initialises the data base
     # Transfer 1500 from Cameron to Greg
     # scriptCall('8292d2c55210392e3bb7c7e9c98c4d5cf4154431', ['e7b1eb096bcb82eead157ec870789b3d8d1ce0d914848c2cc10ec751e5401507','d66a1f7f777eba5cc5349000412342b460b12e6270adb338a9ad506cf652169f'],['wallets.default.balance','wallets.default.balance','1500']) # transfer funds from entity Keys[1], wallet Args[1], to entity Keys[2], wallet Args[2], amount Args[3]

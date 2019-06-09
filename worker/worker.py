@@ -19,6 +19,7 @@ import redisUtilities
 import blockUtilities
 import encryptionUtilities
 
+# put in BSD and other license clauses?
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker

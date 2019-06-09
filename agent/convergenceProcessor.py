@@ -25,43 +25,52 @@ red = redis.StrictRedis(host='redis', port=6379, db=0, charset=ENCODING, decode_
 
 def generateNextCircle():
 
-    print("generating the next circle")
+    logging.debug("in generateNextCircle")
 
     # should always be the latest block that you are generating the next circle from
-    circle = nextCircle(redisUtilities.getOutputMatrix())  # No excluded agents for now
+    circle = nextCircle(redisUtilities.getOutputMatrix())  # No excluded agents for now, get matrix of last block
+
+    logging.debug(f'next circle outputMatrix is {circle}')
 
     # Am I in the circle?
-    
+
     if not (redisUtilities.getMyID() in circle):
         # what should happen if not in next circle?
         logging.info("I AM NOT IN THE NEXT CIRCLE.")
         return
 
+    logging.debug("Agent is in next circle")
     # gather and check instructions
     possibleInstructions = redisUtilities.getInstructionHashes()
+    logging.debug(f'possible instructions are {possibleInstructions}')
     validInstructions = []
     validInstructionHashes = []
     # TODO here: clear any mining pool from previous iterations.  (clearMining.lua script).  Hardcoded for now but put in redisUtilities
     luaHash = 'b5ef661e48d6306417d1f645c358f3d98a6148a1'
-    red.evalsha(luaHash, len(keys), *(keys+args))
+    red.evalsha(luaHash, 0)
+    # TODO catch around this.  If instruction fails on a non matching script it should be removed.
     for instructionHash in possibleInstructions:
         if blockUtilities.tryInstruction(instructionHash):
             logging.debug('instruction was valid')
             validInstructionHashes.append(instructionHash)
             validInstructions.append(redisUtilities.getInstruction(instructionHash))
 
-    logging.debug(f'valid instructions is: {validInstructions}')
-    if len(validInstructions) == 0:
+    logging.debug(f'valid instructions are: {validInstructionHashes}')
+    if len(validInstructionHashes) == 0:
         logging.info("there are no valid instructions and so, no valid block")
         # TODO - do we broadcast no valid block?  Or do we pause and retry in 10s?
         return
 
-    # TODO Setup candidate block structure and store in redis (as will reference this as the block is iterated)
-    # TODO: global static (in Redis?) for random number size
-    myRandoms = [g for g in getRandomNumbers()]
-    mySeed = getRandomNumber(32)
-    mySeededRandomHash = getHashWithSeed(myRandoms,mySeed)
-    
+    # TODO: global static (in Redis?) for random number size, agents in the CIRCLE
+    myRandoms = [g for g in encryptionUtilities.getRandomNumbers(32, 5)]
+    logging.debug(f'myRandoms are {myRandoms}')
+
+    mySeed = encryptionUtilities.getRandomNumber(32)
+    logging.debug(f'mySeed is {mySeed}')
+
+    mySeededRandomHash = encryptionUtilities.getHashWithSeed(myRandoms,mySeed)
+    logging.debug(f'seeded hash is {mySeededRandomHash}')
+
     convergenceHeader = {
               "previousBlock" : redisUtilities.getBlockHash(),
               "instructionsMerkleRoot" : encryptionUtilities.returnMerkleRoot(validInstructionHashes),
@@ -69,30 +78,34 @@ def generateNextCircle():
               "blockHeight" : (redisUtilities.getBlockHeight() + 1),
               "randomNumberHash": mySeededRandomHash
     }
-    
-    signature = signMessage(getHashofInput(convergenceHeader),redisUtilities.getMyPrivKey())
-    
-    
-    
+
+    logging.debug(f'convergenceHeader is {convergenceHeader}')
+
+    signature = encryptionUtilities.signMessage(encryptionUtilities.getHashofInput(convergenceHeader),redisUtilities.getMyPrivKey())
+
+    logging.debug(f'signature is {signature}')
+
+    blockSignatures = [{redisUtilities.getMyID() : signature}]
+    logging.debug(f'blockSignatures is {blockSignatures}')
     proposedBlock = {
         "convergenceHeader" : json.dumps(convergenceHeader),
-        "blockSignatures" :  [{redisUtilities.getMyID():signature}],
+        "blockSignatures" :  blockSignatures,
         "instructions" : json.dumps(validInstructions),
-        "broadcaster" : redisUtilities.getMyID()   
+        "broadcaster" : redisUtilities.getMyID()
     }
-    
+
     logging.info(f'Proposed Block for initial convergence is {proposedBlock}')
 
-    # Write these to blockchain?  (or after all done?) 
-        
-        
+    # Write these to blockchain?  (or after all done?)
+
+
     # TODO setup signature for convergence header
-    
-    
-    # TODO create proposedBlock and convergence header.  Broadcast proposed block. Need to lookup addresses of the 
-       
-    # TODO also update consensus emulator to emit new block type structure.  
-       
+
+
+    # TODO create proposedBlock and convergence header.  Broadcast proposed block. Need to lookup addresses of the
+
+    # TODO also update consensus emulator to emit new block type structure.
+
     # TODO update NODE to accumulate latest block (same convergence header) with all the random numbers
 
     # GREG: I think this is where we emulate the full block creation?
@@ -139,16 +152,18 @@ def distributeBlock(block):
     # blockFile.write(json.dumps(block))
     # blockFile.close()
 
-# Distance calculations for finding the nearest agent to a number for a level.  This is not optimised as will be in a data structure in Lambda
-# currently it is order of N which will get very big.  Needs to be rewritten with binHashTree (TODO)
-# Note this is in memory for the test version that this blockstate manages.  Different implementation in cloud versions
+# Distance calculations for finding the nearest agent to a number for a level. Uses Redis
+# sorted set with lexographical ordering to find nearest (next largest) agent to the outputMatrix
+# this may not be optimised
 def nextCircle(searchTerms):
     circle, bIndex = [],0
-    logging.debug(f'in next circle with lastBlockMatrix: {lastBlockMatrix}')
+    logging.debug(f'finding next circle with {searchTerms}')
     # Code this - SOLUTION: untrusted agents are removed from levels structure or given special untrusted level
+
+    # TODO put exception handling around this
+    # should return ["founders","defenders","protectors","contributors","members"]
     levels = list(red.zrange("levels", "0", "-1"))
     logging.debug(f'levels is {levels}')
-
 
     # for each level (in priority order search for agents)
     for level in levels:
@@ -171,7 +186,7 @@ def nextCircle(searchTerms):
             searchTerm = "(" + searchTerms[bIndex]
             logging.debug(f'searching for clostest num to {searchTerm}')
             logging.debug(f'possible agents are: {red.zrange(level, "0", "-1")}')
-            nextAgent = red.zrangebylex(level, searchTerm, "[\xff", start = 0, num = 1)
+            nextAgent = red.zrangebylex(level, searchTerm, "+", start = 0, num = 1)
             logging.debug(f'level: {level}, nextAgent is {nextAgent}')
 
             # if next agent is [] then there is no agent after the search term in the
@@ -195,6 +210,7 @@ def nextCircle(searchTerms):
                 # number
                 logging.debug(f"agent {nextAgent} was already in circle {circle}")
                 searchTerms[bIndex] = nextAgent
+                pass
             else:
                 circle.append(nextAgent)
                 bIndex = bIndex + 1
@@ -202,11 +218,11 @@ def nextCircle(searchTerms):
 
     logging.debug(f'circle is {circle}')
 
-    # manually adding the current agent if they didnt make the cut
+    # Commented out.  manually adding the current agent if they didnt make the cut
     if not redisUtilities.getMyID() in circle:
-        logging.info("my id not present removing so I can add")
-        circle.pop()
-        circle.append(redisUtilities.getMyID())
+        logging.info("my id not present removing so I am not in the circle ")
+        #circle.pop()
+        #circle.append(redisUtilities.getMyID())
 
 
     return circle

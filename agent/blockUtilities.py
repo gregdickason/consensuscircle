@@ -102,7 +102,7 @@ def executeInstruction(hash, blockHeight=0, pipe=None):
     args.append(instruction['instructionHash'])
     # append blockheight - we dont create a rollback state
     # TODO update scripts for this
-    args.append(blockHeight - 1)
+    args.append(redisUtilities.getBlockHash())  # latest block we would roll back to 
     args.extend(instruction['instruction']['args'])
 
     keys.append(instruction['instruction']['sender'])
@@ -191,6 +191,7 @@ def tryInstruction(hash):
 
     args.append('mining')
     args.append(instruction['instructionHash'])
+    args.append(redisUtilities.getBlockHash())  # latest block we would roll back to
     args.extend(instruction['instruction']['args'])
 
     keys.append(instruction['instruction']['sender'])
@@ -199,6 +200,8 @@ def tryInstruction(hash):
     logging.debug(f'Instruction retrieved is {instruction}\n')
 
     luaHash = instruction['instruction']['luaHash']
+    logging.debug(f'luaHash for instruction is {luaHash}')
+    logging.debug(f'keys are {keys}, args are {args}')
 
     output = red.execute_command("EVALSHA", luaHash, len(keys), *(keys+args))
 
@@ -276,7 +279,7 @@ def generateNextCircle():
 
     # convergenceProcessor.generateNextCircle()
     # you dont need to make a new redis connection you can use the existing one that is defined above (line 26)
-    q = Queue(connection=red)  # send to default queue for now
+    q = Queue('default',connection=red)  # send to default queue for now
     job = q.enqueue(convergenceProcessor.generateNextCircle)
     logging.info("job id is:" + job.get_id())
 

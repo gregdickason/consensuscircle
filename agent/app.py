@@ -118,10 +118,10 @@ def instructionPool():
 
     logging.debug(f'In instructionPool')
     agentResponse = {}
-
+    merkleRoot = encryptionUtilities.returnMerkleRoot(redisUtilities.getInstructionHashes())
     agentResponse['message'] = {
-             'merkleRoot': encryptionUtilities.returnMerkleRoot(instruction_hashes),
-             'signed':encryptionUtilities.signMessage(hashMerkle,agent.getPrivateKey()),
+             'merkleRoot': merkleRoot,
+             'signed':encryptionUtilities.signMessage(merkleRoot,redisUtilities.getMyPrivKey()),
              'hashes': redisUtilities.getInstructionHashes()
            }
     agentResponse['success'] = True
